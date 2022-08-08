@@ -1,5 +1,3 @@
-from ctypes.wintypes import INT
-from dataclasses import replace
 from datetime import datetime
 from datetime import date
 from math import floor
@@ -8,14 +6,16 @@ import time
 import interactions
 from interactions.ext.tasks import IntervalTrigger, create_task
 import sqlite3
+
 conn = sqlite3.connect('Countdowns.db')
 try:
-    conn.execute('''CREATE TABLE Countdowns (timestamp int,msgid int,channelid int,roleid int,times int,length int,messagestart varchar(255),messageend varchar(255));''')
+    conn.execute('''CREATE TABLE Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,times int,length int,messagestart varchar(255),messageend varchar(255));''')
     print ("table made")
 except:
     print("Table probably alredy there")
 
 bot = interactions.Client(token="TOKEN")
+
 
 allzones ={
   "UTC" : {"add": "0"},  
@@ -223,10 +223,12 @@ allzones ={
   "BIT" : {"add": "-12"}
 }
 
-def writeinfile(mention, timestamp,msg,times,length, messagestart, messageend="!"):
+def writeinfile(mention, timestamp,msg,guildid,times,length, messagestart, messageend="!"):
     if msg.id == None:
         return True
     if msg.channel_id == None:
+        return True
+    if guildid == None:
         return True
     if mention != "0":
         roleid = mention.id
@@ -234,12 +236,12 @@ def writeinfile(mention, timestamp,msg,times,length, messagestart, messageend="!
         roleid = 0
     messagestart = messagestart.replace("'", "’")
     messageend = messageend.replace("'", "’")
-    conn.execute("INSERT INTO Countdowns (timestamp,msgid,channelid,roleid,times,length,messagestart,messageend) VALUES ("+str(timestamp)+","+str(msg.id)+","+str(msg.channel_id)+","+str(roleid)+","+str(times)+","+str(length)+", '"+str(messagestart)+"' , '"+str(messageend)+"');")
+    conn.execute("INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,times,length,messagestart,messageend) VALUES ("+str(timestamp)+","+str(msg.id)+","+str(msg.channel_id)+","+str(guildid)+","+str(roleid)+","+str(times)+","+str(length)+", '"+str(messagestart)+"' , '"+str(messageend)+"');")
     conn.commit()
     return False
 
 def timezonemath(timestamp, zone):
-    timestamp = timestamp + 7200
+    timestamp = timestamp + 3600
     try:
         difference = (int(allzones[(zone.upper())]["add"])*3600)
         timestamp = timestamp - difference
@@ -247,9 +249,19 @@ def timezonemath(timestamp, zone):
     except KeyError:
         return("Timezone doesn't exist")
 
+
+@bot.command(
+    name="help",
+    description="Shows a help message",
+)
+
+async def help(ctx: interactions.CommandContext):
+    await ctx.send(f"```Help message```\nThis bot got 6 commands: Countdown, timer, channel, delete, deleteallinchannel and help.\n**Countdown**\nCountdown will show the remaining time until the date you entered. It defaults to 12 (noon) the current day and timezone is UTC.\n**Timer**\nTimer will allow you to start a timer that will run for the duration you enter. Timers can be repeated by using the times option. (I.e starting a timer for 7 minutes will notify you in 7 minutes)\n**Channel**\nIt will show you all active countdowns in this channel.\n**Delete**\nEnter the message id for the countdown you want to delete and it will stop. You can find message id as the last number when using /channel\n**Deleteallinchannel**\nDeletes all countdowns in the channel\n**Help**\nShows this help message.")
+
+
 @bot.command(
     name="countdown",
-    description="Lets countdown to a date",
+    description="Countdown to an exact date. (hour and minute means hour and minute of the day)",
     options = [
         interactions.Option(
             name="day",
@@ -289,18 +301,20 @@ def timezonemath(timestamp, zone):
             name="messagestart",
             description="Custom message before timer",
             type=3,
+            max_length=100,
             required=False,
         ),
         interactions.Option(
             name="messageend",
             description="Custom message after timer",
             type=3,
+            max_length=100,
             required=False,
         ),
         interactions.Option(
             name="mention",
             description="Who to mention",
-            type=8,
+            type=9,
             required=False,
         ),
         interactions.Option(
@@ -341,15 +355,16 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
                 working = True
             
             else: 
-                response = "You cant set time in the past"
+                response = "You cant set time in the past. You can try adding in more variables."
         except:
             response = "not a valid timezone"
     except:
-        response ="not a valid date"
+        response ="not a valid date. Remember that it need to be a date!"
 
     msg = await ctx.send(f"{response}!")
+    guildid = ctx.guild_id
     if working == True:
-        writeerror = writeinfile(mention,timestamp,msg,"0","0", messagestart, messageend)
+        writeerror = writeinfile(mention,timestamp,msg,guildid,"0","0", messagestart, messageend)
         if writeerror:
             await ctx.send(f"SOMETHING WENT WRONG")
 
@@ -359,26 +374,26 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
     description="Lets add a timer",
     options = [
         interactions.Option(
-            name="day",
-            description="How many day",
-            type=4,
-            required=False,
-        ),
-        interactions.Option(
-            name="week",
-            description="How many week",
+            name="minute",
+            description="How many minutes",
             type=4,
             required=False,
         ),
         interactions.Option(
             name="hour",
-            description="How many hour",
+            description="How many hours",
             type=4,
             required=False,
         ),
         interactions.Option(
-            name="minute",
-            description="How many minute",
+            name="day",
+            description="How many days",
+            type=4,
+            required=False,
+        ),
+        interactions.Option(
+            name="week",
+            description="How many weeks",
             type=4,
             required=False,
         ),
@@ -386,18 +401,20 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
             name="messagestart",
             description="Custom message before timer",
             type=3,
+            max_length=100,
             required=False,
         ),
         interactions.Option(
             name="messageend",
             description="Custom message after timer",
             type=3,
+            max_length=100,
             required=False,
         ),
         interactions.Option(
             name="mention",
             description="Who to mention",
-            type=8,
+            type=9,
             required=False,
         ),  
         interactions.Option(
@@ -415,7 +432,8 @@ async def timer(ctx: interactions.CommandContext, day="0", week="0", hour="0", m
     timestamp = currenttime + length
     response = messagestart + " <t:" + str(timestamp) + ":R> " + messageend
     msg = await ctx.send(f"{response}!")
-    writeerror = writeinfile(mention,timestamp,msg,times,length, messagestart, messageend)
+    guildid = ctx.guild_id
+    writeerror = writeinfile(mention,timestamp,msg,guildid,times,length, messagestart, messageend)
     if writeerror:
         await ctx.send(f"SOMETHING WENT WRONG")
     
@@ -423,15 +441,20 @@ async def timer(ctx: interactions.CommandContext, day="0", week="0", hour="0", m
     name="channel",
     description="Show countdowns for this channel",
 )
+
 async def channel(ctx: interactions.CommandContext):
     channelid = str(ctx.channel_id)
-    cursor = conn.execute("SELECT timestamp,msgid,channelid,roleid,times,length,messagestart,messageend FROM Countdowns WHERE channelid = "+str(channelid)+";")
+    cursor = conn.execute("SELECT timestamp,msgid,guildid FROM Countdowns WHERE channelid = "+str(channelid)+" ORDER BY timestamp ASC;")
     result = "Active countdowns in this channel: \n"
     for row in cursor:
         msgid = int(row[1])
         timeid = int(row[0])
-        serverid = str(ctx.guild_id)
-        result = result + "<t:"+str(timeid)+":R> https://discord.com/channels/" + str(serverid) +"/"+str(channelid)+"/"+str(msgid)+"\n"
+        guildid = int(row[2])
+        if len(result) < 1800:
+            result = result + "<t:"+str(timeid)+":R> https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+"\n"
+        else:
+            result = result + "There are more active countdowns, but not enough space to show them in this message."
+            break
     if result == "Active countdowns in this channel: \n":
         result = "No countdowns in this channel"
     await ctx.send(result)
@@ -443,14 +466,14 @@ async def channel(ctx: interactions.CommandContext):
     options = [
         interactions.Option(
             name="msgid",
-            description="What ID do you want to delete",
+            description="Enter message ID that you want to delete.",
             type=3,
             required=True
         )
     ]   
 )
+
 async def delete(ctx: interactions.CommandContext, msgid):
-    result = "Not deleted"
     channelid = str(ctx.channel_id)
     check = conn.total_changes
     conn.execute("DELETE from Countdowns WHERE msgid = "+str(msgid)+" AND channelid = "+str(channelid)+";")
@@ -462,24 +485,47 @@ async def delete(ctx: interactions.CommandContext, msgid):
     await ctx.send(result)
 
 
+@bot.command(
+    name="deleteallinchannel",
+    description="Delete all countdowns in this channel",  
+)
+
+async def delete(ctx: interactions.CommandContext):
+    result = "Not deleted"
+    channelid = str(ctx.channel_id)
+    check = conn.total_changes
+    conn.execute("DELETE from Countdowns WHERE channelid = "+str(channelid)+";")
+    conn.commit()
+    if check == conn.total_changes:
+        result = "An error occourd"
+    else:
+        result = "Countdown(s) Deleted"
+    await ctx.send(result)
+
+
 @create_task(IntervalTrigger(5))
-async def my_task():
+async def timer_check():
     currenttime = time.time()
-    cursor = conn.execute("SELECT timestamp,msgid,channelid,roleid,times,length,messagestart,messageend FROM Countdowns WHERE timestamp < "+str(currenttime)+";")
+    cursor = conn.execute("SELECT timestamp,msgid,channelid,guildid,roleid,times,length,messagestart,messageend FROM Countdowns WHERE timestamp < "+str(currenttime)+";")
     for row in cursor:
-        timestamp = int(row[0])
-        messageend = str(row[7])
-        messagestart = str(row[6])
-        length = int(row[5])
-        times = int(row[4])
-        roleid = int(row[3])
+        messageend = str(row[8])
+        messagestart = str(row[7])
+        length = int(row[6])
+        times = int(row[5])
+        roleid = int(row[4])
+        guildid = int(row[3])
         channelid = int(row[2])
         msgid = int(row[1])
+        timestamp = int(row[0])
 
         channel = interactions.Channel(**await bot._http.get_channel(channelid), _client=bot._http)
-        content = messagestart + "<t:" + str(timestamp) + ":R>" + messageend
+        content = messagestart + " <t:" + str(timestamp) + "> " + messageend
         if roleid != 0:
-            await channel.send(" <@&"+str(roleid)+"> A countdown is done! It said:\n"+content, allowed_mentions={"parse":["roles"]})
+            try:
+                await interactions.get(bot, interactions.User, object_id=roleid)
+                await channel.send("<@" + str(roleid)+"> A countdown mentioning you is done! It said:\n"+content)
+            except:
+                await channel.send(" A countdown mentioning" + f"{'<@&' + str(roleid) + '>' if roleid != guildid else '@everyone'}" + "is done! It said:\n"+content, allowed_mentions={"parse":["roles", "everyone"]})
         else:
             await channel.send("A countdown is done! It said:\n" + content)
         if times != 0:
@@ -494,6 +540,6 @@ async def my_task():
             conn.commit()
     
 
-my_task.start()
+timer_check.start()
 
 bot.start()
