@@ -1,7 +1,6 @@
 from datetime import datetime
 from datetime import date
 from math import floor
-from sqlite3 import Timestamp
 import time
 import interactions
 from interactions.ext.tasks import IntervalTrigger, create_task
@@ -250,13 +249,18 @@ def timezonemath(timestamp, zone):
         return("Timezone doesn't exist")
 
 
+@bot.event
+async def on_start():
+    await bot.change_presence(presence=interactions.ClientPresence(activities=[interactions.PresenceActivity(name="Clock tick", type=interactions.PresenceActivityType.LISTENING)]))
+
+
 @bot.command(
     name="help",
     description="Shows a help message",
 )
 
 async def help(ctx: interactions.CommandContext):
-    await ctx.send(f"```Help message```\nThis bot got 6 commands: Countdown, timer, channel, delete, deleteallinchannel and help.\n**Countdown**\nCountdown will show the remaining time until the date you entered. It defaults to 12 (noon) the current day and timezone is UTC.\n**Timer**\nTimer will allow you to start a timer that will run for the duration you enter. Timers can be repeated by using the times option. (I.e starting a timer for 7 minutes will notify you in 7 minutes)\n**Channel**\nIt will show you all active countdowns in this channel.\n**Delete**\nEnter the message id for the countdown you want to delete and it will stop. You can find message id as the last number when using /channel\n**Deleteallinchannel**\nDeletes all countdowns in the channel\n**Help**\nShows this help message.")
+    await ctx.send(f"```Help message```This bot got 5 commands: Countdown, timer, list, delete and help.\n`Countdown`\nCountdown will show the remaining time until the date you entered. It defaults to 12 (noon) the current day and timezone is UTC.\n`Timer`\nTimer will allow you to start a timer that will run for the duration you enter. Timers can be repeated by using the times option. (I.e starting a timer for 7 minutes will notify you in 7 minutes)\n`List`\nIt will show you all active countdowns in the channel/server depending on subcommand.\n`Delete`\n**Single**\nEnter the message id for the countdown you want to delete and it will stop. You can find message id as the last number when using /list.\n**Channel**\nDeletes all countdowns in this channel.\n**Server**\nDeletes all countdowns in this server.\n`Help`\nShows this help message.", ephemeral=True)
 
 
 @bot.command(
@@ -323,10 +327,19 @@ async def help(ctx: interactions.CommandContext):
             type=3,
             required=False,
         ),
+        interactions.Option(
+            name="pm",
+            description="Do you want PM? (defaults to AM/False)",
+            type=5,
+            required=False,
+        ),
     ],
 )
 
-async def countdown(ctx: interactions.CommandContext, day="", month="", year="", hour="12", minute="00", messagestart="Countdown will end", messageend="", mention="0", timezone="UTC"):
+async def countdown(ctx: interactions.CommandContext, day="", month="", year="", hour="12", minute="00", messagestart="Countdown will end", messageend="", mention="0", timezone="UTC", pm=""):
+
+    if pm:
+        hour = (hour + 12) %25
 
     try:
         int(day)
@@ -359,14 +372,14 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
         except:
             response = "not a valid timezone"
     except:
-        response ="not a valid date. Remember that it need to be a date!"
+        response ="Not a valid date."
 
-    msg = await ctx.send(f"{response}!")
+    msg = await ctx.send(response)
     guildid = ctx.guild_id
     if working == True:
         writeerror = writeinfile(mention,timestamp,msg,guildid,"0","0", messagestart, messageend)
         if writeerror:
-            await ctx.send(f"SOMETHING WENT WRONG")
+            await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
 
 
 @bot.command(
@@ -435,72 +448,122 @@ async def timer(ctx: interactions.CommandContext, day="0", week="0", hour="0", m
     guildid = ctx.guild_id
     writeerror = writeinfile(mention,timestamp,msg,guildid,times,length, messagestart, messageend)
     if writeerror:
-        await ctx.send(f"SOMETHING WENT WRONG")
-    
-@bot.command(
-    name="channel",
-    description="Show countdowns for this channel",
-)
+        await ctx.send(f"SOMETHING WENT WRONG", ephemeral=True)
 
-async def channel(ctx: interactions.CommandContext):
-    channelid = str(ctx.channel_id)
-    cursor = conn.execute("SELECT timestamp,msgid,guildid FROM Countdowns WHERE channelid = "+str(channelid)+" ORDER BY timestamp ASC;")
-    result = "Active countdowns in this channel: \n"
-    for row in cursor:
-        msgid = int(row[1])
-        timeid = int(row[0])
-        guildid = int(row[2])
-        if len(result) < 1800:
-            result = result + "<t:"+str(timeid)+":R> https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+"\n"
-        else:
-            result = result + "There are more active countdowns, but not enough space to show them in this message."
-            break
-    if result == "Active countdowns in this channel: \n":
-        result = "No countdowns in this channel"
-    await ctx.send(result)
+@bot.command(
+    name="list",
+    description="List all countdowns",
+    options=[
+        interactions.Option(
+            name="channel",
+            description="List all countdowns in channel",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+        interactions.Option(
+            name="server",
+            description="List all countdowns in server",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+    ],
+)
+async def cmd(ctx: interactions.CommandContext, sub_command: str,):
+    if sub_command == "channel":
+        channelid = str(ctx.channel_id)
+        cursor = conn.execute("SELECT timestamp,msgid,guildid FROM Countdowns WHERE channelid = "+str(channelid)+" ORDER BY timestamp ASC;")
+        result = "Active countdowns in this channel: \n"
+        for row in cursor:
+            msgid = int(row[1])
+            timeid = int(row[0])
+            guildid = int(row[2])
+            if len(result) < 1800:
+                result = result + "<t:"+str(timeid)+":R> https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+"\n"
+            else:
+                result = result + "There are more active countdowns, but not enough space to show them in this message."
+                break
+        if result == "Active countdowns in this channel: \n":
+            result = "No countdowns in this channel"
+        await ctx.send(result, ephemeral=True)
+    elif sub_command == "server":
+        guildid = str(ctx.guild_id)
+        cursor = conn.execute("SELECT timestamp,msgid,channelid FROM Countdowns WHERE guildid = "+str(guildid)+" ORDER BY timestamp ASC;")
+        result = "Active countdowns in this server: \n"
+        for row in cursor:
+            msgid = int(row[1])
+            timeid = int(row[0])
+            channelid = int(row[2])
+            if len(result) < 1800:
+                result = result + "<t:"+str(timeid)+":R> https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+"\n"
+            else:
+                result = result + "There are more active countdowns, but not enough space to show them in this message."
+                break
+        if result == "Active countdowns in this channel: \n":
+            result = "No countdowns in this channel"
+        await ctx.send(result, ephemeral=True)
 
 
 @bot.command(
     name="delete",
-    description="Delete a countdown in this channel",
-    options = [
+    description="Deletes countdowns",
+    options=[
         interactions.Option(
-            name="msgid",
-            description="Enter message ID that you want to delete.",
-            type=3,
-            required=True
+            name="single",
+            description="delete a single countdown",
+            type=interactions.OptionType.SUB_COMMAND,
+            options=[
+                interactions.Option(
+                name="msgid",
+                description="Enter message ID that you want to delete.",
+                type=3,
+                required=True
         )
-    ]   
+            ],
+        ),
+        interactions.Option(
+            name="channel",
+            description="Delete all countdowns in this channel",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+        interactions.Option(
+            name="server",
+            description="Delete all countdowns in this server",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+    ],
 )
+async def cmd(ctx: interactions.CommandContext, sub_command: str, msgid: int = None):
+    if sub_command == "single":
+        guildid = str(ctx.guild_id)
+        check = conn.total_changes
+        conn.execute("DELETE from Countdowns WHERE msgid = "+str(msgid)+" AND guildid = "+str(guildid)+";")
+        conn.commit()
+        if check == conn.total_changes:
+            result = "An error occourd"
+        else:
+            result = "Countdown Deleted"
+        await ctx.send(result)
+    elif sub_command == "channel":
+        result = "Not deleted"
+        channelid = str(ctx.channel_id)
+        check = conn.total_changes
+        conn.execute("DELETE from Countdowns WHERE channelid = "+str(channelid)+";")
+        conn.commit()
+        if check == conn.total_changes:
+            result = "An error occourd"
+        else:
+            result = "Countdown(s) Deleted"
+        await ctx.send(result)
+    elif sub_command == "server":
+        result = "Not deleted"
+        guildid = str(ctx.guild_id)
+        check = conn.total_changes
+        conn.execute("DELETE from Countdowns WHERE guildid = "+str(guildid)+";")
+        conn.commit()
+        if check == conn.total_changes:
+            result = "An error occourd"
+        else:
+            result = "Countdown(s) Deleted"
+        await ctx.send(result)
 
-async def delete(ctx: interactions.CommandContext, msgid):
-    channelid = str(ctx.channel_id)
-    check = conn.total_changes
-    conn.execute("DELETE from Countdowns WHERE msgid = "+str(msgid)+" AND channelid = "+str(channelid)+";")
-    conn.commit()
-    if check == conn.total_changes:
-        result = "An error occourd"
-    else:
-        result = "Countdown Deleted"
-    await ctx.send(result)
-
-
-@bot.command(
-    name="deleteallinchannel",
-    description="Delete all countdowns in this channel",  
-)
-
-async def delete(ctx: interactions.CommandContext):
-    result = "Not deleted"
-    channelid = str(ctx.channel_id)
-    check = conn.total_changes
-    conn.execute("DELETE from Countdowns WHERE channelid = "+str(channelid)+";")
-    conn.commit()
-    if check == conn.total_changes:
-        result = "An error occourd"
-    else:
-        result = "Countdown(s) Deleted"
-    await ctx.send(result)
 
 
 @create_task(IntervalTrigger(5))
