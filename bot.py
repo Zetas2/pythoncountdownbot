@@ -1,12 +1,11 @@
 from datetime import datetime
 from datetime import date
-from math import floor
+from math import floor, ceil
 import time
 import interactions
 from interactions.ext.tasks import IntervalTrigger, create_task
 import sqlite3
 #from interactions.ext.autosharder import shard
-
 import psutil
 
 conn = sqlite3.connect('Countdowns.db')
@@ -17,6 +16,7 @@ except:
     print("Table probably alredy there")
 
 bot = interactions.Client(token="TOKEN", disable_sync=False)
+
 
 
 
@@ -257,12 +257,12 @@ def checkactive(guildid, channelid):
     cursor = conn.execute("SELECT COUNT(*) FROM Countdowns WHERE guildid= "+str(guildid)+";")
     for row in cursor:
         server = int(row[0])
-    cursor = conn.execute("SELECT COUNT(*) FROM Countdowns WHERE guildid= "+str(channelid)+";")
+    cursor = conn.execute("SELECT COUNT(*) FROM Countdowns WHERE channelid= "+str(channelid)+";")
     for row in cursor:
         channel = int(row[0])
-    if server > 17:
+    if server > 50:
         return True
-    elif channel > 5:
+    elif channel > 20:
         return True
     else:
         return False
@@ -369,7 +369,8 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
     reachedlimit = checkactive(ctx.guild_id, ctx.channel_id)
     if reachedlimit:
         return await ctx.send("Max countdowns reached. Delete one or wait for one to run out to add more.", ephemeral=True)
-        
+    
+
     if pm:
         hour = (hour + 12) %25
 
@@ -406,13 +407,16 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
     except:
         response ="Not a valid date."
 
-    msg = await ctx.send(response)
-    guildid = ctx.guild_id
-    startedby = ctx.author.id
+    
     if working == True:
+        msg = await ctx.send(response)
+        guildid = ctx.guild_id
+        startedby = ctx.author.id
         writeerror = writeinfile(timestamp,msg,guildid,mention,startedby,"0","0", messagestart, messageend)
         if writeerror:
             await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
+    else:
+        msg = await ctx.send(response, ephemeral=True)
 
 
 @bot.command(
@@ -477,6 +481,7 @@ async def timer(ctx: interactions.CommandContext, day="0", week="0", hour="0", m
     if reachedlimit:
         return await ctx.send("Max countdowns reached. Delete one or wait for one to run out to add more.", ephemeral=True)
 
+
     currenttime = floor(time.time())
     length = int(minute) * 60 + int(hour) * 3600 + int(day) * 86400 + int(week) * 604800
     timestamp = currenttime + length
@@ -496,42 +501,80 @@ async def timer(ctx: interactions.CommandContext, day="0", week="0", hour="0", m
             name="channel",
             description="List all countdowns in channel",
             type=interactions.OptionType.SUB_COMMAND,
+            options=[
+                interactions.Option(
+                    name="page",
+                    description="What page number",
+                    type=4,
+                    required=False,
+                ),
+            ]
         ),
         interactions.Option(
             name="server",
             description="List all countdowns in server",
             type=interactions.OptionType.SUB_COMMAND,
+            options=[
+                interactions.Option(
+                    name="page",
+                    description="What page number",
+                    type=4,
+                    required=False,
+                    max_value=50,
+                ),
+            ]
         ),
+        
     ],
 )
-async def list(ctx: interactions.CommandContext, sub_command: str,):
+async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
     channelid = str(ctx.channel_id)
     guildid = str(ctx.guild_id)
     if sub_command == "channel":
+        place = "channel"
+        cursor = conn.execute("SELECT COUNT (*) FROM Countdowns WHERE channelid = "+str(channelid)+";")
+        for row in cursor:
+            numberofcountdown = int(row[0])
         cursor = conn.execute("SELECT timestamp,msgid,channelid FROM Countdowns WHERE channelid = "+str(channelid)+" ORDER BY timestamp ASC;")
-        result = "Active countdowns in this channel: \n"
     elif sub_command == "server":
+        place = "server"
+        cursor = conn.execute("SELECT COUNT (*) FROM Countdowns WHERE guildid = "+str(guildid)+";")
+        for row in cursor:
+            numberofcountdown = int(row[0])
         cursor = conn.execute("SELECT timestamp,msgid,channelid FROM Countdowns WHERE guildid = "+str(guildid)+" ORDER BY timestamp ASC;")
-        result = "Active countdowns in this server: \n"
+    maxpage = ceil(numberofcountdown/5)
+    if maxpage < page:
+        page = maxpage
+    embed = interactions.Embed() 
+    embed.title = "ACTIVE COUNTDOWNS"
+    embed.description = "These are the countdowns active in this " + place
 
+    currentLine = 0
+    goal = page * 5
     for row in cursor:
-        msgid = int(row[1])
-        timeid = int(row[0])
-        channelid = int(row[2])
-        if len(result) < 1800:
-            result = result + "<t:"+str(timeid)+":R> https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+"\n"
+        
+        if currentLine >= goal-5:        
+            msgid = int(row[1])
+            timeid = int(row[0])
+            channelid = int(row[2])
+            embed.add_field("<t:"+str(timeid)+":R>", "https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+"\n")
+        elif currentLine < goal-5:
+            pass
         else:
-            result = result + "There are more active countdowns, but not enough space to show them in this message."
             break
-    if result == "Active countdowns in this server: \n" or result == "Active countdowns in this channel: \n":
-        result = "Theres no active countdowns"
-    await ctx.send(result, ephemeral=True)
+        currentLine = currentLine +1
+        if currentLine >= goal:
+            break 
 
+    embed.footer = interactions.EmbedFooter(text="Page " + str(page) + " of " + str(maxpage))
+    embed.color = int(('#%02x%02x%02x' % (90, 232, 240)).replace("#", "0x"), base=16)
+    await ctx.send(embeds=embed, ephemeral=True)
 
 
 @bot.command(
     name="delete",
     description="Deletes countdowns",
+    default_member_permissions=interactions.Permissions.MANAGE_MESSAGES,
     options=[
         interactions.Option(
             name="single",
