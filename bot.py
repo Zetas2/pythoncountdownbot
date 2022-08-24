@@ -7,6 +7,7 @@ from interactions.ext.tasks import IntervalTrigger, create_task
 import sqlite3
 #from interactions.ext.autosharder import shard
 import psutil
+import maya
 
 conn = sqlite3.connect('Countdowns.db')
 try:
@@ -15,7 +16,7 @@ try:
 except:
     print("Table probably alredy there")
 
-bot = interactions.Client(token="TOKEN", disable_sync=False)
+bot = interactions.Client(token="OTY0MjgyNDI5MTQ3ODY5MjY0.YliX_g.iIgZELIFx2-wzzx0izzOEN_5aQo", disable_sync=False)
 
 
 
@@ -270,6 +271,7 @@ def checkactive(guildid, channelid):
     
 
 
+
 @bot.event
 async def on_start():
     await bot.change_presence(presence=interactions.ClientPresence(activities=[interactions.PresenceActivity(name="/help", type=interactions.PresenceActivityType.LISTENING)]))
@@ -286,8 +288,9 @@ async def help(ctx: interactions.CommandContext):
     embed.add_field("Countdown", "Countdown will show the remaining time until the date you entered. It defaults to 12 (noon) the current day and timezone is UTC.")
     embed.add_field("Timer", "Timer will allow you to start a timer that will run for the duration you enter. Timers can be repeated by using the times option. (I.e starting a timer for 7 minutes will notify you in 7 minutes)")
     embed.add_field("List", "It will show you all active countdowns in the channel/server depending on subcommand.")
-    embed.add_field("Delete", "*Single*\nEnter the message id for the countdown you want to delete and it will stop. You can find message id as the last number when using /list.\n*Channel*\nDeletes all countdowns in this channel.\n*Server*\nDeletes all countdowns in this server.")
+    embed.add_field("Delete", "To use this you need to mave the `MANAGE_MESSAGE` permission.\n*Single*\nEnter the message id for the countdown you want to delete and it will stop. You can find message id as the last number when using /list.\n*Channel*\nDeletes all countdowns in this channel.\n*Server*\nDeletes all countdowns in this server.")
     embed.add_field("Help", "Shows this help message")
+    embed.add_field("Links", "[Discord Support](https://discord.com/invite/b2fY4z4xBY 'Join the support server!') | [Invite the Bot](https://top.gg/bot/710486805836988507) | [Patreon](https://www.patreon.com/livecountdownbot)")
     embed.color = int(('#%02x%02x%02x' % (90, 232, 240)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed, ephemeral=True)
 
@@ -370,6 +373,12 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
     if reachedlimit:
         return await ctx.send("Max countdowns reached. Delete one or wait for one to run out to add more.", ephemeral=True)
     
+    
+    if mention != "0" and not (ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE):
+        return await ctx.send("You dont have permission to ping", ephemeral=True)
+
+        
+
 
     if pm:
         hour = (hour + 12) %25
@@ -392,6 +401,7 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
     working = False
     try:
         wholedate = datetime.strptime( str(year) + "-" + str(month) + "-" + str(day) + " " + str(hour) + ":" + str(minute) + ":00,00", "%Y-%m-%d %H:%M:%S,%f")  
+        print(wholedate)
         timestamp = floor(wholedate.timestamp())
         timestamp = timezonemath(timestamp,timezone)
         currenttime = floor(time.time())
@@ -417,6 +427,106 @@ async def countdown(ctx: interactions.CommandContext, day="", month="", year="",
             await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
     else:
         msg = await ctx.send(response, ephemeral=True)
+
+
+
+
+
+
+
+
+@bot.command(
+    name="mayatest",
+    description="Countdown to an exact date. (hour and minute means hour and minute of the day)",
+    options = [
+        interactions.Option(
+            name="timestring",
+            description="What time do you want",
+            type=3,
+            max_length=100,
+            required=True,
+        ),
+        interactions.Option(
+            name="timezone",
+            description="What timezone",
+            type=3,
+            required=False,
+        ),
+        interactions.Option(
+            name="messagestart",
+            description="Custom message before timer",
+            type=3,
+            max_length=100,
+            required=False,
+        ),
+        interactions.Option(
+            name="messageend",
+            description="Custom message after timer",
+            type=3,
+            max_length=100,
+            required=False,
+        ),
+        interactions.Option(
+            name="mention",
+            description="Who to mention",
+            type=9,
+            required=False,
+        ),
+    ],
+)
+
+async def mayatest(ctx: interactions.CommandContext,  timestring, timezone="UTC", messagestart="Countdown will end", messageend="", mention="0"):
+    reachedlimit = checkactive(ctx.guild_id, ctx.channel_id)
+    if reachedlimit:
+        return await ctx.send("Max countdowns reached. Delete one or wait for one to run out to add more.", ephemeral=True)
+    
+    
+    if mention != "0" and not (ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE):
+        return await ctx.send("You dont have permission to ping", ephemeral=True)
+
+        
+
+
+    working = False
+
+
+    try:
+        wholedate = maya.parse(timestring).datetime()
+        timestamp = floor(wholedate.timestamp())
+        timestamp = timezonemath(timestamp,timezone)
+        currenttime = floor(time.time())
+        try:
+            if int(currenttime) < int(timestamp):
+                response = messagestart + " <t:" + str(timestamp) + ":R> " + messageend
+                working = True
+            
+            else: 
+                response = "You cant set time in the past. You can try adding in more variables."
+        except:
+            response = "not a valid timezone"
+    except:
+        response ="Not a valid date."
+
+    
+    if working == True:
+        msg = await ctx.send(response)
+        guildid = ctx.guild_id
+        startedby = ctx.author.id
+        writeerror = writeinfile(timestamp,msg,guildid,mention,startedby,"0","0", messagestart, messageend)
+        if writeerror:
+            await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
+    else:
+        msg = await ctx.send(response, ephemeral=True)
+
+
+
+
+
+
+
+
+
+
 
 
 @bot.command(
@@ -480,6 +590,9 @@ async def timer(ctx: interactions.CommandContext, day="0", week="0", hour="0", m
     reachedlimit = checkactive(ctx.guild_id, ctx.channel_id)
     if reachedlimit:
         return await ctx.send("Max countdowns reached. Delete one or wait for one to run out to add more.", ephemeral=True)
+
+    if mention != "0" and not (ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE):
+        return await ctx.send("You dont have permission to ping", ephemeral=True)
 
 
     currenttime = floor(time.time())
