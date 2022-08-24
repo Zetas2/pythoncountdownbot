@@ -16,7 +16,7 @@ try:
 except:
     print("Table probably alredy there")
 
-bot = interactions.Client(token="OTY0MjgyNDI5MTQ3ODY5MjY0.YliX_g.iIgZELIFx2-wzzx0izzOEN_5aQo", disable_sync=False)
+bot = interactions.Client(token="TOKEN", disable_sync=False)
 
 
 
