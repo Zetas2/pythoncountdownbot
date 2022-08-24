@@ -245,7 +245,6 @@ def writeinfile(timestamp,msg,guildid,mention,startedby,times,length, messagesta
     return False
 
 def timezonemath(timestamp, zone):
-    timestamp = timestamp + 3600
     try:
         difference = (int(allzones[(zone.upper())]["add"])*3600)
         timestamp = timestamp - difference
