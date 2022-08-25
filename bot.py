@@ -293,7 +293,7 @@ async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
             msgid = int(row[1])
             timeid = int(row[0])
             channelid = int(row[2])
-            embed.add_field("<t:"+str(timeid)+":R>", "https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+"\n")
+            embed.add_field("<t:"+str(timeid)+":R>", "["+str(msgid)+"](https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+")\n")
         elif currentLine < goal-5:
             pass
         else:
