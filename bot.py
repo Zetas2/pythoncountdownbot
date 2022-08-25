@@ -104,10 +104,17 @@ async def help(ctx: interactions.CommandContext):
             type=9,
             required=False,
         ),
+        interactions.Option(
+            name="times",
+            description="Number of times to repeat",
+            type=4,
+            required=False,
+            max_value=50,
+        ),
     ],
 )
 
-async def countdown(ctx: interactions.CommandContext,  timestring, messagestart="Countdown will end", messageend="", mention="0"):
+async def countdown(ctx: interactions.CommandContext,  timestring, messagestart="Countdown will end", messageend="", mention="0", times=0):
     reachedlimit = checkactive(ctx.guild_id, ctx.channel_id)
     if reachedlimit:
         return await ctx.send("Max countdowns reached. Delete one or wait for one to run out to add more.", ephemeral=True)
@@ -124,6 +131,7 @@ async def countdown(ctx: interactions.CommandContext,  timestring, messagestart=
             messagestart = messagestart.replace("\\n", "\n")
             messageend = messageend.replace("\\n", "\n")
             response = messagestart + " <t:" + str(timestamp) + ":R> " + messageend
+            length = int(timestamp) - int(currenttime)
             working = True
         else: 
             response = "You cant set time in the past. You can try adding in more variables."
@@ -134,7 +142,7 @@ async def countdown(ctx: interactions.CommandContext,  timestring, messagestart=
         msg = await ctx.send(response)
         guildid = ctx.guild_id
         startedby = ctx.author.id
-        writeerror = writeinfile(timestamp,msg,guildid,mention,startedby,"0","0", messagestart, messageend)
+        writeerror = writeinfile(timestamp,msg,guildid,mention,startedby,times,length, messagestart, messageend)
         if writeerror:
             await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
     else:
@@ -194,6 +202,7 @@ async def countdown(ctx: interactions.CommandContext,  timestring, messagestart=
             description="Number of times to repeat",
             type=4,
             required=False,
+            max_value=50,
         ),
     ],
 )
