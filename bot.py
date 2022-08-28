@@ -17,6 +17,50 @@ except:
 
 bot = interactions.Client(token="TOKEN", disable_sync=False)
 
+
+translations ={
+  "en-US" : {
+    "helpTitle": "Help",
+    "helpDesc": "This bot got 4 commands: Countdown, list, delete and help.",
+    "helpCountdownTitle": "Countdown", 
+    "helpCountdownDesc": "Countdown will show the remaining time until the date you entered, or for the duration you specify. Its timezone is UTC. They can be repeated by using the times option.",
+    "helpListTitle": "List", 
+    "helpListDesc": "It will show you all active countdowns in the channel/server or from you depending on subcommand.",
+    "helpDeleteTitle": "Delete", 
+    "helpDeleteDesc": "To use this you need to mave the `MANAGE_MESSAGE` permission.\n*Single*\nEnter the message id for the countdown you want to delete and it will stop. You can find message id as the last number when using /list.\n*Channel*\nDeletes all countdowns in this channel.\n*Server*\nDeletes all countdowns in this server.",
+    "helpHelpDesc": "Shows this help message",
+    "helpLinksTitle": "Links", 
+    "helpLinksDesc": "[Discord Support](https://discord.com/invite/b2fY4z4xBY 'Join the support server!') | [Invite the Bot](https://top.gg/bot/710486805836988507) | [Patreon](https://www.patreon.com/livecountdownbot)",
+    "helpTranslateTitle": "Translate",
+    "helpTranslateDesc": "Allows you as an administrator to switch the language of the bot",
+
+    "done": "A countdown is done!", 
+    "created": "It was started by",
+    },
+  "fr" : {
+
+    "helpTitle": "Aide",
+    "helpDesc": "Ce bot a reçu 4 commandes: compte à rebours, minuterie, liste, supprimer et aide.",
+    "helpCountdownTitle": "Compte à rebours", 
+    "helpCountdownDesc": "Le compte à rebours affichera le temps restant jusqu'à la date que vous avez entrée ou pour la durée que vous spécifiez. Son fuseau horaire est UTC. Ils peuvent être répétés en utilisant l'option des temps.",
+    "helpListTitle": "Liste", 
+    "helpListDesc": "Il vous montrera tous les comptes à rebours actifs dans le canal / serveur ou de vous en fonction de la sous-commande.",
+    "helpDeleteTitle": "Supprimer", 
+    "helpDeleteDesc": "Pour l'utiliser, vous devez modifier l'autorisation 'MANAGE_MESSAGE'.\n*Single*\nEntrez l'ID du message pour le compte à rebours que vous souhaitez supprimer et il s'arrêtera. Vous pouvez trouver l'ID de message comme dernier numéro lorsque vous utilisez /list.\n*Channel*\nSupprime tous les comptes à rebours de ce canal.\n*Serveur*\nSupprime tous les comptes à rebours de ce serveur.",
+    "helpHelpDesc": "Affiche ce message d'aide",
+    "helpLinksTitle": "Liens", 
+    "helpLinksDesc": "[Prise en charge de Discord](https://discord.com/invite/b2fY4z4xBY 'Rejoignez le serveur de support!') | [Inviter le bot](https://top.gg/bot/710486805836988507) | [Patreon](https://www.patreon.com/livecountdownbot)",
+    "helpTranslateTitle": "Traduire",
+    "helpTranslateDesc": "Vous permet, en tant qu'administrateur, de changer la langue du bot",
+
+    "done": "Un compte à rebours est lancé!", 
+    "created": "Il a été lancé par"
+    },
+}
+
+
+
+
 def writeinfile(timestamp,msg,guildid,mention,startedby,times,length, messagestart, messageend="!"):
     if msg.id == None:
         return True
@@ -57,16 +101,25 @@ async def on_start():
 @bot.command(
     name="help",
     description="Shows a help message",
+    name_localizations={
+        "fr": "aide"
+    },
+    description_localizations={
+        "fr": "Affiche un message d'aide"
+    }
 )
 async def help(ctx: interactions.CommandContext):
+    language = ctx.guild.preferred_locale
     embed = interactions.Embed() 
-    embed.title = "Help"
-    embed.description = "This bot got 5 commands: Countdown, timer, list, delete and help."
-    embed.add_field("Countdown", "Countdown will show the remaining time until the date you entered, or for the duration you specify. Its timezone is UTC. They can be repeated by using the times option.")
-    embed.add_field("List", "It will show you all active countdowns in the channel/server depending on subcommand.")
-    embed.add_field("Delete", "To use this you need to mave the `MANAGE_MESSAGE` permission.\n*Single*\nEnter the message id for the countdown you want to delete and it will stop. You can find message id as the last number when using /list.\n*Channel*\nDeletes all countdowns in this channel.\n*Server*\nDeletes all countdowns in this server.")
-    embed.add_field("Help", "Shows this help message")
-    embed.add_field("Links", "[Discord Support](https://discord.com/invite/b2fY4z4xBY 'Join the support server!') | [Invite the Bot](https://top.gg/bot/710486805836988507) | [Patreon](https://www.patreon.com/livecountdownbot)")
+    embed.title = (translations[(language)]["helpTitle"])
+    embed.description = (translations[(language)]["helpDesc"])
+    embed.add_field((translations[(language)]["helpCountdownTitle"]), (translations[(language)]["helpCountdownDesc"]))
+    embed.add_field((translations[(language)]["helpListTitle"]), (translations[(language)]["helpListDesc"]))
+    embed.add_field((translations[(language)]["helpDeleteTitle"]), (translations[(language)]["helpDeleteDesc"]))
+    embed.add_field((translations[(language)]["helpTitle"]), (translations[(language)]["helpHelpDesc"]))
+    if (ctx.author.permissions & interactions.Permissions.ADMINISTRATOR):
+        embed.add_field((translations[(language)]["helpTranslateTitle"]), (translations[(language)]["helpTranslateDesc"]))
+    embed.add_field((translations[(language)]["helpLinksTitle"]), (translations[(language)]["helpLinksDesc"]))
     embed.color = int(('#%02x%02x%02x' % (90, 232, 240)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed, ephemeral=True)
 
@@ -113,6 +166,7 @@ async def help(ctx: interactions.CommandContext):
 )
 
 async def countdown(ctx: interactions.CommandContext,  timestring, messagestart="Countdown will end", messageend="", mention="0", times=0):
+    language = ctx.guild.preferred_locale
     reachedlimit = checkactive(ctx.guild_id, ctx.channel_id)
     if reachedlimit:
         return await ctx.send("Max countdowns reached. Delete one or wait for one to run out to add more.", ephemeral=True)
@@ -132,7 +186,7 @@ async def countdown(ctx: interactions.CommandContext,  timestring, messagestart=
             length = int(timestamp) - int(currenttime)
             working = True
         else: 
-            response = "You cant set time in the past. You can try adding in more variables."
+            response = "You cant set time in the past. Try adding **in** or be more specific about your time"
     except:
         response ="Not a valid date."
 
@@ -210,6 +264,7 @@ async def countdown(ctx: interactions.CommandContext,  timestring, messagestart=
 )
 
 async def timer(ctx: interactions.CommandContext, day="0", week="0", hour="0", minute="0", messagestart="Timer will end", messageend="", mention="0", times="0"):
+    language = ctx.guild.preferred_locale
     reachedlimit = checkactive(ctx.guild_id, ctx.channel_id)
     if reachedlimit:
         return await ctx.send("Max countdowns reached. Delete one or wait for one to run out to add more.", ephemeral=True)
@@ -262,30 +317,52 @@ async def timer(ctx: interactions.CommandContext, day="0", week="0", hour="0", m
                 ),
             ]
         ),
+        interactions.Option(
+            name="mine",
+            description="List all countdowns activated by you",
+            type=interactions.OptionType.SUB_COMMAND,
+            options=[
+                interactions.Option(
+                    name="page",
+                    description="What page number",
+                    type=4,
+                    required=False,
+                    max_value=50,
+                ),
+            ]
+        ),
         
     ],
 )
 async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
+    language = ctx.guild.preferred_locale
     channelid = str(ctx.channel_id)
     guildid = str(ctx.guild_id)
     if sub_command == "channel":
-        place = "channel"
+        place = "in this channel"
         cursor = conn.execute("SELECT COUNT (*) FROM Countdowns WHERE channelid = "+str(channelid)+";")
         for row in cursor:
             numberofcountdown = int(row[0])
-        cursor = conn.execute("SELECT timestamp,msgid,channelid FROM Countdowns WHERE channelid = "+str(channelid)+" ORDER BY timestamp ASC;")
+        cursor = conn.execute("SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE channelid = "+str(channelid)+" ORDER BY timestamp ASC;")
     elif sub_command == "server":
-        place = "server"
+        place = "in this server"
         cursor = conn.execute("SELECT COUNT (*) FROM Countdowns WHERE guildid = "+str(guildid)+";")
         for row in cursor:
             numberofcountdown = int(row[0])
-        cursor = conn.execute("SELECT timestamp,msgid,channelid FROM Countdowns WHERE guildid = "+str(guildid)+" ORDER BY timestamp ASC;")
+        cursor = conn.execute("SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = "+str(guildid)+" ORDER BY timestamp ASC;")
+    elif sub_command == "mine":
+        place = "from you"
+        authour = ctx.author.id
+        cursor = conn.execute("SELECT COUNT (*) FROM Countdowns WHERE guildid = "+str(guildid)+" AND startedby = "+str(authour)+";")
+        for row in cursor:
+            numberofcountdown = int(row[0])
+        cursor = conn.execute("SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = "+str(guildid)+" AND startedby = "+str(authour)+ " ORDER BY timestamp ASC;")
     maxpage = ceil(numberofcountdown/5)
     if maxpage < page:
         page = maxpage
     embed = interactions.Embed() 
     embed.title = "ACTIVE COUNTDOWNS"
-    embed.description = "These are the countdowns active in this " + place
+    embed.description = "These are the countdowns active " + place
 
     currentLine = 0
     goal = page * 5
@@ -295,7 +372,8 @@ async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
             msgid = int(row[1])
             timeid = int(row[0])
             channelid = int(row[2])
-            embed.add_field("<t:"+str(timeid)+":R>", "["+str(msgid)+"](https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+" 'Click here to jump to the message')\n")
+            startedby = int(row[3])
+            embed.add_field("<t:"+str(timeid)+":R>", "["+str(msgid)+"](https://discord.com/channels/" + str(guildid) +"/"+str(channelid)+"/"+str(msgid)+" 'Click here to jump to the message') Started by <@!" + str(startedby)+">\n")
         elif currentLine < goal-5:
             pass
         else:
@@ -355,6 +433,7 @@ deletechannel = interactions.Button(
 )
 
 async def delete(ctx: interactions.CommandContext, sub_command: str, msgid: int = None):
+    language = ctx.guild.preferred_locale
     if sub_command == "single":
         guildid = str(ctx.guild_id)
         check = conn.total_changes
@@ -373,6 +452,7 @@ async def delete(ctx: interactions.CommandContext, sub_command: str, msgid: int 
 
 @bot.component("deleteserver")
 async def button_response(ctx):
+    language = ctx.guild.preferred_locale
     guildid = str(ctx.guild_id)
     check = conn.total_changes
     conn.execute("DELETE from Countdowns WHERE guildid = "+str(guildid)+";")
@@ -385,6 +465,7 @@ async def button_response(ctx):
 
 @bot.component("deletechannel")
 async def button_response(ctx):
+    language = ctx.guild.preferred_locale
     channelid = str(ctx.channel_id)
     check = conn.total_changes
     conn.execute("DELETE from Countdowns WHERE channelid = "+str(channelid)+";")
@@ -401,6 +482,7 @@ async def button_response(ctx):
     description="Shows stats of bot",
 )
 async def botstats(ctx: interactions.CommandContext):
+    language = ctx.guild.preferred_locale
     await ctx.defer(ephemeral=True)
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
@@ -422,6 +504,31 @@ async def botstats(ctx: interactions.CommandContext):
     await ctx.send(embeds=embed)
 
 
+
+@bot.command(
+    name="translate",
+    description="Translate the bot",
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    options = [
+        interactions.Option(
+            name="language",
+            description="What language do you want to translate to?",
+            type=3,
+            required=True,
+            choices=[interactions.Choice(name="French", value="fr"),interactions.Choice(name="English", value="en-US")]
+        ),
+    ]
+)
+async def translate(ctx: interactions.CommandContext, language):
+    try:
+        await ctx.guild.set_preferred_locale(language)
+        await ctx.send("Translated to " + language, ephemeral=True)
+    except:
+        await ctx.send("Should be one of these: ('uk', 'ro', 'ja', 'pl', 'no', 'hi', 'th', 'en-GB', 'cs', 'vi', 'es-ES', 'zh-TW', 'ar', 'fi', 'pt-BR', 'bg', 'ru', 'sv-SE', 'en-US', 'nl', 'fr', 'hr', 'de', 'da', 'lt', 'zh-CN', 'el', 'ko', 'it', 'hu', 'tr', 'he')", ephemeral=True)
+
+
+
+
 @create_task(IntervalTrigger(5))
 async def timer_check():
     currenttime = time.time()
@@ -438,12 +545,17 @@ async def timer_check():
         msgid = int(row[1])
         timestamp = int(row[0])
         channel = interactions.Channel(**await bot._http.get_channel(channelid), _client=bot._http)
+        
+        guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild_id)) 
+        language = guild.preferred_locale
 
         embed = interactions.Embed() 
-        embed.title = "A countdown is done!"
         
+        embed.title = (translations[(language)]["done"])
 
-        embed.description = "It was started by <@!" + str(startedby) + ">"
+        embed.footer = interactions.EmbedFooter(text="This should be in " + str(language))
+
+        embed.description = (translations[(language)]["created"]) + " <@!" + str(startedby) + ">"
 
         if times != 0:
             timestamp = timestamp + length
