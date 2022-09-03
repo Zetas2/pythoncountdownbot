@@ -10,6 +10,9 @@ import dateparser
 # To get information about system usage (ram and cpu)
 import psutil
 
+# To validate a url
+from validators import url as validurl
+
 # Used for rounding down timestamps to whole numbers and to get the max pages needed.
 from math import floor, ceil
 
@@ -35,13 +38,23 @@ conn.execute(
     """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255));"""
 )
 
+# This checks so premium features can only be used by premium users.
 async def checkPremium(ctx):
     userid = str(ctx.author.id)
     if userid in premiumUsers:
         return False
-    else:
-        await ctx.send("Sorry, you tried to use a premium only feature", ephemeral=True)
-        return True
+    
+    #If the code havent returned yet, its not a premium user
+    await ctx.send("Sorry, you tried to use a premium only feature", ephemeral=True)
+    return True
+
+async def checkLink(ctx,imagelink):
+    if validurl(imagelink):
+        return False
+
+    #If the code havent returned yet, its not a valid link
+    await ctx.send("You need to send a link to the image", ephemeral=True)
+    return True
 
 
 # The function that adds in the countdowns in the database
@@ -180,6 +193,8 @@ async def countdown(ctx, timestring, messagestart, messageend, mention, times,im
     if imagelink != "":
         if await checkPremium(ctx):
             return
+        if await checkLink(ctx,imagelink):
+            return
 
 
     try:
@@ -224,6 +239,8 @@ async def timer(ctx, day, week, hour, minute, messagestart, messageend, mention,
 
     if imagelink != "":
         if await checkPremium(ctx):
+            return
+        if await checkLink(ctx,imagelink):
             return
 
 
