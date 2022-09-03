@@ -84,6 +84,13 @@ async def help(ctx: interactions.CommandContext):
             required=False,
             max_value=50,
         ),
+        interactions.Option(
+            name="image",
+            description="Link to image to be shown at the end (PREMIUM FEATURE)",
+            type=interactions.OptionType.STRING,
+            required=False,
+            max_length=200,
+        ),
     ],
 )
 async def countdown(
@@ -93,9 +100,10 @@ async def countdown(
     messageend="!",
     mention="0",
     times=0,
+    image=""
 ):
     await commandBuilder.countdown(
-        ctx, timestring, messagestart, messageend, mention, times
+        ctx, timestring, messagestart, messageend, mention, times, image
     )
 
 
@@ -158,6 +166,13 @@ async def countdown(
             required=False,
             max_value=50,
         ),
+        interactions.Option(
+            name="image",
+            description="Link to image to be shown at the end (PREMIUM FEATURE)",
+            type=interactions.OptionType.STRING,
+            required=False,
+            max_length=200,
+        ),
     ],
 )
 async def timer(
@@ -170,10 +185,11 @@ async def timer(
     messageend="!",
     mention="0",
     times=0,
+    image=""
 ):
 
     await commandBuilder.timer(
-        ctx, day, week, hour, minute, messagestart, messageend, mention, times
+        ctx, day, week, hour, minute, messagestart, messageend, mention, times, image
     )
 
 

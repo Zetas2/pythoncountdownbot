@@ -1,5 +1,5 @@
+# Main library
 import interactions
-from languageFile import translations
 
 # Handeling the database
 import sqlite3
@@ -16,8 +16,15 @@ from math import floor, ceil
 # Used for... getting time.
 import time
 
-
+# Here all components are
 import components
+
+# Import a list of all premium users
+from premiumUsers import premiumUsers
+
+# Import a list of all translations
+from languageFile import translations
+
 
 
 # makes conn into the connected database.
@@ -25,8 +32,16 @@ conn = sqlite3.connect("Countdowns.db")
 
 # Make the table if there is noe
 conn.execute(
-    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,messagestart varchar(255),messageend varchar(255));"""
+    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255));"""
 )
+
+async def checkPremium(ctx):
+    userid = str(ctx.author.id)
+    if userid in premiumUsers:
+        return False
+    else:
+        await ctx.send("Sorry, you tried to use a premium only feature", ephemeral=True)
+        return True
 
 
 # The function that adds in the countdowns in the database
@@ -38,6 +53,7 @@ async def sendAndAddToDatabase(
     length,
     messagestart,
     messageend,
+    imagelink
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
@@ -54,7 +70,7 @@ async def sendAndAddToDatabase(
         roleid = 0
 
     conn.execute(
-        "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:messagestart,:messageend);",
+        "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
         {
             "timestamp": int(timestamp),
             "msgid": int(msg.id),
@@ -64,6 +80,7 @@ async def sendAndAddToDatabase(
             "startedby": int(startedby),
             "times": int(times),
             "length": int(length),
+            "imagelink": str(imagelink),
             "messagestart": str(messagestart),
             "messageend": str(messageend),
         },
@@ -155,11 +172,15 @@ async def help(ctx):
     await ctx.send(embeds=embed, ephemeral=True)
 
 
-async def countdown(ctx, timestring, messagestart, messageend, mention, times):
-    reachedLimit = await checkActiveAndMention(ctx, mention)
-
-    if reachedLimit:
+async def countdown(ctx, timestring, messagestart, messageend, mention, times,imagelink):
+    
+    if await checkActiveAndMention(ctx, mention):
         return
+
+    if imagelink != "":
+        if await checkPremium(ctx):
+            return
+
 
     try:
         wholedate = dateparser.parse("in " + timestring)
@@ -186,6 +207,7 @@ async def countdown(ctx, timestring, messagestart, messageend, mention, times):
                 length,
                 messagestart,
                 messageend,
+                imagelink,
             )
             if writeerror:
                 await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -196,11 +218,14 @@ async def countdown(ctx, timestring, messagestart, messageend, mention, times):
             )
 
 
-async def timer(ctx, day, week, hour, minute, messagestart, messageend, mention, times):
-    reachedLimit = await checkActiveAndMention(ctx, mention)
-
-    if reachedLimit:
+async def timer(ctx, day, week, hour, minute, messagestart, messageend, mention, times, imagelink):
+    if await checkActiveAndMention(ctx, mention):
         return
+
+    if imagelink != "":
+        if await checkPremium(ctx):
+            return
+
 
     currenttime = floor(time.time())
     length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
@@ -214,6 +239,7 @@ async def timer(ctx, day, week, hour, minute, messagestart, messageend, mention,
         length,
         messagestart,
         messageend,
+        imagelink,
     )
     if writeerror:
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -432,14 +458,15 @@ async def translate(ctx, language):
 async def checkDone(bot):
     currenttime = int(floor(time.time()))
     cursor = conn.execute(
-        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,messagestart,messageend FROM Countdowns WHERE timestamp < :currenttime;",
+        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend FROM Countdowns WHERE timestamp < :currenttime;",
         {"currenttime": currenttime},
     )
     # There will just be an empty row in cursor if theres no countdowns that are active.
     # Therefore this wont run multiple times.
     for row in cursor:
-        messageend = str(row[9])
-        messagestart = str(row[8])
+        messageend = str(row[10])
+        messagestart = str(row[9])
+        imagelink = str(row[8])
         length = int(row[7])
         times = int(row[6])
         startedby = int(row[5])
@@ -460,6 +487,10 @@ async def checkDone(bot):
         embed.title = translations[(language)]["done"]
 
         embed.description = f"{(translations[(language)]['created'])} <@!{startedby}>"
+
+
+        if imagelink != "":
+            embed.set_image(url=imagelink)
 
         # If it is repeating, it should decrease the number of times to repeat
         if times != 0:
