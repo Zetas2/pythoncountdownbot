@@ -359,7 +359,7 @@ async def button_response(ctx):
     description="Shows stats of bot",
 )
 async def botstats(ctx: interactions.CommandContext):
-    await commandBuilder.botStats(ctx, bot)
+    await commandBuilder.botstats(ctx, bot)
 
 
 # This command is not entierly active yet. It is just a prototype for when the bot is availible in multiple languages.
