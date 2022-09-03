@@ -1,4 +1,6 @@
 # Main library
+from re import sub
+from types import NoneType
 import interactions
 
 # Handeling the database
@@ -40,7 +42,11 @@ conn.execute(
 
 # This checks so premium features can only be used by premium users.
 async def checkPremium(ctx):
-    userid = str(ctx.author.id)
+    # Dont question it... Discord decided to name them different if it was used in dm or not.
+    try:
+        userid = ctx.author.id
+    except:
+        userid = ctx.user.id
     if userid in premiumUsers:
         return False
     
@@ -72,13 +78,16 @@ async def sendAndAddToDatabase(
     messageend = messageend.replace("\\n", "\n")
     msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}")
     guildid = ctx.guild_id
+    # Dont question it... Discord decided to name them different if it was used in dm or not.
     try:
         startedby = ctx.author.id
     except:
+        # If its a dm request, then the guildid wont be there
         startedby = ctx.user.id
+        guildid = 0
     # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
     if msg.id == None or msg.channel_id == None or guildid == None:
-        return True
+        return True 
 
     if mention != "0":
         roleid = mention.id
@@ -165,6 +174,10 @@ async def help(ctx):
     embed.title = translations[(language)]["helpTitle"]
     embed.description = translations[(language)]["helpDesc"]
     embed.add_field(
+        (translations[(language)]["helpTitle"]),
+        (translations[(language)]["helpHelpDesc"]),
+    )
+    embed.add_field(
         (translations[(language)]["helpCountdownTitle"]),
         (translations[(language)]["helpCountdownDesc"]),
     )
@@ -173,21 +186,24 @@ async def help(ctx):
         (translations[(language)]["helpListDesc"]),
     )
     # Only show Delete if the user got MANAGE_MESSAGES Permission
-    if ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
-        embed.add_field(
-            (translations[(language)]["helpDeleteTitle"]),
-            (translations[(language)]["helpDeleteDesc"]),
-        )
-    embed.add_field(
-        (translations[(language)]["helpTitle"]),
-        (translations[(language)]["helpHelpDesc"]),
-    )
-    # Only show Translate if the user got ADMINISTRATOR Permission
-    if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
-        embed.add_field(
-            (translations[(language)]["helpTranslateTitle"]),
-            (translations[(language)]["helpTranslateDesc"]),
-        )
+    # The try is for handeling being used in dms
+    try:
+        if ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
+            embed.add_field(
+                (translations[(language)]["helpDeleteTitle"]),
+                (translations[(language)]["helpDeleteDesc"]),
+            )
+    
+    
+        # Only show Translate if the user got ADMINISTRATOR Permission
+        if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
+            embed.add_field(
+                (translations[(language)]["helpTranslateTitle"]),
+                (translations[(language)]["helpTranslateDesc"]),
+            )
+    except:
+        # If they are in DM, dont show these stuff.
+        pass
     embed.add_field(
         (translations[(language)]["helpLinksTitle"]),
         (translations[(language)]["helpLinksDesc"]),
@@ -281,8 +297,14 @@ async def timer(ctx, day, week, hour, minute, messagestart, messageend, mention,
 
 
 async def list(ctx, sub_command, page):
+    if ctx.guild_id == None and sub_command != "channel":
+        return await ctx.send("Sorry, only /list channel works in DMs", ephemeral=True)
+    # Links for DMs are @me instead of the guildid
+    if ctx.guild_id == None:
+        guildid = "@me"
+    else:
+        guildid = int(ctx.guild_id)
     channelid = int(ctx.channel_id)
-    guildid = int(ctx.guild_id)
     if sub_command == "channel":
         place = "in this channel"
         cursor = conn.execute(
@@ -331,6 +353,8 @@ async def list(ctx, sub_command, page):
 
     currentLine = 0
     goalLine = page * 5
+
+    
 
     # Loops through all active countowns in the correct place to pick out the ones that should be on specified page
     for row in cursor:
@@ -424,16 +448,25 @@ async def autocompleteDelete(ctx, value, whattodelete):
             {"channelid": channelid},
         )
     elif whattodelete == "guild":
-        guildid = int(ctx.guild_id)
-        cursor = conn.execute(
-            "SELECT msgid FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
-            {"guildid": guildid},
-        )
+        
+        if ctx.guild_id == None:
+            cursor = conn.execute(
+            "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
+            {"channelid": channelid},
+            )
+        else:
+            guildid = int(ctx.guild_id)
+            cursor = conn.execute(
+                "SELECT msgid FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
+                {"guildid": guildid},
+            )
     await fillChoices(ctx, cursor, value)
 
 
-async def deleteButton(ctx, whattodelete):
+async def deletebutton(ctx, whattodelete):
     if whattodelete == "guild":
+        if ctx.guild_id == None:
+            return ctx.send("You cant use this in DMs", ephemeral=True)
         guildid = int(ctx.guild_id)
         check = conn.total_changes
         conn.execute(
