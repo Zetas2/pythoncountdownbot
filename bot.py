@@ -857,4 +857,5 @@ timer_check.start()
 
 # shard(bot)
 
+#Start the bot!
 bot.start()
