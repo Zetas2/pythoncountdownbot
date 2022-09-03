@@ -81,6 +81,11 @@ async def sendAndAddToDatabase(
     if msg.id == None or msg.channel_id == None or guildid == None:
         return True
 
+    if mention != "0":
+        roleid= mention.id
+    else:
+        roleid = 0
+
     conn.execute(
         "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:messagestart,:messageend);",
         {
@@ -88,7 +93,7 @@ async def sendAndAddToDatabase(
             "msgid": int(msg.id),
             "channelid": int(msg.channel_id),
             "guildid": int(guildid),
-            "mention": int(mention),
+            "mention": int(roleid),
             "startedby": int(startedby),
             "times": int(times),
             "length": int(length),
@@ -160,7 +165,7 @@ async def on_start():
     description="Shows a help message",
 )
 async def help(ctx: interactions.CommandContext):
-    language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the server is set to
+    language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to
     embed = interactions.Embed()
     embed.title = translations[(language)]["helpTitle"]
     embed.description = translations[(language)]["helpDesc"]
@@ -258,10 +263,20 @@ async def countdown(
         return
 
     try:
-        wholedate = dateparser.parse(
-            timestring
-        )  # This is the line that can cause the error in this try/except. It causes an error if the timestring isnt a valid date.
+        wholedate = dateparser.parse("in "+timestring)
         timestamp = floor(wholedate.timestamp())
+        validDate = True
+    except:
+        try:
+            wholedate = dateparser.parse(timestring)
+            timestamp = floor(wholedate.timestamp())
+            validDate = True
+        except:
+            await ctx.send("Not a valid date.", ephemeral=True)
+            validDate=False
+        
+
+    if validDate:
         currenttime = floor(time.time())
         if currenttime < timestamp:  # Make sure the time is in the future
             length = timestamp - currenttime
@@ -281,8 +296,6 @@ async def countdown(
                 "You cant set time in the past. Try adding **in** or be more specific about your time",
                 ephemeral=True,
             )
-    except:
-        await ctx.send("Not a valid date.", ephemeral=True)
 
 
 @bot.command(
