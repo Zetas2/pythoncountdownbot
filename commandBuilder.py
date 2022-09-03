@@ -72,7 +72,10 @@ async def sendAndAddToDatabase(
     messageend = messageend.replace("\\n", "\n")
     msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}")
     guildid = ctx.guild_id
-    startedby = ctx.author.id
+    try:
+        startedby = ctx.author.id
+    except:
+        startedby = ctx.user.id
     # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
     if msg.id == None or msg.channel_id == None or guildid == None:
         return True
@@ -104,41 +107,56 @@ async def sendAndAddToDatabase(
 
 # Checks so that active countdowns isnt too many and that the user have permission to ping
 async def checkActiveAndMention(ctx, mention):
-    cursor = conn.execute(
-        "SELECT COUNT(*) FROM Countdowns WHERE guildid= :guildid;",
-        {"guildid": int(ctx.guild_id)},
-    )
-    for row in cursor:
-        guild = int(row[0])
-    cursor = conn.execute(
-        "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
-        {"channelid": int(ctx.channel_id)},
-    )
-    for row in cursor:
-        channel = int(row[0])
-    if guild > 50:  # Limits number of active countdowns to 51
-        await ctx.send(
-            "Max countdowns in guild reached. Delete one or wait for one to run out to add more.",
-            ephemeral=True,
+    if ctx.guild_id == None:
+        cursor = conn.execute(
+            "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
+            {"channelid": int(ctx.channel_id)},
         )
-        return True
-    elif channel > 20:  # limits number of active countdowns to 21
-        await ctx.send(
-            "Max countdowns in channel reached. Delete one or wait for one to run out to add more.",
-            ephemeral=True,
-        )
-        return True
+        for row in cursor:
+            channel = int(row[0])
+        if channel > 5:
+            await ctx.send(
+                "Max countdowns in dms reached. Delete one or wait for one to run out to add more.",
+                ephemeral=True,
+            )
+            return True
+        
     else:
-        # Here the limit wasnt reached, so therefore continue checking permission
-        if mention != "0" and not (
-            ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE
-        ):
-            await ctx.send("You dont have permission to ping", ephemeral=True)
+        cursor = conn.execute(
+            "SELECT COUNT(*) FROM Countdowns WHERE guildid= :guildid;",
+            {"guildid": int(ctx.guild_id)},
+        )
+        for row in cursor:
+            guild = int(row[0])
+        cursor = conn.execute(
+            "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
+            {"channelid": int(ctx.channel_id)},
+        )
+        for row in cursor:
+            channel = int(row[0])
+        if guild > 50:  # Limits number of active countdowns to 51
+            await ctx.send(
+                "Max countdowns in guild reached. Delete one or wait for one to run out to add more.",
+                ephemeral=True,
+            )
+            return True
+        elif channel > 20:  # limits number of active countdowns to 21
+            await ctx.send(
+                "Max countdowns in channel reached. Delete one or wait for one to run out to add more.",
+                ephemeral=True,
+            )
+            return True
+        else:
+            # Here the limit wasnt reached, so therefore continue checking permission
+            if mention != "0" and not (
+                ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE
+            ):
+                await ctx.send("You dont have permission to ping", ephemeral=True)
 
-        if mention != "0":
-            mention = mention.id
+            if mention != "0":
+                mention = mention.id
 
-        return False
+            return False
 
 
 async def help(ctx):
