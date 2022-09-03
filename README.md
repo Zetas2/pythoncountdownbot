@@ -23,6 +23,11 @@ Sure.. I might have missed something, but thats the but thats the main stuff at 
 
 To use this bot? Well, just get the code, install the required stuff, fill in the .env file with your own bot token and you are off.
 
+Well, github is being mean, so you need to create your own .env file. The content should be this:
+
+> \# .env
+> DISCORD_TOKEN=YourLongAndComplicatedToken
+
 ## History
 
 This bot is a new version of the old Live Countdown made by the legendary _LordBusiness_. Main reason was since the old one didnt have support for slash commands, but discord would go on and require them.
