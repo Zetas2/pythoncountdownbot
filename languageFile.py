@@ -1,0 +1,20 @@
+translations = {
+    "en-US": {
+        "helpTitle": "Help",
+        "helpDesc": "This bot got the following commands:",
+        "helpCountdownTitle": "Countdown",
+        "helpCountdownDesc": "Countdown will show the remaining time until the date you entered, or for the duration you specify. Its timezone is UTC. They can be repeated by using the times option.",
+        "helpListTitle": "List",
+        "helpListDesc": "It will show you all active countdowns in the channel/guild or from you depending on subcommand.",
+        "helpDeleteTitle": "Delete",
+        "helpDeleteDesc": "To use this you need to mave the `MANAGE_MESSAGE` permission.\n*Single*\nEnter the message id for the countdown you want to delete and it will stop. You can find message id as the last number when using /list.\n*Channel*\nDeletes all countdowns in this channel.\n*Server*\nDeletes all countdowns in this guild.",
+        "helpHelpDesc": "Shows this help message",
+        "helpLinksTitle": "Links",
+        "helpLinksDesc": "[Discord Support](https://discord.com/invite/b2fY4z4xBY 'Join the support guild!') | [Invite the Bot](https://top.gg/bot/710486805836988507) | [Patreon](https://www.patreon.com/livecountdownbot)",
+        "helpTranslateTitle": "Translate",
+        "helpTranslateDesc": "Allows you as an administrator to switch the language of the bot",
+        "helpFooter": "Thanks Zetas2 for translating to English",
+        "done": "A countdown is done!",
+        "created": "It was started by",
+    },
+}
