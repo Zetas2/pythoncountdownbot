@@ -40,18 +40,18 @@ conn.execute(
     """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255));"""
 )
 
+# Dont question it... Discord decided to name them different if it was used in dm or not.
+def getUserid(ctx):
+    return ctx.author.id if ctx.user.id is None else ctx.user.id
+
 # This checks so premium features can only be used by premium users.
-async def checkPremium(ctx):
-    # Dont question it... Discord decided to name them different if it was used in dm or not.
-    try:
-        userid = ctx.author.id
-    except:
-        userid = ctx.user.id
+async def checkPremium(ctx, feature):
+    userid=getUserid(ctx)
     if userid in premiumUsers:
         return False
     
     #If the code havent returned yet, its not a premium user
-    await ctx.send("Sorry, you tried to use a premium only feature", ephemeral=True)
+    await ctx.send(f"Sorry, you tried to use a premium only feature: {feature}", ephemeral=True)
     return True
 
 async def checkLink(ctx,imagelink):
@@ -78,13 +78,9 @@ async def sendAndAddToDatabase(
     messageend = messageend.replace("\\n", "\n")
     msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}")
     guildid = ctx.guild_id
-    # Dont question it... Discord decided to name them different if it was used in dm or not.
-    try:
-        startedby = ctx.author.id
-    except:
-        # If its a dm request, then the guildid wont be there
-        startedby = ctx.user.id
+    if guildid == None:
         guildid = 0
+    startedby = getUserid(ctx)
     # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
     if msg.id == None or msg.channel_id == None or guildid == None:
         return True 
@@ -225,11 +221,14 @@ async def countdown(ctx, timestring, messagestart, messageend, mention, times,im
         return
 
     if imagelink != "":
-        if await checkPremium(ctx):
+        if await checkPremium(ctx, "adding image"):
             return
         if await checkLink(ctx,imagelink):
             return
 
+    if times != 0:
+        if await checkPremium(ctx, "repeating timer"):
+            return
 
     try:
         wholedate = dateparser.parse("in " + timestring)
@@ -272,9 +271,13 @@ async def timer(ctx, day, week, hour, minute, messagestart, messageend, mention,
         return
 
     if imagelink != "":
-        if await checkPremium(ctx):
+        if await checkPremium(ctx, "adding image"):
             return
         if await checkLink(ctx,imagelink):
+            return
+
+    if times != 0:
+        if await checkPremium(ctx, "repeating timer"):
             return
 
 
@@ -397,7 +400,7 @@ async def delete(
         if check == conn.total_changes:
             await ctx.send("An error occurred ", ephemeral=True)
         else:
-            await ctx.send(f"Countdown {msgid} was deleted by {user}")
+            await ctx.send(f"Countdown{msgid} was deleted by {user}")
 
     else:
         if sub_command == "channel":
@@ -518,9 +521,15 @@ async def botstats(ctx, bot):
     await ctx.send(embeds=embed)
 
 
-async def translate(ctx, language):
-    await ctx.guild.set_preferred_locale(language)
-    await ctx.send("Translated to " + language, ephemeral=True)
+async def translate(ctx, language, bot):
+    if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
+        try:
+            await ctx.guild.set_preferred_locale(language)
+            await ctx.send(f"{ctx.author} translated the bot to {language}")
+        except:
+            await ctx.send("Sorry, I need to be able to manage guild to use this command", ephemeral=True)            
+    else:
+        await ctx.send("Sorry, you need to be administrator to use this command", ephemeral=True)
 
 
 async def checkDone(bot):
@@ -543,9 +552,17 @@ async def checkDone(bot):
         channelid = int(row[2])
         msgid = int(row[1])
         timestamp = int(row[0])
-        channel = interactions.Channel(
-            **await bot._http.get_channel(channelid), _client=bot._http
-        )
+        try:
+            channel = interactions.Channel(
+                **await bot._http.get_channel(channelid), _client=bot._http
+            )
+        except:
+            conn.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid;",
+                {"msgid": msgid, "channelid": channelid},
+            )
+            conn.commit()
+            return
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild_id))
         language = "en-US"  # guild.preferred_locale

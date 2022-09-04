@@ -366,8 +366,8 @@ async def botstats(ctx: interactions.CommandContext):
 @bot.command(
     name="translate",
     description="Translate the bot",
-    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     scope=1010636307216728094,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     options=[
         interactions.Option(
             name="language",
@@ -379,7 +379,7 @@ async def botstats(ctx: interactions.CommandContext):
     ],
 )
 async def translate(ctx: interactions.CommandContext, language):
-    await commandBuilder.translate(ctx, language)
+    await commandBuilder.translate(ctx, language, bot)
 
 
 # This is the task that keeps looking if any countdowns are done.
