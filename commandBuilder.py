@@ -61,11 +61,35 @@ async def checkLink(ctx, imagelink):
 
 # The function that adds in the countdowns in the database
 async def sendAndAddToDatabase(
-    timestamp, ctx, mention, times, length, messagestart, messageend, imagelink
+    timestamp, ctx, mention, times, length, messagestart, messageend, imagelink, exact
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
-    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}")
+    timestring = ""
+    if exact:
+        meassurement = length
+        timestring = "Exact time from start: "
+        if meassurement >= 604800:
+            amount = meassurement // 604800
+            meassurement = meassurement - amount * 604800
+            timestring = timestring + str(amount) + " week(s) "
+        if meassurement >= 86400:
+            amount = meassurement // 86400
+            meassurement = meassurement - amount * 86400
+            timestring = timestring + str(amount) + " day(s) "
+        if meassurement >= 3600:
+            amount = meassurement // 3600
+            meassurement = meassurement - amount * 3600
+            timestring = timestring + str(amount) + " hour(s) "
+        if meassurement >= 60:
+            amount = meassurement // 60
+            meassurement = meassurement - amount * 60
+            timestring = timestring + str(amount) + " minute(s) "
+    
+    
+    
+    
+    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}\n*{timestring}*")
     guildid = ctx.guild_id
     if guildid == None:
         guildid = 0
@@ -98,6 +122,12 @@ async def sendAndAddToDatabase(
     conn.commit()
     return False
 
+async def checkLength(ctx, length):
+    if length < 60:
+        if int(ctx.user.id) != 238006908664020993:
+            await ctx.send("Minimum length of a countdown is one minute", ephemeral=True)
+            return True
+    return False
 
 # Checks so that active countdowns isnt too many and that the user have permission to ping
 async def checkActiveAndMention(ctx, mention):
@@ -204,7 +234,7 @@ async def help(ctx):
 
 
 async def countdown(
-    ctx, timestring, messagestart, messageend, mention, times, imagelink
+    ctx, timestring, messagestart, messageend, mention, times, imagelink, exact
 ):
 
     if await checkActiveAndMention(ctx, mention):
@@ -237,6 +267,8 @@ async def countdown(
         currenttime = floor(time.time())
         if currenttime < timestamp:  # Make sure the time is in the future
             length = timestamp - currenttime
+            if await checkLength(ctx, length):
+                return
             writeerror = await sendAndAddToDatabase(
                 timestamp,
                 ctx,
@@ -246,18 +278,19 @@ async def countdown(
                 messagestart,
                 messageend,
                 imagelink,
+                exact,
             )
             if writeerror:
                 await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
         else:
             await ctx.send(
-                "You cant set time in the past. Try adding **in** or be more specific about your time",
+                "You cant set time in the past. Try be more specific about your time.",
                 ephemeral=True,
             )
 
 
 async def timer(
-    ctx, day, week, hour, minute, messagestart, messageend, mention, times, imagelink
+    ctx, day, week, hour, minute, messagestart, messageend, mention, times, imagelink, exact
 ):
     if await checkActiveAndMention(ctx, mention):
         return
@@ -274,6 +307,8 @@ async def timer(
 
     currenttime = floor(time.time())
     length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
+    if await checkLength(ctx, length):
+        return
     timestamp = currenttime + length
 
     writeerror = await sendAndAddToDatabase(
@@ -285,6 +320,7 @@ async def timer(
         messagestart,
         messageend,
         imagelink,
+        exact
     )
     if writeerror:
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -531,6 +567,7 @@ async def botstats(ctx, bot):
     await ctx.defer(ephemeral=True)
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
+    disk = psutil.disk_usage('/').percent
     cursor = conn.execute("SELECT COUNT(*) FROM Countdowns;")
     for row in cursor:
         number = int(row[0])
@@ -543,13 +580,14 @@ async def botstats(ctx, bot):
     embed.description = "This is the current status of the bot"
     embed.add_field("CPU :fire:", f"{cpu}%")
     embed.add_field("RAM :floppy_disk:", f"{ram}%")
+    embed.add_field("Disk :minidisc:", f"{disk}%")
     embed.add_field("Active countdowns :clock1:", f"{number}")
     embed.add_field("Ping! :satellite:", f"{ping} ms")
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed)
 
 
-async def translate(ctx, language, bot):
+async def translate(ctx, language):
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
             await ctx.guild.set_preferred_locale(language)
