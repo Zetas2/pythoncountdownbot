@@ -122,6 +122,12 @@ async def sendAndAddToDatabase(
     conn.commit()
     return False
 
+async def checkLength(ctx, length):
+    if length < 60:
+        if int(ctx.user.id) != 238006908664020993:
+            await ctx.send("Minimum length of a countdown is one minute", ephemeral=True)
+            return True
+    return False
 
 # Checks so that active countdowns isnt too many and that the user have permission to ping
 async def checkActiveAndMention(ctx, mention):
@@ -261,6 +267,8 @@ async def countdown(
         currenttime = floor(time.time())
         if currenttime < timestamp:  # Make sure the time is in the future
             length = timestamp - currenttime
+            if await checkLength(ctx, length):
+                return
             writeerror = await sendAndAddToDatabase(
                 timestamp,
                 ctx,
@@ -299,6 +307,8 @@ async def timer(
 
     currenttime = floor(time.time())
     length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
+    if await checkLength(ctx, length):
+        return
     timestamp = currenttime + length
 
     writeerror = await sendAndAddToDatabase(
