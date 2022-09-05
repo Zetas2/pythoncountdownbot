@@ -61,11 +61,35 @@ async def checkLink(ctx, imagelink):
 
 # The function that adds in the countdowns in the database
 async def sendAndAddToDatabase(
-    timestamp, ctx, mention, times, length, messagestart, messageend, imagelink
+    timestamp, ctx, mention, times, length, messagestart, messageend, imagelink, exact
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
-    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}")
+    timestring = ""
+    if exact:
+        meassurement = length
+        timestring = "Exact time from start: "
+        if meassurement >= 604800:
+            amount = meassurement // 604800
+            meassurement = meassurement - amount * 604800
+            timestring = timestring + str(amount) + " week(s) "
+        if meassurement >= 86400:
+            amount = meassurement // 86400
+            meassurement = meassurement - amount * 86400
+            timestring = timestring + str(amount) + " day(s) "
+        if meassurement >= 3600:
+            amount = meassurement // 3600
+            meassurement = meassurement - amount * 3600
+            timestring = timestring + str(amount) + " hour(s) "
+        if meassurement >= 60:
+            amount = meassurement // 60
+            meassurement = meassurement - amount * 60
+            timestring = timestring + str(amount) + " minute(s) "
+    
+    
+    
+    
+    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}\n*{timestring}*")
     guildid = ctx.guild_id
     if guildid == None:
         guildid = 0
@@ -204,7 +228,7 @@ async def help(ctx):
 
 
 async def countdown(
-    ctx, timestring, messagestart, messageend, mention, times, imagelink
+    ctx, timestring, messagestart, messageend, mention, times, imagelink, exact
 ):
 
     if await checkActiveAndMention(ctx, mention):
@@ -246,18 +270,19 @@ async def countdown(
                 messagestart,
                 messageend,
                 imagelink,
+                exact,
             )
             if writeerror:
                 await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
         else:
             await ctx.send(
-                "You cant set time in the past. Try adding **in** or be more specific about your time",
+                "You cant set time in the past. Try be more specific about your time.",
                 ephemeral=True,
             )
 
 
 async def timer(
-    ctx, day, week, hour, minute, messagestart, messageend, mention, times, imagelink
+    ctx, day, week, hour, minute, messagestart, messageend, mention, times, imagelink, exact
 ):
     if await checkActiveAndMention(ctx, mention):
         return
@@ -285,6 +310,7 @@ async def timer(
         messagestart,
         messageend,
         imagelink,
+        exact
     )
     if writeerror:
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)

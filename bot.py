@@ -94,6 +94,12 @@ async def help(ctx: interactions.CommandContext):
             required=False,
             max_length=200,
         ),
+        interactions.Option(
+            name="exact",
+            description="Set to false if you dont want exact date", 
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
 async def countdown(
@@ -103,10 +109,11 @@ async def countdown(
     messageend="!",
     mention="0",
     times=0,
-    image=""
+    image="",
+    exact=True
 ):
     await commandBuilder.countdown(
-        ctx, timestring, messagestart, messageend, mention, times, image
+        ctx, timestring, messagestart, messageend, mention, times, image, exact
     )
 
 
@@ -176,6 +183,12 @@ async def countdown(
             required=False,
             max_length=200,
         ),
+        interactions.Option(
+            name="exact",
+            description="Set to false if you dont want exact date", 
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
 async def timer(
@@ -188,11 +201,12 @@ async def timer(
     messageend="!",
     mention="0",
     times=0,
-    image=""
+    image="",
+    exact=True
 ):
 
     await commandBuilder.timer(
-        ctx, day, week, hour, minute, messagestart, messageend, mention, times, image
+        ctx, day, week, hour, minute, messagestart, messageend, mention, times, image, exact
     )
 
 
