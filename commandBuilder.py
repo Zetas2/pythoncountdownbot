@@ -25,7 +25,7 @@ import time
 import components
 
 # Import a list of all premium users
-from premiumUsers import premiumUsers
+from premiumGuilds import premiumGuilds
 
 # Import a list of all translations
 from languageFile import translations
@@ -41,8 +41,8 @@ conn.execute(
 
 # This checks so premium features can only be used by premium users.
 async def checkPremium(ctx, feature):
-    user = ctx.user.id
-    if user in premiumUsers:
+    guild = ctx.guild.id
+    if guild in premiumGuilds:
         return False
 
     # If the code havent returned yet, its not a premium user
