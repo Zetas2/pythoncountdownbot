@@ -1,6 +1,4 @@
 # Main library
-from re import sub
-from types import NoneType
 import interactions
 
 # Handeling the database
