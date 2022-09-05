@@ -40,14 +40,10 @@ conn.execute(
     """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255));"""
 )
 
-# Dont question it... Discord decided to name them different if it was used in dm or not.
-def getUserid(ctx):
-    return ctx.author.id if ctx.user.id is None else ctx.user.id
-
 # This checks so premium features can only be used by premium users.
 async def checkPremium(ctx, feature):
-    userid=getUserid(ctx)
-    if userid in premiumUsers:
+    user = ctx.user.id
+    if user in premiumUsers:
         return False
     
     #If the code havent returned yet, its not a premium user
@@ -80,7 +76,7 @@ async def sendAndAddToDatabase(
     guildid = ctx.guild_id
     if guildid == None:
         guildid = 0
-    startedby = getUserid(ctx)
+    startedby = ctx.user.id
     # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
     if msg.id == None or msg.channel_id == None or guildid == None:
         return True 
@@ -335,16 +331,16 @@ async def list(ctx, sub_command, page):
         )
     elif sub_command == "mine":
         place = "from you"
-        author = int(ctx.author.id)
+        user = int(ctx.user.id)
         cursor = conn.execute(
-            "SELECT COUNT (*) FROM Countdowns WHERE guildid = :guildid AND startedby = :author;",
-            {"guildid": guildid, "author": author},
+            "SELECT COUNT (*) FROM Countdowns WHERE guildid = :guildid AND startedby = :user;",
+            {"guildid": guildid, "user": user},
         )
         for row in cursor:
             numberofcountdown = int(row[0])
         cursor = conn.execute(
-            "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid AND startedby = :author ORDER BY timestamp ASC;",
-            {"guildid": guildid, "author": author},
+            "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid AND startedby = :user ORDER BY timestamp ASC;",
+            {"guildid": guildid, "user": user},
         )
     maxpage = ceil(numberofcountdown / 5)
     if maxpage < page:
@@ -396,7 +392,7 @@ async def delete(
         check = conn.total_changes
         conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
         conn.commit()
-        user = ctx.author
+        user = ctx.user
         if check == conn.total_changes:
             await ctx.send("An error occurred ", ephemeral=True)
         else:
@@ -439,10 +435,10 @@ async def fillChoices(ctx, cursor, value):
 
 async def autocompleteDelete(ctx, value, whattodelete):
     if whattodelete == "mine":
-        author = int(ctx.author.id)
+        user = int(ctx.user.id)
         cursor = conn.execute(
-            "SELECT msgid FROM Countdowns WHERE startedby = :author ORDER BY timestamp ASC;",
-            {"author": author},
+            "SELECT msgid FROM Countdowns WHERE startedby = :user ORDER BY timestamp ASC;",
+            {"user": user},
         )
     elif whattodelete == "channel":
         channelid = int(ctx.channel_id)
@@ -476,7 +472,7 @@ async def deletebutton(ctx, whattodelete):
             "DELETE from Countdowns WHERE guildid = :guildid;", {"guildid": guildid}
         )
         conn.commit()
-        user = ctx.author
+        user = ctx.user
         if check == conn.total_changes:
             await ctx.send("An error occurred ", ephemeral=True)
         else:
@@ -489,7 +485,7 @@ async def deletebutton(ctx, whattodelete):
             {"channelid": channelid},
         )
         conn.commit()
-        user = ctx.author
+        user = ctx.user
         if check == conn.total_changes:
             await ctx.send("An error occurred ", ephemeral=True)
         else:
@@ -525,7 +521,7 @@ async def translate(ctx, language, bot):
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
             await ctx.guild.set_preferred_locale(language)
-            await ctx.send(f"{ctx.author} translated the bot to {language}")
+            await ctx.send(f"{ctx.user} translated the bot to {language}")
         except:
             await ctx.send("Sorry, I need to be able to manage guild to use this command", ephemeral=True)            
     else:
