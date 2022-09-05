@@ -377,11 +377,45 @@ async def delete(
 ):
     if sub_command_group == "single":
         if sub_command == "mine":
-            msgid = deletemine.split(":")[1]
+            cursor = getPossibleDeletes(ctx, "mine")
+            try:
+                msgid = deletemine.split(": ")[1]
+            except:
+                return await ctx.send("Please use one of the options ", ephemeral=True)
+            allowedDelete = False
+            for row in cursor:
+
+                if int(row[0]) == int(msgid):
+                    allowedDelete = True
+                    pass
+            if not allowedDelete:
+                return await ctx.send("Please use one of the options", ephemeral=True)
         if sub_command == "channel":
-            msgid = deletechannel.split(":")[1]
+            cursor = getPossibleDeletes(ctx, "channel")
+            try:
+                msgid = deletechannel.split(": ")[1]
+            except:
+                return await ctx.send("Please use one of the options ", ephemeral=True)
+            allowedDelete = False
+            for row in cursor:
+                if int(row[0]) == int(msgid):
+                    allowedDelete = True
+                    pass
+            if not allowedDelete:
+                return await ctx.send("Please use one of the options ", ephemeral=True)
         if sub_command == "guild":
-            msgid = deleteguild.split(":")[1]
+            cursor = getPossibleDeletes(ctx, "guild")
+            try:
+                msgid = deleteguild.split(": ")[1]
+            except:
+                return await ctx.send("Please use one of the options ", ephemeral=True)
+            allowedDelete = False
+            for row in cursor:
+                if int(row[0]) == int(msgid):
+                    allowedDelete = True
+                    pass
+            if not allowedDelete:
+                return await ctx.send("Please use one of the options ", ephemeral=True)
         check = conn.total_changes
         conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
         conn.commit()
@@ -389,7 +423,7 @@ async def delete(
         if check == conn.total_changes:
             await ctx.send("An error occurred ", ephemeral=True)
         else:
-            await ctx.send(f"Countdown{msgid} was deleted by {user}")
+            await ctx.send(f"Countdown {msgid} was deleted by {user}")
 
     else:
         if sub_command == "channel":
@@ -426,7 +460,7 @@ async def fillChoices(ctx, cursor, value):
     await ctx.populate(choices)
 
 
-async def autocompleteDelete(ctx, value, whattodelete):
+def getPossibleDeletes(ctx, whattodelete):
     if whattodelete == "mine":
         user = int(ctx.user.id)
         cursor = conn.execute(
@@ -452,6 +486,11 @@ async def autocompleteDelete(ctx, value, whattodelete):
                 "SELECT msgid FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
                 {"guildid": guildid},
             )
+    return cursor
+
+
+async def autocompleteDelete(ctx, value, whattodelete):
+    cursor = getPossibleDeletes(ctx, whattodelete)
     await fillChoices(ctx, cursor, value)
 
 
