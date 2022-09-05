@@ -25,9 +25,11 @@ To use this bot? Well, just get the code, install the required stuff, fill in th
 
 Well, github is being mean, so you need to create your own .env file. The content should be this:
 
-> \# .env
->
-> DISCORD_TOKEN=YourLongAndComplicatedToken
+```
+\# .env
+
+DISCORD_TOKEN=YourLongAndComplicatedToken
+```
 
 ## History
 
