@@ -16,6 +16,7 @@ For this bot to work, you need at least the following:
 - dateparser 1.1.1
 - psutil 5.9.1
 - validators 0.20.0
+- python-dotenv 0.20.0
 
 Sure.. I might have missed something, but thats the but thats the main stuff at least.
 
