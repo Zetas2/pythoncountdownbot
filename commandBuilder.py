@@ -31,7 +31,6 @@ from premiumUsers import premiumUsers
 from languageFile import translations
 
 
-
 # makes conn into the connected database.
 conn = sqlite3.connect("Countdowns.db")
 
@@ -45,30 +44,26 @@ async def checkPremium(ctx, feature):
     user = ctx.user.id
     if user in premiumUsers:
         return False
-    
-    #If the code havent returned yet, its not a premium user
-    await ctx.send(f"Sorry, you tried to use a premium only feature: {feature}", ephemeral=True)
+
+    # If the code havent returned yet, its not a premium user
+    await ctx.send(
+        f"Sorry, you tried to use a premium only feature: {feature}", ephemeral=True
+    )
     return True
 
-async def checkLink(ctx,imagelink):
+
+async def checkLink(ctx, imagelink):
     if validurl(imagelink):
         return False
 
-    #If the code havent returned yet, its not a valid link
+    # If the code havent returned yet, its not a valid link
     await ctx.send("You need to send a link to the image", ephemeral=True)
     return True
 
 
 # The function that adds in the countdowns in the database
 async def sendAndAddToDatabase(
-    timestamp,
-    ctx,
-    mention,
-    times,
-    length,
-    messagestart,
-    messageend,
-    imagelink
+    timestamp, ctx, mention, times, length, messagestart, messageend, imagelink
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
@@ -79,7 +74,7 @@ async def sendAndAddToDatabase(
     startedby = ctx.user.id
     # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
     if msg.id == None or msg.channel_id == None or guildid == None:
-        return True 
+        return True
 
     if mention != "0":
         roleid = mention.id
@@ -121,7 +116,7 @@ async def checkActiveAndMention(ctx, mention):
                 ephemeral=True,
             )
             return True
-        
+
     else:
         cursor = conn.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE guildid= :guildid;",
@@ -185,8 +180,7 @@ async def help(ctx):
                 (translations[(language)]["helpDeleteTitle"]),
                 (translations[(language)]["helpDeleteDesc"]),
             )
-    
-    
+
         # Only show Translate if the user got ADMINISTRATOR Permission
         if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
             embed.add_field(
@@ -211,15 +205,17 @@ async def help(ctx):
     await ctx.send(embeds=embed, ephemeral=True)
 
 
-async def countdown(ctx, timestring, messagestart, messageend, mention, times,imagelink):
-    
+async def countdown(
+    ctx, timestring, messagestart, messageend, mention, times, imagelink
+):
+
     if await checkActiveAndMention(ctx, mention):
         return
 
     if imagelink != "":
         if await checkPremium(ctx, "adding image"):
             return
-        if await checkLink(ctx,imagelink):
+        if await checkLink(ctx, imagelink):
             return
 
     if times != 0:
@@ -262,20 +258,21 @@ async def countdown(ctx, timestring, messagestart, messageend, mention, times,im
             )
 
 
-async def timer(ctx, day, week, hour, minute, messagestart, messageend, mention, times, imagelink):
+async def timer(
+    ctx, day, week, hour, minute, messagestart, messageend, mention, times, imagelink
+):
     if await checkActiveAndMention(ctx, mention):
         return
 
     if imagelink != "":
         if await checkPremium(ctx, "adding image"):
             return
-        if await checkLink(ctx,imagelink):
+        if await checkLink(ctx, imagelink):
             return
 
     if times != 0:
         if await checkPremium(ctx, "repeating timer"):
             return
-
 
     currenttime = floor(time.time())
     length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
@@ -352,8 +349,6 @@ async def list(ctx, sub_command, page):
 
     currentLine = 0
     goalLine = page * 5
-
-    
 
     # Loops through all active countowns in the correct place to pick out the ones that should be on specified page
     for row in cursor:
@@ -447,11 +442,11 @@ async def autocompleteDelete(ctx, value, whattodelete):
             {"channelid": channelid},
         )
     elif whattodelete == "guild":
-        
+
         if ctx.guild_id == None:
             cursor = conn.execute(
-            "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
-            {"channelid": channelid},
+                "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
+                {"channelid": channelid},
             )
         else:
             guildid = int(ctx.guild_id)
@@ -523,9 +518,14 @@ async def translate(ctx, language, bot):
             await ctx.guild.set_preferred_locale(language)
             await ctx.send(f"{ctx.user} translated the bot to {language}")
         except:
-            await ctx.send("Sorry, I need to be able to manage guild to use this command", ephemeral=True)            
+            await ctx.send(
+                "Sorry, I need to be able to manage guild to use this command",
+                ephemeral=True,
+            )
     else:
-        await ctx.send("Sorry, you need to be administrator to use this command", ephemeral=True)
+        await ctx.send(
+            "Sorry, you need to be administrator to use this command", ephemeral=True
+        )
 
 
 async def checkDone(bot):
@@ -549,8 +549,8 @@ async def checkDone(bot):
         msgid = int(row[1])
         timestamp = int(row[0])
         try:
-            channel = interactions.Channel(
-                **await bot._http.get_channel(channelid), _client=bot._http
+            channel = await interactions.get(
+                bot, interactions.Channel, object_id=channelid
             )
         except:
             conn.execute(
@@ -568,7 +568,6 @@ async def checkDone(bot):
         embed.title = translations[(language)]["done"]
 
         embed.description = f"{(translations[(language)]['created'])} <@!{startedby}>"
-
 
         if imagelink != "":
             embed.set_image(url=imagelink)
