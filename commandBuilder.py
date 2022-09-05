@@ -585,17 +585,10 @@ async def checkDone(bot):
         channelid = int(row[2])
         msgid = int(row[1])
         timestamp = int(row[0])
-        try:
-            channel = await interactions.get(
+        channel = await interactions.get(
                 bot, interactions.Channel, object_id=channelid
             )
-        except:
-            conn.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid;",
-                {"msgid": msgid, "channelid": channelid},
-            )
-            conn.commit()
-            return
+        
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild_id))
         language = "en-US"  # guild.preferred_locale
@@ -638,15 +631,26 @@ async def checkDone(bot):
         embed.add_field("Countdown", content)
         embed.color = int(("#%02x%02x%02x" % (0, 255, 0)).replace("#", "0x"), base=16)
 
-        if roleid != 0:
-            try:
-                await interactions.get(bot, interactions.User, object_id=roleid)
-                await channel.send(f"<@{roleid}>", embeds=embed)
-            except:
-                await channel.send(
-                    f"{'<@&' + str(roleid) + '>' if roleid != guildid else '@everyone'}",
-                    embeds=embed,
-                    allowed_mentions={"parse": ["roles", "everyone"]},
+        try:
+            if roleid != 0:
+                try:
+                    await interactions.get(bot, interactions.User, object_id=roleid)
+                    await channel.send(f"<@{roleid}>", embeds=embed)
+                except:
+                    await channel.send(
+                        f"{'<@&' + str(roleid) + '>' if roleid != guildid else '@everyone'}",
+                        embeds=embed,
+                        allowed_mentions={"parse": ["roles", "everyone"]},
+                    )
+            else:
+                await channel.send(embeds=embed)
+        except Exception as error:
+            if str(error)[19:33] == "Missing Access":
+                conn.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid;",
+                    {"msgid": msgid, "channelid": channelid},
                 )
-        else:
-            await channel.send(embeds=embed)
+                conn.commit()
+                return
+            else:
+                print(error)

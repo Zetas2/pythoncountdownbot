@@ -10,6 +10,9 @@ from interactions.ext.tasks import IntervalTrigger, create_task
 # This is where the commands are made
 import commandBuilder
 
+import logging
+logging.basicConfig(filename='log.txt', level=logging.WARNING, format='')
+
 
 # These two are used to have the token as a .env file.
 from os import getenv
