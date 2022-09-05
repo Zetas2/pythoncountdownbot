@@ -396,7 +396,7 @@ async def botstats(ctx: interactions.CommandContext):
     ],
 )
 async def translate(ctx: interactions.CommandContext, language):
-    await commandBuilder.translate(ctx, language, bot)
+    await commandBuilder.translate(ctx, language)
 
 
 # This is the task that keeps looking if any countdowns are done.

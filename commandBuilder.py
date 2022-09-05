@@ -567,6 +567,7 @@ async def botstats(ctx, bot):
     await ctx.defer(ephemeral=True)
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
+    disk = psutil.disk_usage('/').percent
     cursor = conn.execute("SELECT COUNT(*) FROM Countdowns;")
     for row in cursor:
         number = int(row[0])
@@ -579,13 +580,14 @@ async def botstats(ctx, bot):
     embed.description = "This is the current status of the bot"
     embed.add_field("CPU :fire:", f"{cpu}%")
     embed.add_field("RAM :floppy_disk:", f"{ram}%")
+    embed.add_field("Disk :minidisc:", f"{disk}%")
     embed.add_field("Active countdowns :clock1:", f"{number}")
     embed.add_field("Ping! :satellite:", f"{ping} ms")
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed)
 
 
-async def translate(ctx, language, bot):
+async def translate(ctx, language):
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
             await ctx.guild.set_preferred_locale(language)
