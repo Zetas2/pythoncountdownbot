@@ -262,6 +262,83 @@ async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
 
 
 @bot.command(
+    name="timeleft",
+    description="Shows the exact time left of a countdown",
+    options=[
+        interactions.Option(
+            name="mine",
+            description="Shows one of your countdowns",
+            type=interactions.OptionType.SUB_COMMAND,
+            options=[
+                interactions.Option(
+                    type=interactions.OptionType.STRING,
+                    name="showmine",
+                    description="Which of your countdowns do you want to be shown?",
+                    required=True,
+                    autocomplete=True,
+                )
+            ],
+        ),
+        interactions.Option(
+            name="channel",
+            description="Show one of this channels countdowns",
+            type=interactions.OptionType.SUB_COMMAND,
+            options=[
+                interactions.Option(
+                    type=interactions.OptionType.STRING,
+                    name="showchannel",
+                    description="Which of this channels countdowns do you want to be shown?",
+                    required=True,
+                    autocomplete=True,
+                )
+            ],
+        ),
+        interactions.Option(
+            name="guild",
+            description="Show one of this guilds countdowns",
+            type=interactions.OptionType.SUB_COMMAND,
+            options=[
+                interactions.Option(
+                    type=interactions.OptionType.STRING,
+                    name="showguild",
+                    description="Which of this guilds countdowns do you want to be shown?",
+                    required=True,
+                    autocomplete=True,
+                )
+            ],
+        ),
+    ],
+)
+async def timeleft(
+    ctx: interactions.CommandContext,
+    sub_command: str,
+    showmine: str = "",
+    showchannel: str = "",
+    showguild: str = "",
+):
+    await commandBuilder.timeleft(
+        ctx, sub_command, showmine, showchannel, showguild
+    )
+
+
+@bot.autocomplete("timeleft", "showmine")
+async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
+    await commandBuilder.autocompleteCountdowns(ctx, value, "mine")
+
+
+@bot.autocomplete("timeleft", "showchannel")
+async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
+    await commandBuilder.autocompleteCountdowns(ctx, value, "channel")
+
+
+@bot.autocomplete("timeleft", "showguild")
+async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
+    await commandBuilder.autocompleteCountdowns(ctx, value, "guild")
+
+
+
+
+@bot.command(
     name="delete",
     description="Deletes countdowns",
     options=[
@@ -341,17 +418,17 @@ async def delete(
 
 @bot.autocomplete("delete", "deletemine")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteDelete(ctx, value, "mine")
+    await commandBuilder.autocompleteCountdowns(ctx, value, "mine")
 
 
 @bot.autocomplete("delete", "deletechannel")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteDelete(ctx, value, "channel")
+    await commandBuilder.autocompleteCountdowns(ctx, value, "channel")
 
 
 @bot.autocomplete("delete", "deleteguild")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteDelete(ctx, value, "guild")
+    await commandBuilder.autocompleteCountdowns(ctx, value, "guild")
 
 
 # Here are the functions that runs when the verify/cancel buttons are pressed
