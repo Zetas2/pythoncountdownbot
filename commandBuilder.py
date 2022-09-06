@@ -68,23 +68,23 @@ async def sendAndAddToDatabase(
     timestring = ""
     if exact:
         meassurement = length
-        timestring = "Exact time from start: "
+        timestring = "Exact time from start:"
         if meassurement >= 604800:
             amount = meassurement // 604800
             meassurement = meassurement - amount * 604800
-            timestring = timestring + str(amount) + " week(s)"
+            timestring = timestring +" "+ str(amount) + " week(s)"
         if meassurement >= 86400:
             amount = meassurement // 86400
             meassurement = meassurement - amount * 86400
-            timestring = timestring + str(amount) + " day(s)"
+            timestring = timestring +" "+ str(amount) + " day(s)"
         if meassurement >= 3600:
             amount = meassurement // 3600
             meassurement = meassurement - amount * 3600
-            timestring = timestring + str(amount) + " hour(s)"
+            timestring = timestring +" "+ str(amount) + " hour(s)"
         if meassurement >= 60:
             amount = meassurement // 60
             meassurement = meassurement - amount * 60
-            timestring = timestring + str(amount) + " minute(s)"
+            timestring = timestring +" "+ str(amount) + " minute(s)"
     
     
     
@@ -200,15 +200,11 @@ async def help(ctx):
         (translations[(language)]["helpListTitle"]),
         (translations[(language)]["helpListDesc"]),
     )
-    # Only show Delete if the user got MANAGE_MESSAGES Permission
-    # The try is for handeling being used in dms
+    embed.add_field(
+        (translations[(language)]["helpDeleteTitle"]),
+        (translations[(language)]["helpDeleteDesc"]),
+    )
     try:
-        if ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
-            embed.add_field(
-                (translations[(language)]["helpDeleteTitle"]),
-                (translations[(language)]["helpDeleteDesc"]),
-            )
-
         # Only show Translate if the user got ADMINISTRATOR Permission
         if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
             embed.add_field(
@@ -411,69 +407,83 @@ async def list(ctx, sub_command, page):
 async def delete(
     ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
 ):
-    if sub_command_group == "single":
-        if sub_command == "mine":
-            cursor = getPossibleDeletes(ctx, "mine")
-            try:
-                msgid = deletemine.split(": ")[1]
-            except:
-                return await ctx.send("Please use one of the options ", ephemeral=True)
-            allowedDelete = False
-            for row in cursor:
 
-                if int(row[0]) == int(msgid):
-                    allowedDelete = True
-                    pass
-            if not allowedDelete:
-                return await ctx.send("Please use one of the options", ephemeral=True)
-        if sub_command == "channel":
-            cursor = getPossibleDeletes(ctx, "channel")
-            try:
-                msgid = deletechannel.split(": ")[1]
-            except:
-                return await ctx.send("Please use one of the options ", ephemeral=True)
-            allowedDelete = False
-            for row in cursor:
-                if int(row[0]) == int(msgid):
-                    allowedDelete = True
-                    pass
-            if not allowedDelete:
-                return await ctx.send("Please use one of the options ", ephemeral=True)
-        if sub_command == "guild":
-            cursor = getPossibleDeletes(ctx, "guild")
-            try:
-                msgid = deleteguild.split(": ")[1]
-            except:
-                return await ctx.send("Please use one of the options ", ephemeral=True)
-            allowedDelete = False
-            for row in cursor:
-                if int(row[0]) == int(msgid):
-                    allowedDelete = True
-                    pass
-            if not allowedDelete:
-                return await ctx.send("Please use one of the options ", ephemeral=True)
+    if sub_command == "mine":
+        cursor = getPossibleDeletes(ctx, "mine")
+        try:
+            msgid = deletemine.split(": ")[1]
+        except:
+            return await ctx.send("Please use one of the options ", ephemeral=True)
+        allowedDelete = False
+        for row in cursor:
+            if int(row[0]) == int(msgid):
+                allowedDelete = True
+                pass
+        if not allowedDelete:
+            return await ctx.send("Please use one of the options", ephemeral=True)
         check = conn.total_changes
         conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
         conn.commit()
-        user = ctx.user
         if check == conn.total_changes:
             await ctx.send("An error occurred ", ephemeral=True)
         else:
+            user = ctx.user
             await ctx.send(f"Countdown {msgid} was deleted by {user}")
+        
 
+    elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
+        if sub_command_group == "single":
+            if sub_command == "channel":
+                cursor = getPossibleDeletes(ctx, "channel")
+                try:
+                    msgid = deletechannel.split(": ")[1]
+                except:
+                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                allowedDelete = False
+                for row in cursor:
+                    if int(row[0]) == int(msgid):
+                        allowedDelete = True
+                        pass
+                if not allowedDelete:
+                    return await ctx.send("Please use one of the options ", ephemeral=True)
+            if sub_command == "guild":
+                cursor = getPossibleDeletes(ctx, "guild")
+                try:
+                    msgid = deleteguild.split(": ")[1]
+                except:
+                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                allowedDelete = False
+                for row in cursor:
+                    if int(row[0]) == int(msgid):
+                        allowedDelete = True
+                        pass
+                if not allowedDelete:
+                    return await ctx.send("Please use one of the options ", ephemeral=True)
+            check = conn.total_changes
+            conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+            conn.commit()
+            
+            if check == conn.total_changes:
+                await ctx.send("An error occurred ", ephemeral=True)
+            else:
+                user = ctx.user
+                await ctx.send(f"Countdown {msgid} was deleted by {user}")
+
+        else:
+            if sub_command == "channel":
+                await ctx.send(
+                    "Are you sure you want to delete all the countdowns in this channel?",
+                    components=[components.deleteChannel, components.deleteCancel],
+                    ephemeral=True,
+                )
+            elif sub_command == "guild":
+                await ctx.send(
+                    "Are you sure you want to delete all the countdowns in this guild?",
+                    components=[components.deleteGuild, components.deleteCancel],
+                    ephemeral=True,
+                )
     else:
-        if sub_command == "channel":
-            await ctx.send(
-                "Are you sure you want to delete all the countdowns in this channel?",
-                components=[components.deleteChannel, components.deleteCancel],
-                ephemeral=True,
-            )
-        elif sub_command == "guild":
-            await ctx.send(
-                "Are you sure you want to delete all the countdowns in this guild?",
-                components=[components.deleteGuild, components.deleteCancel],
-                ephemeral=True,
-            )
+        await ctx.send("Sorry, you need `MANAGE_MESSAGES` to use this", ephemeral=True, )
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.

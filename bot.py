@@ -264,7 +264,6 @@ async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
 @bot.command(
     name="delete",
     description="Deletes countdowns",
-    default_member_permissions=interactions.Permissions.MANAGE_MESSAGES,
     options=[
         interactions.Option(
             name="single",
