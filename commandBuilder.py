@@ -182,6 +182,7 @@ async def checkActiveAndMention(ctx, mention):
                 ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE
             ):
                 await ctx.send("You dont have permission to ping", ephemeral=True)
+                return True
 
             if mention != "0":
                 mention = mention.id
@@ -743,5 +744,3 @@ async def checkDone(bot):
                 )
                 conn.commit()
                 return
-            else:
-                print(error)
