@@ -86,15 +86,13 @@ async def sendAndAddToDatabase(
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
+
     if exact:
         timestring = "Exact time from start: "
         timestring = getExactTimestring(timestring, length)
     else:
         timestring = ""
-
-    msg = await ctx.send(
-        f"{messagestart} <t:{timestamp}:R> {messageend}\n*{timestring}*"
-    )
+    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}\n*{timestring}*")
     guildid = ctx.guild_id
     if guildid == None:
         guildid = 0
@@ -428,6 +426,7 @@ async def delete(
     ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
 ):
 
+
     if sub_command == "mine":
         cursor = getPossibleCountdowns(ctx, "mine")
         try:
@@ -441,12 +440,14 @@ async def delete(
                 pass
         if not allowedDelete:
             return await ctx.send("Please use one of the options", ephemeral=True)
+
         check = conn.total_changes
         conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
         conn.commit()
         if check == conn.total_changes:
             await ctx.send("An error occurred ", ephemeral=True)
         else:
+
             user = ctx.user
             await ctx.send(f"Countdown {msgid} was deleted by {user}")
 
@@ -538,8 +539,10 @@ async def fillChoices(ctx, cursor, value):
     await ctx.populate(choices)
 
 
+
 def getPossibleCountdowns(ctx, option):
     if option == "mine":
+
         user = int(ctx.user.id)
         cursor = conn.execute(
             "SELECT msgid FROM Countdowns WHERE startedby = :user ORDER BY timestamp ASC;",
@@ -567,8 +570,10 @@ def getPossibleCountdowns(ctx, option):
     return cursor
 
 
+
 async def autocompleteCountdowns(ctx, value, option):
     cursor = getPossibleCountdowns(ctx, option)
+
     await fillChoices(ctx, cursor, value)
 
 
@@ -765,4 +770,6 @@ async def checkDone(bot):
                     {"msgid": msgid, "channelid": channelid},
                 )
                 conn.commit()
+
                 return
+
