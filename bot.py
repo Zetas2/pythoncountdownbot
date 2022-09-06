@@ -11,7 +11,8 @@ from interactions.ext.tasks import IntervalTrigger, create_task
 import commandBuilder
 
 import logging
-logging.basicConfig(filename='log.txt', level=logging.WARNING, format='')
+
+logging.basicConfig(filename="log.txt", level=logging.WARNING, format="")
 
 
 # These two are used to have the token as a .env file.
@@ -96,7 +97,7 @@ async def help(ctx: interactions.CommandContext):
         ),
         interactions.Option(
             name="exact",
-            description="Set to false if you dont want exact date", 
+            description="Set to false if you dont want exact date",
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
@@ -110,7 +111,7 @@ async def countdown(
     mention="0",
     times=0,
     image="",
-    exact=True
+    exact=True,
 ):
     await commandBuilder.countdown(
         ctx, timestring, messagestart, messageend, mention, times, image, exact
@@ -185,7 +186,7 @@ async def countdown(
         ),
         interactions.Option(
             name="exact",
-            description="Set to false if you dont want exact date", 
+            description="Set to false if you dont want exact date",
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
@@ -202,11 +203,21 @@ async def timer(
     mention="0",
     times=0,
     image="",
-    exact=True
+    exact=True,
 ):
 
     await commandBuilder.timer(
-        ctx, day, week, hour, minute, messagestart, messageend, mention, times, image, exact
+        ctx,
+        day,
+        week,
+        hour,
+        minute,
+        messagestart,
+        messageend,
+        mention,
+        times,
+        image,
+        exact,
     )
 
 
@@ -316,9 +327,7 @@ async def timeleft(
     showchannel: str = "",
     showguild: str = "",
 ):
-    await commandBuilder.timeleft(
-        ctx, sub_command, showmine, showchannel, showguild
-    )
+    await commandBuilder.timeleft(ctx, sub_command, showmine, showchannel, showguild)
 
 
 @bot.autocomplete("timeleft", "showmine")
@@ -334,8 +343,6 @@ async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
 @bot.autocomplete("timeleft", "showguild")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
     await commandBuilder.autocompleteCountdowns(ctx, value, "guild")
-
-
 
 
 @bot.command(

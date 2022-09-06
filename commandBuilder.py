@@ -58,26 +58,26 @@ async def checkLink(ctx, imagelink):
     await ctx.send("You need to send a link to the image", ephemeral=True)
     return True
 
+
 def getExactTimestring(timestring, length):
     meassurement = length
     if meassurement >= 604800:
         amount = meassurement // 604800
         meassurement = meassurement - amount * 604800
-        timestring = timestring +" "+ str(amount) + " week(s)"
+        timestring = timestring + " " + str(amount) + " week(s)"
     if meassurement >= 86400:
         amount = meassurement // 86400
         meassurement = meassurement - amount * 86400
-        timestring = timestring +" "+ str(amount) + " day(s)"
+        timestring = timestring + " " + str(amount) + " day(s)"
     if meassurement >= 3600:
         amount = meassurement // 3600
         meassurement = meassurement - amount * 3600
-        timestring = timestring +" "+ str(amount) + " hour(s)"
+        timestring = timestring + " " + str(amount) + " hour(s)"
     if meassurement >= 60:
         amount = meassurement // 60
         meassurement = meassurement - amount * 60
-        timestring = timestring +" "+ str(amount) + " minute(s)"
+        timestring = timestring + " " + str(amount) + " minute(s)"
     return timestring
-    
 
 
 # The function that adds in the countdowns in the database
@@ -91,11 +91,10 @@ async def sendAndAddToDatabase(
         timestring = getExactTimestring(timestring, length)
     else:
         timestring = ""
-    
-    
-    
-    
-    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}\n*{timestring}*")
+
+    msg = await ctx.send(
+        f"{messagestart} <t:{timestamp}:R> {messageend}\n*{timestring}*"
+    )
     guildid = ctx.guild_id
     if guildid == None:
         guildid = 0
@@ -128,12 +127,16 @@ async def sendAndAddToDatabase(
     conn.commit()
     return False
 
+
 async def checkLength(ctx, length):
     if length < 60:
         if int(ctx.user.id) != 238006908664020993:
-            await ctx.send("Minimum length of a countdown is one minute", ephemeral=True)
+            await ctx.send(
+                "Minimum length of a countdown is one minute", ephemeral=True
+            )
             return True
     return False
+
 
 # Checks so that active countdowns isnt too many and that the user have permission to ping
 async def checkActiveAndMention(ctx, mention):
@@ -293,7 +296,17 @@ async def countdown(
 
 
 async def timer(
-    ctx, day, week, hour, minute, messagestart, messageend, mention, times, imagelink, exact
+    ctx,
+    day,
+    week,
+    hour,
+    minute,
+    messagestart,
+    messageend,
+    mention,
+    times,
+    imagelink,
+    exact,
 ):
     if await checkActiveAndMention(ctx, mention):
         return
@@ -323,7 +336,7 @@ async def timer(
         messagestart,
         messageend,
         imagelink,
-        exact
+        exact,
     )
     if writeerror:
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -436,7 +449,6 @@ async def delete(
         else:
             user = ctx.user
             await ctx.send(f"Countdown {msgid} was deleted by {user}")
-        
 
     elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
         if sub_command_group == "single":
@@ -445,31 +457,41 @@ async def delete(
                 try:
                     msgid = deletechannel.split(": ")[1]
                 except:
-                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                    return await ctx.send(
+                        "Please use one of the options ", ephemeral=True
+                    )
                 allowedDelete = False
                 for row in cursor:
                     if int(row[0]) == int(msgid):
                         allowedDelete = True
                         pass
                 if not allowedDelete:
-                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                    return await ctx.send(
+                        "Please use one of the options ", ephemeral=True
+                    )
             if sub_command == "guild":
                 cursor = getPossibleCountdowns(ctx, "guild")
                 try:
                     msgid = deleteguild.split(": ")[1]
                 except:
-                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                    return await ctx.send(
+                        "Please use one of the options ", ephemeral=True
+                    )
                 allowedDelete = False
                 for row in cursor:
                     if int(row[0]) == int(msgid):
                         allowedDelete = True
                         pass
                 if not allowedDelete:
-                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                    return await ctx.send(
+                        "Please use one of the options ", ephemeral=True
+                    )
             check = conn.total_changes
-            conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+            conn.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+            )
             conn.commit()
-            
+
             if check == conn.total_changes:
                 await ctx.send("An error occurred ", ephemeral=True)
             else:
@@ -490,7 +512,10 @@ async def delete(
                     ephemeral=True,
                 )
     else:
-        await ctx.send("Sorry, you need `MANAGE_MESSAGES` to use this", ephemeral=True, )
+        await ctx.send(
+            "Sorry, you need `MANAGE_MESSAGES` to use this",
+            ephemeral=True,
+        )
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
@@ -579,6 +604,7 @@ async def deletebutton(ctx, option):
         # Just edit away the buttons and say that contdowns are kept
         await ctx.edit("All countdowns are kept", components=[])
 
+
 async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
 
     if sub_command == "mine":
@@ -596,17 +622,18 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
             msgid = showguild.split(": ")[1]
         except:
             return await ctx.send("Please use one of the options ", ephemeral=True)
-    
-    
-    timestamp=0
 
-    cursor = conn.execute("SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+    timestamp = 0
+
+    cursor = conn.execute(
+        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+    )
     for row in cursor:
         timestamp = int(row[0])
 
     if timestamp == 0:
         return await ctx.send("Please use one of the options ", ephemeral=True)
-    
+
     currenttime = floor(time.time())
     length = timestamp - currenttime
 
@@ -615,13 +642,11 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
     await ctx.send(timestring, ephemeral=True)
 
 
-
-
 async def botstats(ctx, bot):
     await ctx.defer(ephemeral=True)
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
-    disk = psutil.disk_usage('/').percent
+    disk = psutil.disk_usage("/").percent
     cursor = conn.execute("SELECT COUNT(*) FROM Countdowns;")
     for row in cursor:
         number = int(row[0])
@@ -677,10 +702,7 @@ async def checkDone(bot):
         channelid = int(row[2])
         msgid = int(row[1])
         timestamp = int(row[0])
-        channel = await interactions.get(
-                bot, interactions.Channel, object_id=channelid
-            )
-        
+        channel = await interactions.get(bot, interactions.Channel, object_id=channelid)
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild_id))
         language = "en-US"  # guild.preferred_locale
