@@ -58,6 +58,27 @@ async def checkLink(ctx, imagelink):
     await ctx.send("You need to send a link to the image", ephemeral=True)
     return True
 
+def getExactTimestring(timestring, length):
+    meassurement = length
+    if meassurement >= 604800:
+        amount = meassurement // 604800
+        meassurement = meassurement - amount * 604800
+        timestring = timestring +" "+ str(amount) + " week(s)"
+    if meassurement >= 86400:
+        amount = meassurement // 86400
+        meassurement = meassurement - amount * 86400
+        timestring = timestring +" "+ str(amount) + " day(s)"
+    if meassurement >= 3600:
+        amount = meassurement // 3600
+        meassurement = meassurement - amount * 3600
+        timestring = timestring +" "+ str(amount) + " hour(s)"
+    if meassurement >= 60:
+        amount = meassurement // 60
+        meassurement = meassurement - amount * 60
+        timestring = timestring +" "+ str(amount) + " minute(s)"
+    return timestring
+    
+
 
 def getExactTimestring(timestring, length):
     meassurement = length
@@ -86,7 +107,7 @@ async def sendAndAddToDatabase(
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
-    timestring = ""
+
     if exact:
         if length > 3600:
             timestring = "*Exact time from start: "
@@ -94,6 +115,7 @@ async def sendAndAddToDatabase(
             timestring = timestring + "*"
 
     msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}\n{timestring}")
+
     guildid = ctx.guild_id
     if guildid == None:
         guildid = 0
@@ -458,6 +480,45 @@ async def delete(
 
             user = ctx.user
             await ctx.send(f"Countdown {msgid} was deleted by {user}")
+        
+
+    elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
+        if sub_command_group == "single":
+            if sub_command == "channel":
+                cursor = getPossibleCountdowns(ctx, "channel")
+                try:
+                    msgid = deletechannel.split(": ")[1]
+                except:
+                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                allowedDelete = False
+                for row in cursor:
+                    if int(row[0]) == int(msgid):
+                        allowedDelete = True
+                        pass
+                if not allowedDelete:
+                    return await ctx.send("Please use one of the options ", ephemeral=True)
+            if sub_command == "guild":
+                cursor = getPossibleCountdowns(ctx, "guild")
+                try:
+                    msgid = deleteguild.split(": ")[1]
+                except:
+                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                allowedDelete = False
+                for row in cursor:
+                    if int(row[0]) == int(msgid):
+                        allowedDelete = True
+                        pass
+                if not allowedDelete:
+                    return await ctx.send("Please use one of the options ", ephemeral=True)
+            check = conn.total_changes
+            conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+            conn.commit()
+            
+            if check == conn.total_changes:
+                await ctx.send("An error occurred ", ephemeral=True)
+            else:
+                user = ctx.user
+                await ctx.send(f"Countdown {msgid} was deleted by {user}")
 
     elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
         if sub_command_group == "single":
@@ -623,6 +684,43 @@ async def deletebutton(ctx, option):
     elif option == "cancel":
         # Just edit away the buttons and say that contdowns are kept
         await ctx.edit("All countdowns are kept", components=[])
+
+async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
+
+    if sub_command == "mine":
+        try:
+            msgid = showmine.split(": ")[1]
+        except:
+            return await ctx.send("Please use one of the options ", ephemeral=True)
+    elif sub_command == "channel":
+        try:
+            msgid = showchannel.split(": ")[1]
+        except:
+            return await ctx.send("Please use one of the options ", ephemeral=True)
+    elif sub_command == "guild":
+        try:
+            msgid = showguild.split(": ")[1]
+        except:
+            return await ctx.send("Please use one of the options ", ephemeral=True)
+    
+    
+    timestamp=0
+
+    cursor = conn.execute("SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+    for row in cursor:
+        timestamp = int(row[0])
+
+    if timestamp == 0:
+        return await ctx.send("Please use one of the options ", ephemeral=True)
+    
+    currenttime = floor(time.time())
+    length = timestamp - currenttime
+
+    timestring = "Exact time left: "
+    timestring = getExactTimestring(timestring, length)
+    await ctx.send(timestring, ephemeral=True)
+
+
 
 
 async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
@@ -790,5 +888,4 @@ async def checkDone(bot):
                     {"msgid": msgid, "channelid": channelid},
                 )
                 conn.commit()
-
                 return
