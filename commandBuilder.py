@@ -732,6 +732,8 @@ async def checkDone(bot):
 
         embed.description = f"{(translations[(language)]['created'])} <@!{startedby}>"
 
+        embed.add_field("Original message", f"[{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message')")
+
         if imagelink != "":
             embed.set_image(url=imagelink)
 
