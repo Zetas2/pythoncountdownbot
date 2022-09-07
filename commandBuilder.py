@@ -110,11 +110,13 @@ async def sendAndAddToDatabase(
 
     if exact:
         if length > 3600:
-            timestring = "*Exact time from start: "
+            timestring = "\n*Exact time from start: "
             timestring = getExactTimestring(timestring, length)
             timestring = timestring + "*"
+        else:
+            timestring = ""
 
-    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}\n{timestring}")
+    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
 
     guildid = ctx.guild_id
     if guildid == None:
