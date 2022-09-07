@@ -115,9 +115,8 @@ async def sendAndAddToDatabase(
             timestring = getExactTimestring(timestring, length)
             timestring = timestring + "*"
 
-            
-
     msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
+
 
     guildid = ctx.guild_id
     if guildid == None:
