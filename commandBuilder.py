@@ -196,7 +196,7 @@ async def help(ctx):
     language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to
     embed = interactions.Embed()
     embed.title = translations[(language)]["helpTitle"]
-    embed.description = translations[(language)]["helpDesc"]
+    embed.description = (translations[(language)]["helpHover"])+"\n"+translations[(language)]["helpDesc"]
     embed.add_field(
         (translations[(language)]["helpTitle"]),
         (translations[(language)]["helpHelpDesc"]),
@@ -204,6 +204,10 @@ async def help(ctx):
     embed.add_field(
         (translations[(language)]["helpCountdownTitle"]),
         (translations[(language)]["helpCountdownDesc"]),
+    )
+    embed.add_field(
+        (translations[(language)]["helpLeftTitle"]),
+        (translations[(language)]["helpLeftDesc"]),
     )
     embed.add_field(
         (translations[(language)]["helpListTitle"]),
