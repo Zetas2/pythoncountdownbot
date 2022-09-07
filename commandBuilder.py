@@ -547,12 +547,20 @@ async def fillChoices(ctx, cursor, value):
 
 def getPossibleCountdowns(ctx, option):
     if option == "mine":
-
         user = int(ctx.user.id)
-        cursor = conn.execute(
-            "SELECT msgid FROM Countdowns WHERE startedby = :user ORDER BY timestamp ASC;",
-            {"user": user},
-        )
+        if ctx.guild_id == None:
+            channelid = int(ctx.channel_id)
+            cursor = conn.execute(
+                "SELECT msgid FROM Countdowns WHERE startedby = :user AND channelid = :channelid ORDER BY timestamp ASC;",
+                {"user": user, "channelid": channelid},
+            )
+        else:
+            guildid = int(ctx.guild_id)
+            cursor = conn.execute(
+                "SELECT msgid FROM Countdowns WHERE startedby = :user AND guildid = :guildid ORDER BY timestamp ASC;",
+                {"user": user, "guildid": guildid},
+            )
+
     elif option == "channel":
         channelid = int(ctx.channel_id)
         cursor = conn.execute(
@@ -562,6 +570,7 @@ def getPossibleCountdowns(ctx, option):
     elif option == "guild":
 
         if ctx.guild_id == None:
+            channelid = int(ctx.channel_id)
             cursor = conn.execute(
                 "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
                 {"channelid": channelid},
