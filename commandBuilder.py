@@ -196,7 +196,11 @@ async def help(ctx):
     language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to
     embed = interactions.Embed()
     embed.title = translations[(language)]["helpTitle"]
-    embed.description = (translations[(language)]["helpHover"])+"\n"+translations[(language)]["helpDesc"]
+    embed.description = (
+        (translations[(language)]["helpHover"])
+        + "\n"
+        + translations[(language)]["helpDesc"]
+    )
     embed.add_field(
         (translations[(language)]["helpTitle"]),
         (translations[(language)]["helpHelpDesc"]),
@@ -431,7 +435,6 @@ async def delete(
     ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
 ):
 
-
     if sub_command == "mine":
         cursor = getPossibleCountdowns(ctx, "mine")
         try:
@@ -544,7 +547,6 @@ async def fillChoices(ctx, cursor, value):
     await ctx.populate(choices)
 
 
-
 def getPossibleCountdowns(ctx, option):
     if option == "mine":
         user = int(ctx.user.id)
@@ -582,7 +584,6 @@ def getPossibleCountdowns(ctx, option):
                 {"guildid": guildid},
             )
     return cursor
-
 
 
 async def autocompleteCountdowns(ctx, value, option):
@@ -732,7 +733,10 @@ async def checkDone(bot):
 
         embed.description = f"{(translations[(language)]['created'])} <@!{startedby}>"
 
-        embed.add_field("Original message", f"[{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message')")
+        embed.add_field(
+            "Original message",
+            f"[{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message')",
+        )
 
         if imagelink != "":
             embed.set_image(url=imagelink)
@@ -788,4 +792,3 @@ async def checkDone(bot):
                 conn.commit()
 
                 return
-
