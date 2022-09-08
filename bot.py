@@ -101,6 +101,12 @@ async def help(ctx: interactions.CommandContext):
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        interactions.Option(
+            name="alert",
+            description="Set to false if you dont want to be alerted at completion",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
 async def countdown(
@@ -112,9 +118,10 @@ async def countdown(
     times=0,
     image="",
     exact=True,
+    alert=True,
 ):
     await commandBuilder.countdown(
-        ctx, timestring, messagestart, messageend, mention, times, image, exact
+        ctx, timestring, messagestart, messageend, mention, times, image, exact, alert
     )
 
 
@@ -190,6 +197,12 @@ async def countdown(
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        interactions.Option(
+            name="alert",
+            description="Set to false if you dont want to be alerted at completion",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
 async def timer(
@@ -204,6 +217,7 @@ async def timer(
     times=0,
     image="",
     exact=True,
+    alert=True,
 ):
 
     await commandBuilder.timer(
@@ -218,6 +232,7 @@ async def timer(
         times,
         image,
         exact,
+        alert,
     )
 
 
@@ -329,7 +344,6 @@ async def timeleft(
 ):
 
     await commandBuilder.timeleft(ctx, sub_command, showmine, showchannel, showguild)
-
 
 
 @bot.autocomplete("timeleft", "showmine")
@@ -454,6 +468,7 @@ async def button_response(ctx):
 @bot.component("deletechannel")
 async def button_response(ctx):
     await commandBuilder.deletebutton(ctx, "channel")
+
 
 @bot.component("deletemine")
 async def button_response(ctx):

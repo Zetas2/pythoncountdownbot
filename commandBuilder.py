@@ -58,26 +58,26 @@ async def checkLink(ctx, imagelink):
     await ctx.send("You need to send a link to the image", ephemeral=True)
     return True
 
+
 def getExactTimestring(timestring, length):
     meassurement = length
     if meassurement >= 604800:
         amount = meassurement // 604800
         meassurement = meassurement - amount * 604800
-        timestring = timestring +" "+ str(amount) + " week(s)"
+        timestring = timestring + " " + str(amount) + " week(s)"
     if meassurement >= 86400:
         amount = meassurement // 86400
         meassurement = meassurement - amount * 86400
-        timestring = timestring +" "+ str(amount) + " day(s)"
+        timestring = timestring + " " + str(amount) + " day(s)"
     if meassurement >= 3600:
         amount = meassurement // 3600
         meassurement = meassurement - amount * 3600
-        timestring = timestring +" "+ str(amount) + " hour(s)"
+        timestring = timestring + " " + str(amount) + " hour(s)"
     if meassurement >= 60:
         amount = meassurement // 60
         meassurement = meassurement - amount * 60
-        timestring = timestring +" "+ str(amount) + " minute(s)"
+        timestring = timestring + " " + str(amount) + " minute(s)"
     return timestring
-    
 
 
 def getExactTimestring(timestring, length):
@@ -103,7 +103,16 @@ def getExactTimestring(timestring, length):
 
 # The function that adds in the countdowns in the database
 async def sendAndAddToDatabase(
-    timestamp, ctx, mention, times, length, messagestart, messageend, imagelink, exact
+    timestamp,
+    ctx,
+    mention,
+    times,
+    length,
+    messagestart,
+    messageend,
+    imagelink,
+    exact,
+    alert,
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
@@ -117,37 +126,37 @@ async def sendAndAddToDatabase(
 
     msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
 
+    if alert:
+        guildid = ctx.guild_id
+        if guildid == None:
+            guildid = 0
+        startedby = ctx.user.id
+        # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
+        if msg.id == None or msg.channel_id == None or guildid == None:
+            return True
 
-    guildid = ctx.guild_id
-    if guildid == None:
-        guildid = 0
-    startedby = ctx.user.id
-    # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
-    if msg.id == None or msg.channel_id == None or guildid == None:
-        return True
+        if mention != "0":
+            roleid = mention.id
+        else:
+            roleid = 0
 
-    if mention != "0":
-        roleid = mention.id
-    else:
-        roleid = 0
-
-    conn.execute(
-        "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
-        {
-            "timestamp": int(timestamp),
-            "msgid": int(msg.id),
-            "channelid": int(msg.channel_id),
-            "guildid": int(guildid),
-            "mention": int(roleid),
-            "startedby": int(startedby),
-            "times": int(times),
-            "length": int(length),
-            "imagelink": str(imagelink),
-            "messagestart": str(messagestart),
-            "messageend": str(messageend),
-        },
-    )
-    conn.commit()
+        conn.execute(
+            "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
+            {
+                "timestamp": int(timestamp),
+                "msgid": int(msg.id),
+                "channelid": int(msg.channel_id),
+                "guildid": int(guildid),
+                "mention": int(roleid),
+                "startedby": int(startedby),
+                "times": int(times),
+                "length": int(length),
+                "imagelink": str(imagelink),
+                "messagestart": str(messagestart),
+                "messageend": str(messageend),
+            },
+        )
+        conn.commit()
     return False
 
 
@@ -271,7 +280,7 @@ async def help(ctx):
 
 
 async def countdown(
-    ctx, timestring, messagestart, messageend, mention, times, imagelink, exact
+    ctx, timestring, messagestart, messageend, mention, times, imagelink, exact, alert
 ):
 
     if await checkActiveAndMention(ctx, mention):
@@ -316,6 +325,7 @@ async def countdown(
                 messageend,
                 imagelink,
                 exact,
+                alert,
             )
             if writeerror:
                 await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -338,6 +348,7 @@ async def timer(
     times,
     imagelink,
     exact,
+    alert,
 ):
     if await checkActiveAndMention(ctx, mention):
         return
@@ -368,6 +379,7 @@ async def timer(
         messageend,
         imagelink,
         exact,
+        alert,
     )
     if writeerror:
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -474,10 +486,15 @@ async def delete(
                 return await ctx.send("Please use one of the options", ephemeral=True)
 
             check = conn.total_changes
-            conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+            conn.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+            )
             conn.commit()
             if check == conn.total_changes:
-                await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
+                await ctx.send(
+                    "An error occurred (could be that there is none to delete)",
+                    ephemeral=True,
+                )
             else:
 
                 user = ctx.user
@@ -488,8 +505,6 @@ async def delete(
                 components=[components.deleteMine, components.deleteCancel],
                 ephemeral=True,
             )
-    
-        
 
     elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
         if sub_command_group == "single":
@@ -498,33 +513,46 @@ async def delete(
                 try:
                     msgid = deletechannel.split(": ")[1]
                 except:
-                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                    return await ctx.send(
+                        "Please use one of the options ", ephemeral=True
+                    )
                 allowedDelete = False
                 for row in cursor:
                     if int(row[0]) == int(msgid):
                         allowedDelete = True
                         pass
                 if not allowedDelete:
-                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                    return await ctx.send(
+                        "Please use one of the options ", ephemeral=True
+                    )
             if sub_command == "guild":
                 cursor = getPossibleCountdowns(ctx, "guild")
                 try:
                     msgid = deleteguild.split(": ")[1]
                 except:
-                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                    return await ctx.send(
+                        "Please use one of the options ", ephemeral=True
+                    )
                 allowedDelete = False
                 for row in cursor:
                     if int(row[0]) == int(msgid):
                         allowedDelete = True
                         pass
                 if not allowedDelete:
-                    return await ctx.send("Please use one of the options ", ephemeral=True)
+                    return await ctx.send(
+                        "Please use one of the options ", ephemeral=True
+                    )
             check = conn.total_changes
-            conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+            conn.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+            )
             conn.commit()
-            
+
             if check == conn.total_changes:
-                await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
+                await ctx.send(
+                    "An error occurred (could be that there is none to delete)",
+                    ephemeral=True,
+                )
             else:
                 user = ctx.user
                 await ctx.send(f"Countdown {msgid} was deleted by {user}")
@@ -542,7 +570,7 @@ async def delete(
                     components=[components.deleteGuild, components.deleteCancel],
                     ephemeral=True,
                 )
-            
+
     else:
         await ctx.send(
             "Sorry, you need `MANAGE_MESSAGES` to use this, unless you want to delete your own",
@@ -627,7 +655,10 @@ async def deletebutton(ctx, option):
         conn.commit()
         user = ctx.user
         if check == conn.total_changes:
-            await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
+            await ctx.send(
+                "An error occurred (could be that there is none to delete)",
+                ephemeral=True,
+            )
         else:
             await ctx.send(f"Servers Countdown(s) Deleted by {user}")
     elif option == "channel":
@@ -639,7 +670,10 @@ async def deletebutton(ctx, option):
         )
         conn.commit()
         if check == conn.total_changes:
-            await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
+            await ctx.send(
+                "An error occurred (could be that there is none to delete)",
+                ephemeral=True,
+            )
         else:
             user = ctx.user
             await ctx.send(f"Channels Countdown(s) Deleted by {user}")
@@ -650,17 +684,22 @@ async def deletebutton(ctx, option):
         userid = int(ctx.user.id)
         check = conn.total_changes
         conn.execute(
-            "DELETE from Countdowns WHERE guildid = :guildid AND startedby = :userid; ", {"guildid": guildid, "userid": userid}
+            "DELETE from Countdowns WHERE guildid = :guildid AND startedby = :userid; ",
+            {"guildid": guildid, "userid": userid},
         )
         conn.commit()
         user = ctx.user
         if check == conn.total_changes:
-            await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
+            await ctx.send(
+                "An error occurred (could be that there is none to delete)",
+                ephemeral=True,
+            )
         else:
             await ctx.send(f"All {user} Countdown(s) Deleted")
     elif option == "cancel":
         # Just edit away the buttons and say that contdowns are kept
         await ctx.edit("All countdowns are kept", components=[])
+
 
 async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
 
@@ -679,25 +718,24 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
             msgid = showguild.split(": ")[1]
         except:
             return await ctx.send("Please use one of the options ", ephemeral=True)
-    
-    
-    timestamp=0
 
-    cursor = conn.execute("SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+    timestamp = 0
+
+    cursor = conn.execute(
+        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+    )
     for row in cursor:
         timestamp = int(row[0])
 
     if timestamp == 0:
         return await ctx.send("Please use one of the options ", ephemeral=True)
-    
+
     currenttime = floor(time.time())
     length = timestamp - currenttime
 
     timestring = "Exact time left: "
     timestring = getExactTimestring(timestring, length)
     await ctx.send(timestring, ephemeral=True)
-
-
 
 
 async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
