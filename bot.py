@@ -41,7 +41,6 @@ async def on_start():
     )
 
 
-# This looks way different compared to other commands since its prepped for translation..
 @bot.command(
     name="help",
     description="Shows a help message",
@@ -101,6 +100,12 @@ async def help(ctx: interactions.CommandContext):
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        interactions.Option(
+            name="alert",
+            description="Set to false if you dont want to be alerted at completion",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
 async def countdown(
@@ -112,9 +117,10 @@ async def countdown(
     times=0,
     image="",
     exact=True,
+    alert=True,
 ):
     await commandBuilder.countdown(
-        ctx, timestring, messagestart, messageend, mention, times, image, exact
+        ctx, timestring, messagestart, messageend, mention, times, image, exact, alert
     )
 
 
@@ -190,6 +196,12 @@ async def countdown(
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        interactions.Option(
+            name="alert",
+            description="Set to false if you dont want to be alerted at completion",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
 async def timer(
@@ -204,6 +216,7 @@ async def timer(
     times=0,
     image="",
     exact=True,
+    alert=True,
 ):
 
     await commandBuilder.timer(
@@ -218,6 +231,7 @@ async def timer(
         times,
         image,
         exact,
+        alert,
     )
 
 
@@ -331,7 +345,6 @@ async def timeleft(
     await commandBuilder.timeleft(ctx, sub_command, showmine, showchannel, showguild)
 
 
-
 @bot.autocomplete("timeleft", "showmine")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
     await commandBuilder.autocompleteCountdowns(ctx, value, "mine")
@@ -401,6 +414,11 @@ async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
             ],
         ),
         interactions.Option(
+            name="mine",
+            description="Delete all your countdowns in this guild",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+        interactions.Option(
             name="channel",
             description="Delete all countdowns in this channel",
             type=interactions.OptionType.SUB_COMMAND,
@@ -451,6 +469,11 @@ async def button_response(ctx):
     await commandBuilder.deletebutton(ctx, "channel")
 
 
+@bot.component("deletemine")
+async def button_response(ctx):
+    await commandBuilder.deletebutton(ctx, "mine")
+
+
 @bot.component("deletecancel")
 async def button_response(ctx):
     await commandBuilder.deletebutton(ctx, "cancel")
@@ -482,6 +505,30 @@ async def botstats(ctx: interactions.CommandContext):
 )
 async def translate(ctx: interactions.CommandContext, language):
     await commandBuilder.translate(ctx, language)
+
+
+#a dev program
+@bot.command(
+    name="log",
+    description="Show the log",
+    scope=1010636307216728094,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+)
+async def log(ctx: interactions.CommandContext):
+    await commandBuilder.log(ctx)
+
+
+
+
+
+# Here are message commands - commands that are activated by a message
+@bot.command(
+    name="deletethis",
+    description="Delete this countdown",
+    type=interactions.ApplicationCommandType.MESSAGE,
+)
+async def deletethis(ctx: interactions.CommandContext):
+    await commandBuilder.deleteThis(ctx)
 
 
 # This is the task that keeps looking if any countdowns are done.
