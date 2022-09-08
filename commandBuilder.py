@@ -613,7 +613,6 @@ async def deleteThis(ctx):
         else:
             user = ctx.user
             return await ctx.send(f"Countdown {msgid} was deleted by {user}")
-    
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
@@ -822,8 +821,7 @@ async def botstats(ctx, bot):
     for row in cursor:
         number = int(row[0])
 
-
-    with open("log.txt", 'r') as file:
+    with open("log.txt", "r") as file:
         for count, line in enumerate(file):
             pass
         logsize = count + 1
@@ -959,8 +957,21 @@ async def checkDone(bot):
         except Exception as error:
             if str(error)[19:33] == "Missing Access":
                 conn.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid;",
-                    {"msgid": msgid, "channelid": channelid},
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msgid},
+                )
+                conn.commit()
+                return
+            else:
+                reportchannel = await interactions.get(
+                    bot, interactions.Channel, object_id=1017484839131283566
+                )
+                await reportchannel.send(
+                    f"Time: {timestamp}\nmsg: {msgid}\nchannel: {channelid}\nguild: {guildid}\nrole: {roleid}\nstartedby: {startedby}\ntimes: {times}\nlength: {length}\nimage: {imagelink}\nstart: {messagestart}\nEnd: {messageend}\n\n Error: {error}"
+                )
+                conn.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msgid},
                 )
                 conn.commit()
                 return
