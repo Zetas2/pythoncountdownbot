@@ -846,7 +846,23 @@ async def translate(ctx, language):
         )
 
 
+async def log(ctx):
+    if int(ctx.user.id) == 238006908664020993:
+        logs = ""
 
+        with open("log.txt") as file:
+
+            # loop to read iterate
+            # last n lines and print it
+            for line in file.readlines()[-10:]:
+                logs = logs + line
+
+        await ctx.send(f"Logs are:\n```{logs}```", ephemeral=True)
+
+    else:
+        await ctx.send(
+            "Sorry, you need to be the dev to use this command", ephemeral=True
+        )
 
 
 async def checkDone(bot):

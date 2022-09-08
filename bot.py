@@ -507,6 +507,20 @@ async def translate(ctx: interactions.CommandContext, language):
     await commandBuilder.translate(ctx, language)
 
 
+#a dev program
+@bot.command(
+    name="log",
+    description="Show the log",
+    scope=1010636307216728094,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+)
+async def log(ctx: interactions.CommandContext):
+    await commandBuilder.log(ctx)
+
+
+
+
+
 # Here are message commands - commands that are activated by a message
 @bot.command(
     name="deletethis",
