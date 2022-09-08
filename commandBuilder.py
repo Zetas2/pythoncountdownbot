@@ -815,6 +815,12 @@ async def botstats(ctx, bot):
     for row in cursor:
         number = int(row[0])
 
+
+    with open("log.txt", 'r') as file:
+        for count, line in enumerate(file):
+            pass
+        logsize = count + 1
+
     # Check this when activating shards
     ping = round(bot.latency)
 
@@ -826,6 +832,7 @@ async def botstats(ctx, bot):
     embed.add_field("Disk :minidisc:", f"{disk}%")
     embed.add_field("Active countdowns :clock1:", f"{number}")
     embed.add_field("Ping! :satellite:", f"{ping} ms")
+    embed.add_field("Log size :scroll:", f"{logsize} rows")
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed)
 
@@ -849,11 +856,7 @@ async def translate(ctx, language):
 async def log(ctx):
     if int(ctx.user.id) == 238006908664020993:
         logs = ""
-
-        with open("log.txt") as file:
-
-            # loop to read iterate
-            # last n lines and print it
+        with open("log.txt", "r") as file:
             for line in file.readlines()[-10:]:
                 logs = logs + line
 
