@@ -589,7 +589,7 @@ async def deleteThis(ctx):
         startedby = int(row[0])
     if (
         startedby != userid
-        and ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES
+        and not ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES
     ):
         return await ctx.send(
             "Sorry, you need `MANAGE_MESSAGES` to use this, unless you want to delete your own",
@@ -844,6 +844,9 @@ async def translate(ctx, language):
         await ctx.send(
             "Sorry, you need to be administrator to use this command", ephemeral=True
         )
+
+
+
 
 
 async def checkDone(bot):
