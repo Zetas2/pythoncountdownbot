@@ -421,16 +421,16 @@ async def list(ctx, sub_command, page):
         )
     elif sub_command == "mine":
         place = "from you"
-        user = int(ctx.user.id)
+        userid = int(ctx.user.id)
         cursor = conn.execute(
-            "SELECT COUNT (*) FROM Countdowns WHERE guildid = :guildid AND startedby = :user;",
-            {"guildid": guildid, "user": user},
+            "SELECT COUNT (*) FROM Countdowns WHERE guildid = :guildid AND startedby = :userid;",
+            {"guildid": guildid, "userid": userid},
         )
         for row in cursor:
             numberofcountdown = int(row[0])
         cursor = conn.execute(
-            "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid AND startedby = :user ORDER BY timestamp ASC;",
-            {"guildid": guildid, "user": user},
+            "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid AND startedby = :userid ORDER BY timestamp ASC;",
+            {"guildid": guildid, "userid": userid},
         )
     maxpage = ceil(numberofcountdown / 5)
     if maxpage < page:
@@ -578,6 +578,37 @@ async def delete(
         )
 
 
+async def deleteThis(ctx):
+    msgid = int(ctx.target.id)
+    userid = int(ctx.user.id)
+    cursor = conn.execute(
+        "SELECT startedby,msgid FROM Countdowns WHERE msgid = :msgid;",
+        {"msgid": msgid},
+    )
+    for row in cursor:
+        startedby = int(row[0])
+    if (
+        startedby != userid
+        and ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES
+    ):
+        return await ctx.send(
+            "Sorry, you need `MANAGE_MESSAGES` to use this, unless you want to delete your own",
+            ephemeral=True,
+        )
+    else:
+        check = conn.total_changes
+        conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+        conn.commit()
+        if check == conn.total_changes:
+            await ctx.send(
+                "An error occurred (could be that there is none to delete)",
+                ephemeral=True,
+            )
+        else:
+            user = ctx.user
+            await ctx.send(f"Countdown {msgid} was deleted by {user}")
+
+
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
 async def fillChoices(ctx, cursor, value):
     countdowns = []
@@ -600,18 +631,18 @@ async def fillChoices(ctx, cursor, value):
 
 def getPossibleCountdowns(ctx, option):
     if option == "mine":
-        user = int(ctx.user.id)
+        userid = int(ctx.user.id)
         if ctx.guild_id == None:
             channelid = int(ctx.channel_id)
             cursor = conn.execute(
-                "SELECT msgid FROM Countdowns WHERE startedby = :user AND channelid = :channelid ORDER BY timestamp ASC;",
-                {"user": user, "channelid": channelid},
+                "SELECT msgid FROM Countdowns WHERE startedby = :userid AND channelid = :channelid ORDER BY timestamp ASC;",
+                {"userid": userid, "channelid": channelid},
             )
         else:
             guildid = int(ctx.guild_id)
             cursor = conn.execute(
-                "SELECT msgid FROM Countdowns WHERE startedby = :user AND guildid = :guildid ORDER BY timestamp ASC;",
-                {"user": user, "guildid": guildid},
+                "SELECT msgid FROM Countdowns WHERE startedby = :userid AND guildid = :guildid ORDER BY timestamp ASC;",
+                {"userid": userid, "guildid": guildid},
             )
 
     elif option == "channel":

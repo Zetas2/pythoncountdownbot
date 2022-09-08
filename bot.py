@@ -41,7 +41,6 @@ async def on_start():
     )
 
 
-# This looks way different compared to other commands since its prepped for translation..
 @bot.command(
     name="help",
     description="Shows a help message",
@@ -506,6 +505,16 @@ async def botstats(ctx: interactions.CommandContext):
 )
 async def translate(ctx: interactions.CommandContext, language):
     await commandBuilder.translate(ctx, language)
+
+
+# Here are message commands - commands that are activated by a message
+@bot.command(
+    name="deletethis",
+    description="Delete this countdown",
+    type=interactions.ApplicationCommandType.MESSAGE,
+)
+async def deletethis(ctx: interactions.CommandContext):
+    await commandBuilder.deleteThis(ctx)
 
 
 # This is the task that keeps looking if any countdowns are done.
