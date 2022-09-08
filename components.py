@@ -13,6 +13,12 @@ deleteChannel = interactions.Button(
     custom_id="deletechannel",
 )
 
+deleteMine = interactions.Button(
+    style=interactions.ButtonStyle.DANGER,
+    label="Delete",
+    custom_id="deletemine",
+)
+
 deleteCancel = interactions.Button(
     style=interactions.ButtonStyle.PRIMARY,
     label="Keep countdowns",

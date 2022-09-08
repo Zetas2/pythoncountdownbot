@@ -401,6 +401,11 @@ async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
             ],
         ),
         interactions.Option(
+            name="mine",
+            description="Delete all your countdowns in this guild",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+        interactions.Option(
             name="channel",
             description="Delete all countdowns in this channel",
             type=interactions.OptionType.SUB_COMMAND,
@@ -449,6 +454,10 @@ async def button_response(ctx):
 @bot.component("deletechannel")
 async def button_response(ctx):
     await commandBuilder.deletebutton(ctx, "channel")
+
+@bot.component("deletemine")
+async def button_response(ctx):
+    await commandBuilder.deletebutton(ctx, "mine")
 
 
 @bot.component("deletecancel")

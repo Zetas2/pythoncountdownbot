@@ -459,28 +459,36 @@ async def delete(
     ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
 ):
     if sub_command == "mine":
-        cursor = getPossibleCountdowns(ctx, "mine")
-        try:
-            msgid = deletemine.split(": ")[1]
-        except:
-            return await ctx.send("Please use one of the options ", ephemeral=True)
-        allowedDelete = False
-        for row in cursor:
-            if int(row[0]) == int(msgid):
-                allowedDelete = True
-                pass
-        if not allowedDelete:
-            return await ctx.send("Please use one of the options", ephemeral=True)
+        if sub_command_group == "single":
+            cursor = getPossibleCountdowns(ctx, "mine")
+            try:
+                msgid = deletemine.split(": ")[1]
+            except:
+                return await ctx.send("Please use one of the options ", ephemeral=True)
+            allowedDelete = False
+            for row in cursor:
+                if int(row[0]) == int(msgid):
+                    allowedDelete = True
+                    pass
+            if not allowedDelete:
+                return await ctx.send("Please use one of the options", ephemeral=True)
 
-        check = conn.total_changes
-        conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
-        conn.commit()
-        if check == conn.total_changes:
-            await ctx.send("An error occurred ", ephemeral=True)
+            check = conn.total_changes
+            conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+            conn.commit()
+            if check == conn.total_changes:
+                await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
+            else:
+
+                user = ctx.user
+                await ctx.send(f"Countdown {msgid} was deleted by {user}")
         else:
-
-            user = ctx.user
-            await ctx.send(f"Countdown {msgid} was deleted by {user}")
+            await ctx.send(
+                "Are you sure you want to delete all your countdowns in this guild?",
+                components=[components.deleteMine, components.deleteCancel],
+                ephemeral=True,
+            )
+    
         
 
     elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
@@ -516,7 +524,7 @@ async def delete(
             conn.commit()
             
             if check == conn.total_changes:
-                await ctx.send("An error occurred ", ephemeral=True)
+                await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
             else:
                 user = ctx.user
                 await ctx.send(f"Countdown {msgid} was deleted by {user}")
@@ -534,6 +542,7 @@ async def delete(
                     components=[components.deleteGuild, components.deleteCancel],
                     ephemeral=True,
                 )
+            
     else:
         await ctx.send(
             "Sorry, you need `MANAGE_MESSAGES` to use this, unless you want to delete your own",
@@ -618,7 +627,7 @@ async def deletebutton(ctx, option):
         conn.commit()
         user = ctx.user
         if check == conn.total_changes:
-            await ctx.send("An error occurred ", ephemeral=True)
+            await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
         else:
             await ctx.send(f"Servers Countdown(s) Deleted by {user}")
     elif option == "channel":
@@ -630,10 +639,25 @@ async def deletebutton(ctx, option):
         )
         conn.commit()
         if check == conn.total_changes:
-            await ctx.send("An error occurred ", ephemeral=True)
+            await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
         else:
             user = ctx.user
             await ctx.send(f"Channels Countdown(s) Deleted by {user}")
+    elif option == "mine":
+        if ctx.guild_id == None:
+            return ctx.send("You cant use this in DMs", ephemeral=True)
+        guildid = int(ctx.guild_id)
+        userid = int(ctx.user.id)
+        check = conn.total_changes
+        conn.execute(
+            "DELETE from Countdowns WHERE guildid = :guildid AND startedby = :userid; ", {"guildid": guildid, "userid": userid}
+        )
+        conn.commit()
+        user = ctx.user
+        if check == conn.total_changes:
+            await ctx.send("An error occurred (could be that there is none to delete)", ephemeral=True)
+        else:
+            await ctx.send(f"All {user} Countdown(s) Deleted")
     elif option == "cancel":
         # Just edit away the buttons and say that contdowns are kept
         await ctx.edit("All countdowns are kept", components=[])
