@@ -893,7 +893,22 @@ async def checkDone(bot):
         channelid = int(row[2])
         msgid = int(row[1])
         timestamp = int(row[0])
-        channel = await interactions.get(bot, interactions.Channel, object_id=channelid)
+        try:
+            channel = await interactions.get(bot, interactions.Channel, object_id=channelid)
+        except Exception as error:
+            reportchannel = await interactions.get(
+                    bot, interactions.Channel, object_id=1017484839131283566
+                )
+            await reportchannel.send(
+                f"Time: {timestamp}\nmsg: {msgid}\nchannel: {channelid}\nguild: {guildid}\nrole: {roleid}\nstartedby: {startedby}\ntimes: {times}\nlength: {length}\nimage: {imagelink}\nstart: {messagestart}\nEnd: {messageend}\n\n Error: {error}"
+            )
+            conn.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid;",
+                {"msgid": msgid},
+            )
+            conn.commit()
+            return
+
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild_id))
         language = "en-US"  # guild.preferred_locale
