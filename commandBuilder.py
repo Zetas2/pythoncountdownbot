@@ -581,12 +581,18 @@ async def delete(
 async def deleteThis(ctx):
     msgid = int(ctx.target.id)
     userid = int(ctx.user.id)
+    startedby = 0
     cursor = conn.execute(
         "SELECT startedby,msgid FROM Countdowns WHERE msgid = :msgid;",
         {"msgid": msgid},
     )
     for row in cursor:
         startedby = int(row[0])
+    if startedby == 0:
+        return await ctx.send(
+            "You can ony use this on active countdowns.",
+            ephemeral=True,
+        )
     if (
         startedby != userid
         and not ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES
@@ -600,13 +606,14 @@ async def deleteThis(ctx):
         conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
         conn.commit()
         if check == conn.total_changes:
-            await ctx.send(
+            return await ctx.send(
                 "An error occurred (could be that there is none to delete)",
                 ephemeral=True,
             )
         else:
             user = ctx.user
-            await ctx.send(f"Countdown {msgid} was deleted by {user}")
+            return await ctx.send(f"Countdown {msgid} was deleted by {user}")
+    
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
