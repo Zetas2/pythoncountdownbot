@@ -458,7 +458,6 @@ async def list(ctx, sub_command, page):
 async def delete(
     ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
 ):
-
     if sub_command == "mine":
         cursor = getPossibleCountdowns(ctx, "mine")
         try:
@@ -522,54 +521,6 @@ async def delete(
                 user = ctx.user
                 await ctx.send(f"Countdown {msgid} was deleted by {user}")
 
-    elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
-        if sub_command_group == "single":
-            if sub_command == "channel":
-                cursor = getPossibleCountdowns(ctx, "channel")
-                try:
-                    msgid = deletechannel.split(": ")[1]
-                except:
-                    return await ctx.send(
-                        "Please use one of the options ", ephemeral=True
-                    )
-                allowedDelete = False
-                for row in cursor:
-                    if int(row[0]) == int(msgid):
-                        allowedDelete = True
-                        pass
-                if not allowedDelete:
-                    return await ctx.send(
-                        "Please use one of the options ", ephemeral=True
-                    )
-            if sub_command == "guild":
-                cursor = getPossibleCountdowns(ctx, "guild")
-                try:
-                    msgid = deleteguild.split(": ")[1]
-                except:
-                    return await ctx.send(
-                        "Please use one of the options ", ephemeral=True
-                    )
-                allowedDelete = False
-                for row in cursor:
-                    if int(row[0]) == int(msgid):
-                        allowedDelete = True
-                        pass
-                if not allowedDelete:
-                    return await ctx.send(
-                        "Please use one of the options ", ephemeral=True
-                    )
-            check = conn.total_changes
-            conn.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
-            )
-            conn.commit()
-
-            if check == conn.total_changes:
-                await ctx.send("An error occurred ", ephemeral=True)
-            else:
-                user = ctx.user
-                await ctx.send(f"Countdown {msgid} was deleted by {user}")
-
         else:
             if sub_command == "channel":
                 await ctx.send(
@@ -585,7 +536,7 @@ async def delete(
                 )
     else:
         await ctx.send(
-            "Sorry, you need `MANAGE_MESSAGES` to use this",
+            "Sorry, you need `MANAGE_MESSAGES` to use this, unless you want to delete your own",
             ephemeral=True,
         )
 
