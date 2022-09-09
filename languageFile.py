@@ -13,6 +13,8 @@ translations = {
         "helpDeleteDesc": "To use this with other than *mine* you need to have the `MANAGE_MESSAGE` permission.\n*Deletethis*\nThis is a messagecommand - right click/long press on a countdown, pick apps, and then deletethis to delete that countdown.\n*Single*\nPick one of the list presented to you. To get more info about what countdown it is, use /list.\n*Mine*\nDelete the countdown you created.\n*Channel*\nDeletes all countdowns in this channel.\n*Guild*\nDeletes all countdowns in this guild.",
         "helpHelpTitle": "/Help",
         "helpHelpDesc": "Shows this help message",
+        "helpMentionTitle": "Mention",
+        "helpMentionDesc": "To be able to mention people at the end of the countdown you currently need to have the `MENTION_EVERYONE` premission",
         "helpLinksTitle": "/Links",
         "helpLinksDesc": "[Discord Support](https://discord.com/invite/b2fY4z4xBY 'Join the support guild!') | [Invite the Bot](https://top.gg/bot/710486805836988507) | [Patreon](https://www.patreon.com/livecountdownbot)",
         "helpTranslateTitle": "/Translate",
