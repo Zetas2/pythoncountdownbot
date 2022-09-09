@@ -1,8 +1,10 @@
 translations = {
     "en-US": {
         "helpTitle": "Help",
-        "helpHover": "To see when the timer runs out, you can hover/click on the timestamp.",
-        "helpDesc": "This bot has the following commands:",
+        "helpHeader": "/Help",
+        "helpHover": "To see when the timer run out, you can hover/click on the timestamp.",
+        "helpDesc": "This bot got the following commands:",
+
         "helpLeftTitle": "/Timeleft",
         "helpLeftDesc": "Shows the exact time left for a countdown.",
         "helpCountdownTitle": "/Countdown",
