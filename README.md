@@ -18,7 +18,7 @@ For this bot to work, you need at least the following:
 - validators 0.20.0
 - python-dotenv 0.20.0
 
-Sure.. I might have missed something, but thats the but thats the main stuff at least.
+Sure.. I might have missed something, but thats the main stuff at least.
 
 ## How to use
 
