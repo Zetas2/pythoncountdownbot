@@ -235,7 +235,7 @@ async def help(ctx):
         + translations[(language)]["helpDesc"]
     )
     embed.add_field(
-        (translations[(language)]["helpTitle"]),
+        (translations[(language)]["helpHeader"]),
         (translations[(language)]["helpHelpDesc"]),
     )
     embed.add_field(
