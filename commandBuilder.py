@@ -228,7 +228,7 @@ async def checkActiveAndMention(ctx, mention):
 async def help(ctx):
     language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to
     embed = interactions.Embed()
-    embed.title = translations[(language)]["helpTitle"]
+    embed.title = translations[(language)]["helpHeader"]
     embed.description = (
         (translations[(language)]["helpHover"])
         + "\n"
