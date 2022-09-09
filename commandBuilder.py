@@ -892,6 +892,13 @@ async def checkDone(bot):
                 bot, interactions.Channel, object_id=channelid
             )
         except Exception as error:
+            if str(error)[19:34] == "Unknown Channel":
+                conn.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msgid},
+                )
+                conn.commit()
+                return
             reportchannel = await interactions.get(
                 bot, interactions.Channel, object_id=1017484839131283566
             )
