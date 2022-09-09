@@ -38,7 +38,7 @@ conn.execute(
 )
 
 # This checks so premium features can only be used by premium users.
-async def checkPremium(ctx, feature):
+async def checkNoPremium(ctx, feature):
     guild = ctx.guild.id
     if guild in premiumGuilds:
         return False
@@ -187,6 +187,7 @@ async def checkActiveAndMention(ctx, mention):
             return True
 
     else:
+
         cursor = conn.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE guildid= :guildid;",
             {"guildid": int(ctx.guild_id)},
@@ -199,30 +200,23 @@ async def checkActiveAndMention(ctx, mention):
         )
         for row in cursor:
             channel = int(row[0])
-        if guild > 50:  # Limits number of active countdowns to 51
-            await ctx.send(
-                "Max countdowns in guild reached. Delete one or wait for one to run out to add more.",
-                ephemeral=True,
-            )
-            return True
-        elif channel > 20:  # limits number of active countdowns to 21
-            await ctx.send(
-                "Max countdowns in channel reached. Delete one or wait for one to run out to add more.",
-                ephemeral=True,
-            )
-            return True
-        else:
-            # Here the limit wasnt reached, so therefore continue checking permission
-            if mention != "0" and not (
-                ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE
-            ):
-                await ctx.send("You dont have permission to ping", ephemeral=True)
+        if guild > 49:  # Limits number of active countdowns to 50
+            if await checkNoPremium(ctx, "Increased amount of countdowns in this guild. Get premium or delete some of the active ones."):
                 return True
+        elif channel > 19:  # limits number of active countdowns to 20
+            if await checkNoPremium(ctx, "Increased amount of countdowns in this channel. Get premium or delete some of the active ones."):
+                return True
+        # Here the limit wasnt reached, so therefore continue checking permission
+        if mention != "0" and not (
+            ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE
+        ):
+            await ctx.send("You dont have permission to ping", ephemeral=True)
+            return True
 
-            if mention != "0":
-                mention = mention.id
+        if mention != "0":
+            mention = mention.id
 
-            return False
+        return False
 
 
 async def help(ctx):
@@ -253,6 +247,10 @@ async def help(ctx):
     embed.add_field(
         (translations[(language)]["helpDeleteTitle"]),
         (translations[(language)]["helpDeleteDesc"]),
+    )
+    embed.add_field(
+        (translations[(language)]["helpMentionTitle"]),
+        (translations[(language)]["helpMentionDesc"]),
     )
     try:
         # Only show Translate if the user got ADMINISTRATOR Permission
@@ -287,13 +285,13 @@ async def countdown(
         return
 
     if imagelink != "":
-        if await checkPremium(ctx, "adding image"):
+        if await checkNoPremium(ctx, "adding image"):
             return
         if await checkLink(ctx, imagelink):
             return
 
     if times != 0:
-        if await checkPremium(ctx, "repeating timer"):
+        if await checkNoPremium(ctx, "repeating timer"):
             return
 
     try:
@@ -354,13 +352,13 @@ async def timer(
         return
 
     if imagelink != "":
-        if await checkPremium(ctx, "adding image"):
+        if await checkNoPremium(ctx, "adding image"):
             return
         if await checkLink(ctx, imagelink):
             return
 
     if times != 0:
-        if await checkPremium(ctx, "repeating timer"):
+        if await checkNoPremium(ctx, "repeating timer"):
             return
 
     currenttime = floor(time.time())
@@ -894,11 +892,20 @@ async def checkDone(bot):
         msgid = int(row[1])
         timestamp = int(row[0])
         try:
-            channel = await interactions.get(bot, interactions.Channel, object_id=channelid)
+            channel = await interactions.get(
+                bot, interactions.Channel, object_id=channelid
+            )
         except Exception as error:
-            reportchannel = await interactions.get(
-                    bot, interactions.Channel, object_id=1017484839131283566
+            if str(error)[19:34] == "Unknown Channel":
+                conn.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msgid},
                 )
+                conn.commit()
+                return
+            reportchannel = await interactions.get(
+                bot, interactions.Channel, object_id=1017484839131283566
+            )
             await reportchannel.send(
                 f"Time: {timestamp}\nmsg: {msgid}\nchannel: {channelid}\nguild: {guildid}\nrole: {roleid}\nstartedby: {startedby}\ntimes: {times}\nlength: {length}\nimage: {imagelink}\nstart: {messagestart}\nEnd: {messageend}\n\n Error: {error}"
             )
@@ -908,7 +915,6 @@ async def checkDone(bot):
             )
             conn.commit()
             return
-
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild_id))
         language = "en-US"  # guild.preferred_locale
