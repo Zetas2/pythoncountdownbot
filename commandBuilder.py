@@ -201,10 +201,10 @@ async def checkActiveAndMention(ctx, mention):
         for row in cursor:
             channel = int(row[0])
         if guild > 49:  # Limits number of active countdowns to 50
-            if await checkNoPremium(ctx, "Increased amount of countdowns"):
+            if await checkNoPremium(ctx, "Increased amount of countdowns in this guild. Get premium or delete some of the active ones."):
                 return True
         elif channel > 19:  # limits number of active countdowns to 20
-            if await checkNoPremium(ctx, "Increased amount of countdowns"):
+            if await checkNoPremium(ctx, "Increased amount of countdowns in this channel. Get premium or delete some of the active ones."):
                 return True
         # Here the limit wasnt reached, so therefore continue checking permission
         if mention != "0" and not (
