@@ -81,7 +81,7 @@ async def help(ctx: interactions.CommandContext):
             required=False,
         ),
         interactions.Option(
-            name="times",
+            name="repeat",
             description="Number of times to repeat",
             type=interactions.OptionType.INTEGER,
             required=False,
@@ -114,13 +114,13 @@ async def countdown(
     messagestart="Countdown will end",
     messageend="!",
     mention="0",
-    times=0,
+    repeat=0,
     image="",
     exact=True,
     alert=True,
 ):
     await commandBuilder.countdown(
-        ctx, timestring, messagestart, messageend, mention, times, image, exact, alert
+        ctx, timestring, messagestart, messageend, mention, repeat, image, exact, alert
     )
 
 
@@ -177,7 +177,7 @@ async def countdown(
             required=False,
         ),
         interactions.Option(
-            name="times",
+            name="repeat",
             description="Number of times to repeat",
             type=interactions.OptionType.INTEGER,
             required=False,
@@ -213,7 +213,7 @@ async def timer(
     messagestart="Timer will end",
     messageend="!",
     mention="0",
-    times=0,
+    repeat=0,
     image="",
     exact=True,
     alert=True,
@@ -228,7 +228,7 @@ async def timer(
         messagestart,
         messageend,
         mention,
-        times,
+        repeat,
         image,
         exact,
         alert,
