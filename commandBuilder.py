@@ -860,7 +860,8 @@ async def translate(ctx, language):
 
 
 async def log(ctx):
-    if int(ctx.user.id) == 238006908664020993 or int(ctx.user.id) == 360084558265450496 or int(ctx.user.id) == 729791860674920488:
+    devs = [238006908664020993, 360084558265450496, 729791860674920488]
+    if int(ctx.user.id) in devs:
         logs = ""
         with open("log.txt", "r") as file:
             for line in file.readlines()[-15:]:
