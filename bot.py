@@ -12,7 +12,7 @@ import commandBuilder
 
 import logging
 
-logging.basicConfig(filename="log.txt", level=logging.WARNING, format="")
+logging.basicConfig(filename="log.txt", level=logging.WARNING, format="%(asctime)s - %(message)s")
 
 
 # These two are used to have the token as a .env file.
