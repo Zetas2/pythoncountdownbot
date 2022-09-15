@@ -23,7 +23,7 @@ load_dotenv()
 TOKENSTRING = getenv("DISCORD_TOKEN")
 
 
-bot = interactions.Client(token=TOKENSTRING, disable_sync=False)
+bot = interactions.Client(token=TOKENSTRING)
 
 
 # Check this when activating shards
