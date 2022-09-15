@@ -12,7 +12,9 @@ import commandBuilder
 
 import logging
 
-logging.basicConfig(filename="log.txt", level=logging.WARNING, format="%(asctime)s - %(message)s")
+logging.basicConfig(
+    filename="log.txt", level=logging.WARNING, format="%(asctime)s - %(message)s"
+)
 
 
 # These two are used to have the token as a .env file.
@@ -128,7 +130,16 @@ async def countdown(
     alert=True,
 ):
     await commandBuilder.countdown(
-        ctx, timestring, messagestart, messageend, mention, repeat, repeattime, image, exact, alert
+        ctx,
+        timestring,
+        messagestart,
+        messageend,
+        mention,
+        repeat,
+        repeattime,
+        image,
+        exact,
+        alert,
     )
 
 
@@ -515,7 +526,7 @@ async def translate(ctx: interactions.CommandContext, language):
     await commandBuilder.translate(ctx, language)
 
 
-#a dev program
+# a dev program
 @bot.command(
     name="log",
     description="Show the log",
@@ -526,9 +537,6 @@ async def log(ctx: interactions.CommandContext):
     await commandBuilder.log(ctx)
 
 
-
-
-
 # Here are message commands - commands that are activated by a message
 @bot.command(
     name="deletethis",
@@ -537,6 +545,15 @@ async def log(ctx: interactions.CommandContext):
 )
 async def deletethis(ctx: interactions.CommandContext):
     await commandBuilder.deleteThis(ctx)
+
+
+@bot.command(
+    name="timeleftthis",
+    description="Delete this countdown",
+    type=interactions.ApplicationCommandType.MESSAGE,
+)
+async def timeleftthis(ctx: interactions.CommandContext):
+    await commandBuilder.timeleftThis(ctx)
 
 
 # This is the task that keeps looking if any countdowns are done.

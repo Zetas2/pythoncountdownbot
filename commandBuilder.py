@@ -201,10 +201,16 @@ async def checkActiveAndMention(ctx, mention):
         for row in cursor:
             channel = int(row[0])
         if guild > 49:  # Limits number of active countdowns to 50
-            if await checkNoPremium(ctx, "Increased amount of countdowns in this guild. Get premium or delete some of the active ones."):
+            if await checkNoPremium(
+                ctx,
+                "Increased amount of countdowns in this guild. Get premium or delete some of the active ones.",
+            ):
                 return True
         elif channel > 19:  # limits number of active countdowns to 20
-            if await checkNoPremium(ctx, "Increased amount of countdowns in this channel. Get premium or delete some of the active ones."):
+            if await checkNoPremium(
+                ctx,
+                "Increased amount of countdowns in this channel. Get premium or delete some of the active ones.",
+            ):
                 return True
         # Here the limit wasnt reached, so therefore continue checking permission
         if mention != "0" and not (
@@ -278,7 +284,16 @@ async def help(ctx):
 
 
 async def countdown(
-    ctx, timestring, messagestart, messageend, mention, times, repeattime, imagelink, exact, alert
+    ctx,
+    timestring,
+    messagestart,
+    messageend,
+    mention,
+    times,
+    repeattime,
+    imagelink,
+    exact,
+    alert,
 ):
 
     if await checkActiveAndMention(ctx, mention):
@@ -803,6 +818,31 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
 
     if timestamp == 0:
         return await ctx.send("Please use one of the options ", ephemeral=True)
+
+    currenttime = floor(time.time())
+    length = timestamp - currenttime
+
+    timestring = "Exact time left: "
+    timestring = getExactTimestring(timestring, length)
+    await ctx.send(timestring, ephemeral=True)
+
+
+async def timeleftThis(ctx):
+
+    msgid = int(ctx.target.id)
+
+    timestamp = 0
+
+    cursor = conn.execute(
+        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+    )
+    for row in cursor:
+        timestamp = int(row[0])
+
+    if timestamp == 0:
+        return await ctx.send(
+            "Please only use this on active countdowns", ephemeral=True
+        )
 
     currenttime = floor(time.time())
     length = timestamp - currenttime
