@@ -695,7 +695,7 @@ async def deletebutton(ctx, option):
                 ephemeral=True,
             )
         else:
-            await ctx.send(f"Servers Countdown(s) Deleted by {user}")
+            await ctx.send(f"Guilds Countdown(s) Deleted by {user}")
     elif option == "channel":
         channelid = int(ctx.channel_id)
         check = conn.total_changes
@@ -825,7 +825,7 @@ async def botstats(ctx, bot):
         logsize = count + 1
 
     guilds = len(bot.guilds)
-    
+
     # Check this when activating shards
     ping = round(bot.latency)
 
