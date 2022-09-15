@@ -88,6 +88,13 @@ async def help(ctx: interactions.CommandContext):
             max_value=50,
         ),
         interactions.Option(
+            name="repeattime",
+            description="The time between each repeat in HOURS. Defaults to 24(each day)",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+            max_value=1000,
+        ),
+        interactions.Option(
             name="image",
             description="Link to image to be shown at the end (PREMIUM FEATURE)",
             type=interactions.OptionType.STRING,
@@ -115,12 +122,13 @@ async def countdown(
     messageend="!",
     mention="0",
     repeat=0,
+    repeattime=24,
     image="",
     exact=True,
     alert=True,
 ):
     await commandBuilder.countdown(
-        ctx, timestring, messagestart, messageend, mention, repeat, image, exact, alert
+        ctx, timestring, messagestart, messageend, mention, repeat, repeattime, image, exact, alert
     )
 
 

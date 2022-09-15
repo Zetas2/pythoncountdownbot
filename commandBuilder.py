@@ -278,7 +278,7 @@ async def help(ctx):
 
 
 async def countdown(
-    ctx, timestring, messagestart, messageend, mention, times, imagelink, exact, alert
+    ctx, timestring, messagestart, messageend, mention, times, repeattime, imagelink, exact, alert
 ):
 
     if await checkActiveAndMention(ctx, mention):
@@ -313,6 +313,8 @@ async def countdown(
             length = timestamp - currenttime
             if await checkLength(ctx, length):
                 return
+            if times != 0:
+                length = repeattime * 3600
             writeerror = await sendAndAddToDatabase(
                 timestamp,
                 ctx,
