@@ -857,10 +857,10 @@ async def translate(ctx, language):
 
 
 async def log(ctx):
-    if int(ctx.user.id) == 238006908664020993:
+    if int(ctx.user.id) == 238006908664020993 or int(ctx.user.id) == 360084558265450496 or int(ctx.user.id) == 729791860674920488:
         logs = ""
         with open("log.txt", "r") as file:
-            for line in file.readlines()[-10:]:
+            for line in file.readlines()[-15:]:
                 logs = logs + line
 
         await ctx.send(f"Logs are:\n```{logs}```", ephemeral=True)
