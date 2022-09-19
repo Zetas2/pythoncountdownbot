@@ -127,7 +127,7 @@ async def sendAndAddToDatabase(
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
     currenttime = floor(time.time())
-    timeleft = int(currenttime) - int(timestamp)
+    timeleft = int(timestamp) -int(currenttime)
     timestring = ""
     if exact:
         if timeleft > 3600:
@@ -846,7 +846,7 @@ async def timeleftThis(ctx):
 
     timestamp = 0
 
-    cursor = conn.execute(
+    cursor = connCountdowns.execute(
         "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
     )
     for row in cursor:
