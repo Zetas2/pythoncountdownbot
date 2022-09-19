@@ -116,12 +116,13 @@ async def sendAndAddToDatabase(
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
-
+    currenttime = floor(time.time())
+    timeleft = int(currenttime) - int(timestamp)
     timestring = ""
     if exact:
-        if length > 3600:
+        if  timeleft > 3600:
             timestring = "\n*Exact time from start: "
-            timestring = getExactTimestring(timestring, length)
+            timestring = getExactTimestring(timestring, timeleft)
             timestring = timestring + "*"
 
     msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
