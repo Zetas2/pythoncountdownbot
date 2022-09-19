@@ -126,12 +126,12 @@ async def sendAndAddToDatabase(
 ):
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
-
     currenttime = floor(time.time())
     timeleft = int(currenttime) - int(timestamp)
     timestring = ""
     if exact:
         if timeleft > 3600:
+
             timestring = "\n*Exact time from start: "
             timestring = getExactTimestring(timestring, timeleft)
             timestring = timestring + "*"
@@ -295,7 +295,16 @@ async def help(ctx):
 
 
 async def countdown(
-    ctx, timestring, messagestart, messageend, mention, times, imagelink, exact, alert
+    ctx,
+    timestring,
+    messagestart,
+    messageend,
+    mention,
+    times,
+    repeattime,
+    imagelink,
+    exact,
+    alert,
 ):
 
     if await checkActiveAndMention(ctx, mention):
@@ -330,6 +339,8 @@ async def countdown(
             length = timestamp - currenttime
             if await checkLength(ctx, length):
                 return
+            if times != 0:
+                length = repeattime * 3600
             writeerror = await sendAndAddToDatabase(
                 timestamp,
                 ctx,
@@ -714,7 +725,7 @@ async def deletebutton(ctx, option):
                 ephemeral=True,
             )
         else:
-            await ctx.send(f"Servers Countdown(s) Deleted by {user}")
+            await ctx.send(f"Guilds Countdown(s) Deleted by {user}")
     elif option == "channel":
         channelid = int(ctx.channel_id)
         check = connCountdowns.total_changes
@@ -829,6 +840,31 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
     await ctx.send(timestring, ephemeral=True)
 
 
+async def timeleftThis(ctx):
+
+    msgid = int(ctx.target.id)
+
+    timestamp = 0
+
+    cursor = conn.execute(
+        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+    )
+    for row in cursor:
+        timestamp = int(row[0])
+
+    if timestamp == 0:
+        return await ctx.send(
+            "Please only use this on active countdowns", ephemeral=True
+        )
+
+    currenttime = floor(time.time())
+    length = timestamp - currenttime
+
+    timestring = "Exact time left: "
+    timestring = getExactTimestring(timestring, length)
+    await ctx.send(timestring, ephemeral=True)
+
+
 async def botstats(ctx, bot):
     await ctx.defer(ephemeral=True)
     cpu = psutil.cpu_percent(4)
@@ -843,6 +879,8 @@ async def botstats(ctx, bot):
             pass
         logsize = count + 1
 
+    guilds = len(bot.guilds)
+
     # Check this when activating shards
     ping = round(bot.latency)
 
@@ -853,6 +891,7 @@ async def botstats(ctx, bot):
     embed.add_field("RAM :floppy_disk:", f"{ram}%")
     embed.add_field("Disk :minidisc:", f"{disk}%")
     embed.add_field("Active countdowns :clock1:", f"{number}")
+    embed.add_field("Guilds :timer:", f"{guilds}")
     embed.add_field("Ping! :satellite:", f"{ping} ms")
     embed.add_field("Log size :scroll:", f"{logsize} rows")
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
