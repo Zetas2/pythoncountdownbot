@@ -29,18 +29,34 @@ from premiumGuilds import premiumGuilds
 from languageFile import translations
 
 
-# makes conn into the connected database.
-conn = sqlite3.connect("Countdowns.db")
+# makes connCountdowns into the connected database for countdowns.
+connCountdowns = sqlite3.connect("Countdowns.db")
+
 
 # Make the table if there is noe
-conn.execute(
+connCountdowns.execute(
     """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255));"""
 )
 
+# makes connPremium into the connected database for premium.
+connPremium = sqlite3.connect("premiumGuilds.db")
+# Make the table if there is noe
+connPremium.execute(
+    """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int)"""
+)
+
+
+
 # This checks so premium features can only be used by premium users.
 async def checkNoPremium(ctx, feature):
-    guild = ctx.guild.id
-    if guild in premiumGuilds:
+    guildid = int(ctx.guild.id)
+
+    cursor = connPremium.execute(
+        "SELECT guildid FROM Premium WHERE guildid = :guildid;",
+        {"guildid": guildid},
+    )
+
+    for row in cursor:
         return False
 
     # If the code havent returned yet, its not a premium user
@@ -141,7 +157,7 @@ async def sendAndAddToDatabase(
         else:
             roleid = 0
 
-        conn.execute(
+        connCountdowns.execute(
             "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
             {
                 "timestamp": int(timestamp),
@@ -157,7 +173,7 @@ async def sendAndAddToDatabase(
                 "messageend": str(messageend),
             },
         )
-        conn.commit()
+        connCountdowns.commit()
     return False
 
 
@@ -174,7 +190,7 @@ async def checkLength(ctx, length):
 # Checks so that active countdowns isnt too many and that the user have permission to ping
 async def checkActiveAndMention(ctx, mention):
     if ctx.guild_id == None:
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
             {"channelid": int(ctx.channel_id)},
         )
@@ -189,13 +205,13 @@ async def checkActiveAndMention(ctx, mention):
 
     else:
 
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE guildid= :guildid;",
             {"guildid": int(ctx.guild_id)},
         )
         for row in cursor:
             guild = int(row[0])
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
             {"channelid": int(ctx.channel_id)},
         )
@@ -395,39 +411,39 @@ async def list(ctx, sub_command, page):
     channelid = int(ctx.channel_id)
     if sub_command == "channel":
         place = "in this channel"
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT COUNT (*) FROM Countdowns WHERE channelid = :channelid;",
             {"channelid": channelid},
         )
 
         for row in cursor:
             numberofcountdown = int(row[0])
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
             {"channelid": channelid},
         )
     elif sub_command == "guild":
         place = "in this guild"
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT COUNT (*) FROM Countdowns WHERE guildid = :guildid;",
             {"guildid": guildid},
         )
         for row in cursor:
             numberofcountdown = int(row[0])
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
             {"guildid": guildid},
         )
     elif sub_command == "mine":
         place = "from you"
         userid = int(ctx.user.id)
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT COUNT (*) FROM Countdowns WHERE guildid = :guildid AND startedby = :userid;",
             {"guildid": guildid, "userid": userid},
         )
         for row in cursor:
             numberofcountdown = int(row[0])
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid AND startedby = :userid ORDER BY timestamp ASC;",
             {"guildid": guildid, "userid": userid},
         )
@@ -484,12 +500,12 @@ async def delete(
             if not allowedDelete:
                 return await ctx.send("Please use one of the options", ephemeral=True)
 
-            check = conn.total_changes
-            conn.execute(
+            check = connCountdowns.total_changes
+            connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
             )
-            conn.commit()
-            if check == conn.total_changes:
+            connCountdowns.commit()
+            if check == connCountdowns.total_changes:
                 await ctx.send(
                     "An error occurred (could be that there is none to delete)",
                     ephemeral=True,
@@ -541,13 +557,13 @@ async def delete(
                     return await ctx.send(
                         "Please use one of the options ", ephemeral=True
                     )
-            check = conn.total_changes
-            conn.execute(
+            check = connCountdowns.total_changes
+            connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
             )
-            conn.commit()
+            connCountdowns.commit()
 
-            if check == conn.total_changes:
+            if check == connCountdowns.total_changes:
                 await ctx.send(
                     "An error occurred (could be that there is none to delete)",
                     ephemeral=True,
@@ -581,7 +597,7 @@ async def deleteThis(ctx):
     msgid = int(ctx.target.id)
     userid = int(ctx.user.id)
     startedby = 0
-    cursor = conn.execute(
+    cursor = connCountdowns.execute(
         "SELECT startedby,msgid FROM Countdowns WHERE msgid = :msgid;",
         {"msgid": msgid},
     )
@@ -601,10 +617,10 @@ async def deleteThis(ctx):
             ephemeral=True,
         )
     else:
-        check = conn.total_changes
-        conn.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
-        conn.commit()
-        if check == conn.total_changes:
+        check = connCountdowns.total_changes
+        connCountdowns.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+        connCountdowns.commit()
+        if check == connCountdowns.total_changes:
             return await ctx.send(
                 "An error occurred (could be that there is none to delete)",
                 ephemeral=True,
@@ -639,20 +655,20 @@ def getPossibleCountdowns(ctx, option):
         userid = int(ctx.user.id)
         if ctx.guild_id == None:
             channelid = int(ctx.channel_id)
-            cursor = conn.execute(
+            cursor = connCountdowns.execute(
                 "SELECT msgid FROM Countdowns WHERE startedby = :userid AND channelid = :channelid ORDER BY timestamp ASC;",
                 {"userid": userid, "channelid": channelid},
             )
         else:
             guildid = int(ctx.guild_id)
-            cursor = conn.execute(
+            cursor = connCountdowns.execute(
                 "SELECT msgid FROM Countdowns WHERE startedby = :userid AND guildid = :guildid ORDER BY timestamp ASC;",
                 {"userid": userid, "guildid": guildid},
             )
 
     elif option == "channel":
         channelid = int(ctx.channel_id)
-        cursor = conn.execute(
+        cursor = connCountdowns.execute(
             "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
             {"channelid": channelid},
         )
@@ -660,13 +676,13 @@ def getPossibleCountdowns(ctx, option):
 
         if ctx.guild_id == None:
             channelid = int(ctx.channel_id)
-            cursor = conn.execute(
+            cursor = connCountdowns.execute(
                 "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
                 {"channelid": channelid},
             )
         else:
             guildid = int(ctx.guild_id)
-            cursor = conn.execute(
+            cursor = connCountdowns.execute(
                 "SELECT msgid FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
                 {"guildid": guildid},
             )
@@ -684,13 +700,13 @@ async def deletebutton(ctx, option):
         if ctx.guild_id == None:
             return ctx.send("You cant use this in DMs", ephemeral=True)
         guildid = int(ctx.guild_id)
-        check = conn.total_changes
-        conn.execute(
+        check = connCountdowns.total_changes
+        connCountdowns.execute(
             "DELETE from Countdowns WHERE guildid = :guildid;", {"guildid": guildid}
         )
-        conn.commit()
+        connCountdowns.commit()
         user = ctx.user
-        if check == conn.total_changes:
+        if check == connCountdowns.total_changes:
             await ctx.send(
                 "An error occurred (could be that there is none to delete)",
                 ephemeral=True,
@@ -699,13 +715,13 @@ async def deletebutton(ctx, option):
             await ctx.send(f"Servers Countdown(s) Deleted by {user}")
     elif option == "channel":
         channelid = int(ctx.channel_id)
-        check = conn.total_changes
-        conn.execute(
+        check = connCountdowns.total_changes
+        connCountdowns.execute(
             "DELETE from Countdowns WHERE channelid = :channelid;",
             {"channelid": channelid},
         )
-        conn.commit()
-        if check == conn.total_changes:
+        connCountdowns.commit()
+        if check == connCountdowns.total_changes:
             await ctx.send(
                 "An error occurred (could be that there is none to delete)",
                 ephemeral=True,
@@ -718,14 +734,14 @@ async def deletebutton(ctx, option):
             return ctx.send("You cant use this in DMs", ephemeral=True)
         guildid = int(ctx.guild_id)
         userid = int(ctx.user.id)
-        check = conn.total_changes
-        conn.execute(
+        check = connCountdowns.total_changes
+        connCountdowns.execute(
             "DELETE from Countdowns WHERE guildid = :guildid AND startedby = :userid; ",
             {"guildid": guildid, "userid": userid},
         )
-        conn.commit()
+        connCountdowns.commit()
         user = ctx.user
-        if check == conn.total_changes:
+        if check == connCountdowns.total_changes:
             await ctx.send(
                 "An error occurred (could be that there is none to delete)",
                 ephemeral=True,
@@ -757,7 +773,7 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
 
     timestamp = 0
 
-    cursor = conn.execute(
+    cursor = connCountdowns.execute(
         "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
     )
     for row in cursor:
@@ -794,7 +810,7 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
 
     timestamp = 0
 
-    cursor = conn.execute(
+    cursor = connCountdowns.execute(
         "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
     )
     for row in cursor:
@@ -816,7 +832,7 @@ async def botstats(ctx, bot):
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
     disk = psutil.disk_usage("/").percent
-    cursor = conn.execute("SELECT COUNT(*) FROM Countdowns;")
+    cursor = connCountdowns.execute("SELECT COUNT(*) FROM Countdowns;")
     for row in cursor:
         number = int(row[0])
 
@@ -875,7 +891,7 @@ async def timeleftThis(ctx):
     msgid = int(ctx.target.id)
     timestamp = 0
 
-    cursor = conn.execute(
+    cursor = connCountdowns.execute(
         "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
     )
     for row in cursor:
@@ -894,7 +910,7 @@ async def timeleftThis(ctx):
 
 async def checkDone(bot):
     currenttime = int(floor(time.time()))
-    cursor = conn.execute(
+    cursor = connCountdowns.execute(
         "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend FROM Countdowns WHERE timestamp < :currenttime;",
         {"currenttime": currenttime},
     )
@@ -918,11 +934,11 @@ async def checkDone(bot):
             )
         except Exception as error:
             if str(error)[19:34] == "Unknown Channel":
-                conn.execute(
+                connCountdowns.execute(
                     "DELETE from Countdowns WHERE msgid = :msgid;",
                     {"msgid": msgid},
                 )
-                conn.commit()
+                connCountdowns.commit()
                 return
             reportchannel = await interactions.get(
                 bot, interactions.Channel, object_id=1017484839131283566
@@ -930,11 +946,11 @@ async def checkDone(bot):
             await reportchannel.send(
                 f"Time: {timestamp}\nmsg: {msgid}\nchannel: {channelid}\nguild: {guildid}\nrole: {roleid}\nstartedby: {startedby}\ntimes: {times}\nlength: {length}\nimage: {imagelink}\nstart: {messagestart}\nEnd: {messageend}\n\n Error: {error}"
             )
-            conn.execute(
+            connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
                 {"msgid": msgid},
             )
-            conn.commit()
+            connCountdowns.commit()
             return
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild_id))
@@ -967,22 +983,22 @@ async def checkDone(bot):
                 f"This countdown will be repeated {times} time(s) more. Next time is: <t:{timestamp}:R>",
             )
             times = times - 1
-            conn.execute(
+            connCountdowns.execute(
                 "UPDATE Countdowns set times = :times where msgid = :msgid;",
                 {"times": times, "msgid": msgid},
             )
-            conn.execute(
+            connCountdowns.execute(
                 "UPDATE Countdowns set timestamp = :timestamp where msgid = :msgid;",
                 {"timestamp": timestamp, "msgid": msgid},
             )
-            conn.commit()
+            connCountdowns.commit()
         # If its not repeating, it should get deleted from the database
         else:
-            conn.execute(
+            connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid;",
                 {"msgid": msgid, "channelid": channelid},
             )
-            conn.commit()
+            connCountdowns.commit()
 
         try:
             if roleid != 0:
@@ -999,11 +1015,11 @@ async def checkDone(bot):
                 await channel.send(embeds=embed)
         except Exception as error:
             if str(error)[19:33] == "Missing Access":
-                conn.execute(
+                connCountdowns.execute(
                     "DELETE from Countdowns WHERE msgid = :msgid;",
                     {"msgid": msgid},
                 )
-                conn.commit()
+                connCountdowns.commit()
                 return
             else:
                 reportchannel = await interactions.get(
@@ -1012,9 +1028,9 @@ async def checkDone(bot):
                 await reportchannel.send(
                     f"Time: {timestamp}\nmsg: {msgid}\nchannel: {channelid}\nguild: {guildid}\nrole: {roleid}\nstartedby: {startedby}\ntimes: {times}\nlength: {length}\nimage: {imagelink}\nstart: {messagestart}\nEnd: {messageend}\n\n Error: {error}"
                 )
-                conn.execute(
+                connCountdowns.execute(
                     "DELETE from Countdowns WHERE msgid = :msgid;",
                     {"msgid": msgid},
                 )
-                conn.commit()
+                connCountdowns.commit()
                 return
