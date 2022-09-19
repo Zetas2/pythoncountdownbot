@@ -846,7 +846,7 @@ async def timeleftThis(ctx):
 
     timestamp = 0
 
-    cursor = conn.execute(
+    cursor = connCountdowns.execute(
         "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
     )
     for row in cursor:
