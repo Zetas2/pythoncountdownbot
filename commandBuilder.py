@@ -934,6 +934,10 @@ async def checkDone(bot):
         if imagelink != "":
             embed.set_image(url=imagelink)
 
+        content = f"{messagestart} <t:{timestamp}> {messageend}"
+        embed.add_field("Countdown", content)
+        embed.color = int(("#%02x%02x%02x" % (0, 255, 0)).replace("#", "0x"), base=16)
+
         # If it is repeating, it should decrease the number of times to repeat
         if times != 0:
             timestamp = timestamp + length
@@ -958,10 +962,6 @@ async def checkDone(bot):
                 {"msgid": msgid, "channelid": channelid},
             )
             conn.commit()
-
-        content = f"{messagestart} <t:{timestamp}> {messageend}"
-        embed.add_field("Countdown", content)
-        embed.color = int(("#%02x%02x%02x" % (0, 255, 0)).replace("#", "0x"), base=16)
 
         try:
             if roleid != 0:
