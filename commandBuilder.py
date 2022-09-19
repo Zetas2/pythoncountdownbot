@@ -871,6 +871,26 @@ async def log(ctx):
             "Sorry, you need to be the dev to use this command", ephemeral=True
         )
 
+async def timeleftThis(ctx):
+    msgid = int(ctx.target.id)
+    timestamp = 0
+
+    cursor = conn.execute(
+        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+    )
+    for row in cursor:
+        timestamp = int(row[0])
+
+    if timestamp == 0:
+        return await ctx.send("Please use one of the options ", ephemeral=True)
+
+    currenttime = floor(time.time())
+    length = timestamp - currenttime
+
+    timestring = "Exact time left: "
+    timestring = getExactTimestring(timestring, length)
+    await ctx.send(timestring, ephemeral=True)
+
 
 async def checkDone(bot):
     currenttime = int(floor(time.time()))

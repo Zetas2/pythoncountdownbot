@@ -530,6 +530,16 @@ async def log(ctx: interactions.CommandContext):
 async def deletethis(ctx: interactions.CommandContext):
     await commandBuilder.deleteThis(ctx)
 
+@bot.command(
+    name="timeleftthis",
+    description="See exact time left of this countdown",
+    type=interactions.ApplicationCommandType.MESSAGE,
+)
+async def timeleftthis(ctx: interactions.CommandContext):
+    await commandBuilder.timeleftThis(ctx)
+
+
+
 
 # This is the task that keeps looking if any countdowns are done.
 @create_task(IntervalTrigger(5))  # 5 means execute task each 5 second
