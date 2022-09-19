@@ -537,6 +537,32 @@ async def log(ctx: interactions.CommandContext):
     await commandBuilder.log(ctx)
 
 
+@bot.command(
+    name="addpremium",
+    description="add a premium guild",
+    scope=1010636307216728094,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    options=[
+        interactions.Option(
+            name="userid",
+            description="Whos the user",
+            type=interactions.OptionType.STRING,
+            max_length=50,
+            required=True,
+        ),
+        interactions.Option(
+            name="guildid",
+            description="What guild do they want it for",
+            type=interactions.OptionType.STRING,
+            max_length=50,
+            required=True,
+        ),
+    ],
+)
+async def addpremium(ctx: interactions.CommandContext, userid, guildid):
+    await commandBuilder.addpremium(ctx, userid, guildid)
+
+
 # Here are message commands - commands that are activated by a message
 @bot.command(
     name="deletethis",
@@ -549,7 +575,8 @@ async def deletethis(ctx: interactions.CommandContext):
 
 @bot.command(
     name="timeleftthis",
-    description="Delete this countdown",
+    description="See exact time left of this countdown",
+
     type=interactions.ApplicationCommandType.MESSAGE,
 )
 async def timeleftthis(ctx: interactions.CommandContext):
