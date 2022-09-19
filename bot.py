@@ -507,7 +507,7 @@ async def translate(ctx: interactions.CommandContext, language):
     await commandBuilder.translate(ctx, language)
 
 
-#a dev program
+# a dev program
 @bot.command(
     name="log",
     description="Show the log",
@@ -518,7 +518,30 @@ async def log(ctx: interactions.CommandContext):
     await commandBuilder.log(ctx)
 
 
-
+@bot.command(
+    name="addpremium",
+    description="add a premium guild",
+    scope=1010636307216728094,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    options=[
+        interactions.Option(
+            name="userid",
+            description="Whos the user",
+            type=interactions.OptionType.STRING,
+            max_length=50,
+            required=True,
+        ),
+        interactions.Option(
+            name="guildid",
+            description="What guild do they want it for",
+            type=interactions.OptionType.STRING,
+            max_length=50,
+            required=True,
+        ),
+    ],
+)
+async def addpremium(ctx: interactions.CommandContext, userid, guildid):
+    await commandBuilder.addpremium(ctx, userid, guildid)
 
 
 # Here are message commands - commands that are activated by a message
@@ -530,6 +553,7 @@ async def log(ctx: interactions.CommandContext):
 async def deletethis(ctx: interactions.CommandContext):
     await commandBuilder.deleteThis(ctx)
 
+
 @bot.command(
     name="timeleftthis",
     description="See exact time left of this countdown",
@@ -537,8 +561,6 @@ async def deletethis(ctx: interactions.CommandContext):
 )
 async def timeleftthis(ctx: interactions.CommandContext):
     await commandBuilder.timeleftThis(ctx)
-
-
 
 
 # This is the task that keeps looking if any countdowns are done.

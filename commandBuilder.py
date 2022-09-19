@@ -22,9 +22,6 @@ import time
 # Here all components are
 import components
 
-# Import a list of all premium users
-from premiumGuilds import premiumGuilds
-
 # Import a list of all translations
 from languageFile import translations
 
@@ -41,10 +38,7 @@ connCountdowns.execute(
 # makes connPremium into the connected database for premium.
 connPremium = sqlite3.connect("premiumGuilds.db")
 # Make the table if there is noe
-connPremium.execute(
-    """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int)"""
-)
-
+connPremium.execute("""CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int)""")
 
 
 # This checks so premium features can only be used by premium users.
@@ -137,7 +131,7 @@ async def sendAndAddToDatabase(
     timeleft = int(currenttime) - int(timestamp)
     timestring = ""
     if exact:
-        if  timeleft > 3600:
+        if timeleft > 3600:
             timestring = "\n*Exact time from start: "
             timestring = getExactTimestring(timestring, timeleft)
             timestring = timestring + "*"
@@ -218,10 +212,16 @@ async def checkActiveAndMention(ctx, mention):
         for row in cursor:
             channel = int(row[0])
         if guild > 49:  # Limits number of active countdowns to 50
-            if await checkNoPremium(ctx, "Increased amount of countdowns in this guild. Get premium or delete some of the active ones."):
+            if await checkNoPremium(
+                ctx,
+                "Increased amount of countdowns in this guild. Get premium or delete some of the active ones.",
+            ):
                 return True
         elif channel > 19:  # limits number of active countdowns to 20
-            if await checkNoPremium(ctx, "Increased amount of countdowns in this channel. Get premium or delete some of the active ones."):
+            if await checkNoPremium(
+                ctx,
+                "Increased amount of countdowns in this channel. Get premium or delete some of the active ones.",
+            ):
                 return True
         # Here the limit wasnt reached, so therefore continue checking permission
         if mention != "0" and not (
@@ -618,7 +618,9 @@ async def deleteThis(ctx):
         )
     else:
         check = connCountdowns.total_changes
-        connCountdowns.execute("DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid})
+        connCountdowns.execute(
+            "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+        )
         connCountdowns.commit()
         if check == connCountdowns.total_changes:
             return await ctx.send(
@@ -874,7 +876,8 @@ async def translate(ctx, language):
 
 
 async def log(ctx):
-    if int(ctx.user.id) == 238006908664020993 or int(ctx.user.id) == 360084558265450496 or int(ctx.user.id) == 729791860674920488:
+    devs = [238006908664020993, 360084558265450496, 729791860674920488]
+    if int(ctx.user.id) in devs:
         logs = ""
         with open("log.txt", "r") as file:
             for line in file.readlines()[-15:]:
@@ -886,6 +889,26 @@ async def log(ctx):
         await ctx.send(
             "Sorry, you need to be the dev to use this command", ephemeral=True
         )
+
+
+async def addpremium(ctx, userid, guildid):
+    devs = [238006908664020993, 360084558265450496, 729791860674920488]
+    if int(ctx.user.id) in devs:
+
+        connPremium.execute(
+            "INSERT INTO Premium (userid,guildid) VALUES (:userid,:guildid);",
+            {
+                "userid": int(userid),
+                "guildid": int(guildid),
+            },
+        )
+        connPremium.commit()
+
+    else:
+        await ctx.send(
+            "Sorry, you need to be the dev to use this command", ephemeral=True
+        )
+
 
 async def timeleftThis(ctx):
     msgid = int(ctx.target.id)
@@ -973,7 +996,6 @@ async def checkDone(bot):
             "Original message",
             f"[{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message')",
         )
-
 
         # If it is repeating, it should decrease the number of times to repeat
         if times != 0:
