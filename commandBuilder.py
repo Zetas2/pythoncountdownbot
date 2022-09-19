@@ -903,6 +903,9 @@ async def addpremium(ctx, userid, guildid):
             },
         )
         connPremium.commit()
+        await ctx.send(
+            "Guild was added", ephemeral=True
+        )
 
     else:
         await ctx.send(
