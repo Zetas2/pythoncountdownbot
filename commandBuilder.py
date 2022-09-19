@@ -127,7 +127,7 @@ async def sendAndAddToDatabase(
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
     currenttime = floor(time.time())
-    timeleft = int(currenttime) - int(timestamp)
+    timeleft = int(timestamp) -int(currenttime)
     timestring = ""
     if exact:
         if timeleft > 3600:
