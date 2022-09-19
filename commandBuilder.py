@@ -926,17 +926,18 @@ async def checkDone(bot):
 
         embed.description = f"{(translations[(language)]['created'])} <@!{startedby}>"
 
-        embed.add_field(
-            "Original message",
-            f"[{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message')",
-        )
-
         if imagelink != "":
             embed.set_image(url=imagelink)
 
         content = f"{messagestart} <t:{timestamp}> {messageend}"
         embed.add_field("Countdown", content)
         embed.color = int(("#%02x%02x%02x" % (0, 255, 0)).replace("#", "0x"), base=16)
+
+        embed.add_field(
+            "Original message",
+            f"[{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message')",
+        )
+
 
         # If it is repeating, it should decrease the number of times to repeat
         if times != 0:
