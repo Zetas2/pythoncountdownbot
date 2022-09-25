@@ -13,7 +13,7 @@ import commandBuilder
 import logging
 
 logging.basicConfig(
-    filename="log.txt", level=logging.WARNING, format="%(asctime)s - %(message)s"
+    filename="log.txt", level=logging.DEBUG, format="%(asctime)s - %(message)s"
 )
 
 
@@ -25,8 +25,7 @@ load_dotenv()
 TOKENSTRING = getenv("DISCORD_TOKEN")
 
 
-bot = interactions.Client(token=TOKENSTRING)
-
+bot = interactions.Client(token=TOKENSTRING, intents=interactions.Intents.ALL &~ interactions.Intents.ALL)
 
 # Check this when activating shards
 # This sets the bots presence to "Listening to /help"
