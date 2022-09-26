@@ -105,11 +105,10 @@ async def sendAndAddToDatabase(
     messagestart = messagestart.replace("\\n", "\n")
     messageend = messageend.replace("\\n", "\n")
     currenttime = floor(time.time())
-    timeleft = int(timestamp) -int(currenttime)
+    timeleft = int(timestamp) - int(currenttime)
     timestring = ""
     if exact:
         if timeleft > 3600:
-
             timestring = "\n*Exact time from start: "
             timestring = getExactTimestring(timestring, timeleft)
             timestring = timestring + "*"
@@ -685,12 +684,13 @@ async def autocompleteCountdowns(ctx, value, option):
 
     await fillChoices(ctx, cursor, value)
 
+
 def deletedChannel(channel):
     channelid = int(channel.id)
     connCountdowns.execute(
-            "DELETE from Countdowns WHERE channelid = :channelid;",
-            {"channelid": channelid},
-        )
+        "DELETE from Countdowns WHERE channelid = :channelid;",
+        {"channelid": channelid},
+    )
     connCountdowns.commit()
 
 
@@ -928,9 +928,7 @@ async def addpremium(ctx, userid, guildid):
             },
         )
         connPremium.commit()
-        await ctx.send(
-            "Guild was added", ephemeral=True
-        )
+        await ctx.send("Guild was added", ephemeral=True)
 
     else:
         await ctx.send(

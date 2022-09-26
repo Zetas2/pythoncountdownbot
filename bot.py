@@ -13,7 +13,7 @@ import commandBuilder
 import logging
 
 logging.basicConfig(
-    filename="log.txt", level=logging.DEBUG, format="%(asctime)s - %(message)s"
+    filename="log.txt", level=logging.WARNING, format="%(asctime)s - %(message)s"
 )
 
 
@@ -41,9 +41,11 @@ async def on_start():
         )
     )
 
+
 @bot.event
 async def on_channel_delete(channel):
     commandBuilder.deletedChannel(channel)
+
 
 @bot.command(
     name="help",
@@ -578,7 +580,6 @@ async def deletethis(ctx: interactions.CommandContext):
 @bot.command(
     name="timeleftthis",
     description="See exact time left of this countdown",
-
     type=interactions.ApplicationCommandType.MESSAGE,
 )
 async def timeleftthis(ctx: interactions.CommandContext):
