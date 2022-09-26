@@ -682,6 +682,14 @@ async def autocompleteCountdowns(ctx, value, option):
 
     await fillChoices(ctx, cursor, value)
 
+def deletedChannel(channel):
+    channelid = int(channel.id)
+    connCountdowns.execute(
+            "DELETE from Countdowns WHERE channelid = :channelid;",
+            {"channelid": channelid},
+        )
+    connCountdowns.commit()
+
 
 async def deletebutton(ctx, option):
     if option == "guild":

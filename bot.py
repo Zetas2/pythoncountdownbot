@@ -25,7 +25,7 @@ load_dotenv()
 TOKENSTRING = getenv("DISCORD_TOKEN")
 
 
-bot = interactions.Client(token=TOKENSTRING, intents=interactions.Intents.ALL &~ interactions.Intents.ALL)
+bot = interactions.Client(token=TOKENSTRING, intents=interactions.Intents.GUILDS)
 
 # Check this when activating shards
 # This sets the bots presence to "Listening to /help"
@@ -41,6 +41,9 @@ async def on_start():
         )
     )
 
+@bot.event
+async def on_channel_delete(channel):
+    commandBuilder.deletedChannel(channel)
 
 @bot.command(
     name="help",
