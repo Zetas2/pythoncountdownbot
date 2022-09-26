@@ -554,17 +554,68 @@ async def log(ctx: interactions.CommandContext):
             max_length=50,
             required=True,
         ),
+    ],
+)
+async def addpremium(ctx: interactions.CommandContext, userid):
+    await commandBuilder.addpremium(ctx, userid, 0)
+
+
+@bot.command(
+    name="deletepremium",
+    description="Delete a premium user",
+    scope=1010636307216728094,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    options=[
         interactions.Option(
-            name="guildid",
-            description="What guild do they want it for",
+            name="userid",
+            description="Whos the user",
             type=interactions.OptionType.STRING,
             max_length=50,
             required=True,
         ),
     ],
 )
-async def addpremium(ctx: interactions.CommandContext, userid, guildid):
-    await commandBuilder.addpremium(ctx, userid, guildid)
+async def deletepremium(ctx: interactions.CommandContext, userid):
+    await commandBuilder.deletepremium(ctx, userid)
+
+@bot.command(
+    name="editpremium",
+    description="Edit your premium guild",
+    options=[
+        interactions.Option(
+            name="guildid",
+            description="What guild do you want to be premium",
+            type=interactions.OptionType.STRING,
+            max_length=50,
+            required=True,
+        ),
+    ],
+)
+async def editpremium(ctx: interactions.CommandContext, guildid):
+    await commandBuilder.editpremium(ctx, guildid)
+
+
+
+
+@bot.command(
+    name="listpremium",
+    description="List all premium guild",
+    scope=1010636307216728094,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    options=[
+            interactions.Option(
+                name="page",
+                description="What page number",
+                type=interactions.OptionType.INTEGER,
+                required=False,
+                max_value=50,
+            ),
+        ],
+)
+async def listpremium(ctx: interactions.CommandContext, page=1):
+    await commandBuilder.listpremium(ctx, page)
+
+
 
 
 # Here are message commands - commands that are activated by a message

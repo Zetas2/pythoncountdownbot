@@ -900,8 +900,11 @@ async def translate(ctx, language):
         )
 
 
+# HERE COME DEVS COMMANDS
+devs = [238006908664020993, 360084558265450496, 729791860674920488]
+
+
 async def log(ctx):
-    devs = [238006908664020993, 360084558265450496, 729791860674920488]
     if int(ctx.user.id) in devs:
         logs = ""
         with open("log.txt", "r") as file:
@@ -917,7 +920,6 @@ async def log(ctx):
 
 
 async def addpremium(ctx, userid, guildid):
-    devs = [238006908664020993, 360084558265450496, 729791860674920488]
     if int(ctx.user.id) in devs:
 
         connPremium.execute(
@@ -929,6 +931,103 @@ async def addpremium(ctx, userid, guildid):
         )
         connPremium.commit()
         await ctx.send("Guild was added", ephemeral=True)
+
+    else:
+        await ctx.send(
+            "Sorry, you need to be the dev to use this command", ephemeral=True
+        )
+
+
+async def deletepremium(ctx, userid):
+
+    if int(ctx.user.id) in devs:
+        check = connPremium.total_changes
+        connPremium.execute(
+            "DELETE from Premium WHERE userid = :userid;",
+            {"userid": userid},
+        )
+        connPremium.commit()
+
+        if check == connPremium.total_changes:
+            await ctx.send(
+                "An error occurred (could be that there is none to delete)",
+                ephemeral=True,
+            )
+        else:
+            await ctx.send(f"User <@{userid}> was deleted from premium users", ephemeral=True)
+
+    else:
+        await ctx.send(
+            "Sorry, you need to be the dev to use this command", ephemeral=True
+        )
+
+
+async def editpremium(ctx, guildid):
+
+    premiumUsers = []
+    cursor = connPremium.execute("SELECT userid FROM Premium")
+    for row in cursor:
+        premiumUsers.append(row[0])
+    
+    userid = int(ctx.user.id)
+    if userid in premiumUsers:   
+        check = connPremium.total_changes
+        connPremium.execute(
+            "UPDATE Premium set guildid = :guildid WHERE userid = :userid;",
+            {"userid": userid, "guildid": int(guildid)},
+        )
+        connPremium.commit()
+
+        if check == connPremium.total_changes:
+            await ctx.send(
+                "An error occurred",
+                ephemeral=True,
+            )
+        else:
+            await ctx.send(f"Guild was updated to: {guildid}", ephemeral=True)
+
+    else:
+        await ctx.send(
+            "Sorry, you need to be a premium user to use this command", ephemeral=True
+        )
+
+
+
+
+async def listpremium(ctx, page):
+    if int(ctx.user.id) in devs:
+        cursor = connPremium.execute("SELECT COUNT (*) FROM Premium")
+        for row in cursor:
+            numberofcountdown = int(row[0])
+        cursor = connPremium.execute("SELECT guildid,userid FROM Premium")
+        lines = 15
+        maxpage = ceil(numberofcountdown / lines)
+        if maxpage < page:
+            page = maxpage
+
+        embed = interactions.Embed()
+        embed.title = "Premium users"
+        currentLine = 0
+        goalLine = page * lines
+        # Loops through all premiums to pick out the ones that should be on specified page
+        for row in cursor:
+            if currentLine >= goalLine - lines:
+                guildid = int(row[0])
+                userid = int(row[1])
+                embed.add_field(f"-----", f"<@{userid}> have guild {guildid}")
+            elif currentLine < goalLine - lines:
+                pass
+            else:
+                break
+            currentLine = currentLine + 1
+            if currentLine >= goalLine:
+                break
+
+        embed.footer = interactions.EmbedFooter(text=f"Page {page} of {maxpage}")
+        embed.color = int(
+            ("#%02x%02x%02x" % (255, 153, 51)).replace("#", "0x"), base=16
+        )
+        await ctx.send(embeds=embed, ephemeral=True)
 
     else:
         await ctx.send(
