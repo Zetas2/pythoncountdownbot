@@ -70,6 +70,7 @@ async def checkLink(ctx, imagelink):
 
 
 def getExactTimestring(timestring, length):
+    startstring = timestring
     meassurement = length
     if meassurement >= 86400:
         amount = meassurement // 86400
@@ -83,6 +84,8 @@ def getExactTimestring(timestring, length):
         amount = meassurement // 60
         meassurement = meassurement - amount * 60
         timestring = timestring + " " + str(amount) + " minute(s)"
+    if startstring == timestring:
+        timestring = timestring + "less than a minute"
     return timestring
 
 
