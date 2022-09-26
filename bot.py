@@ -89,7 +89,7 @@ async def help(ctx: interactions.CommandContext):
             description="Number of times to repeat",
             type=interactions.OptionType.INTEGER,
             required=False,
-            max_value=50,
+            max_value=200,
         ),
         interactions.Option(
             name="repeattime",
@@ -202,7 +202,7 @@ async def countdown(
             description="Number of times to repeat",
             type=interactions.OptionType.INTEGER,
             required=False,
-            max_value=50,
+            max_value=200,
         ),
         interactions.Option(
             name="image",
