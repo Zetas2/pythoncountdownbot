@@ -554,10 +554,17 @@ async def log(ctx: interactions.CommandContext):
             max_length=50,
             required=True,
         ),
+        interactions.Option(
+            name="guildid",
+            description="What guild do you want it to?",
+            type=interactions.OptionType.STRING,
+            max_length=50,
+            required=False,
+        ),
     ],
 )
-async def addpremium(ctx: interactions.CommandContext, userid):
-    await commandBuilder.addpremium(ctx, userid, 0)
+async def addpremium(ctx: interactions.CommandContext, userid, guildid=0):
+    await commandBuilder.addpremium(ctx, userid, guildid)
 
 
 @bot.command(
@@ -635,6 +642,27 @@ async def deletethis(ctx: interactions.CommandContext):
 )
 async def timeleftthis(ctx: interactions.CommandContext):
     await commandBuilder.timeleftThis(ctx)
+
+
+
+
+#Jokes
+@bot.command(
+    name="whoisthegreatest",
+    description="If you are curious about who the greatest is",
+)
+async def timeleftthis(ctx: interactions.CommandContext):
+    await ctx.send("<@729791860674920488>")
+
+@bot.command(
+    name="whoistheboss",
+    description="If you are curious about who the boss is",
+)
+async def timeleftthis(ctx: interactions.CommandContext):
+    await ctx.send("<@360084558265450496>", ephemeral=True,)
+
+
+
 
 
 # This is the task that keeps looking if any countdowns are done.

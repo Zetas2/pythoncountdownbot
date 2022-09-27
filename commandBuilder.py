@@ -38,7 +38,7 @@ connCountdowns.execute(
 # makes connPremium into the connected database for premium.
 connPremium = sqlite3.connect("premiumGuilds.db")
 # Make the table if there is noe
-connPremium.execute("""CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int)""")
+connPremium.execute("""CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int)""")
 
 
 # This checks so premium features can only be used by premium users.
@@ -921,16 +921,23 @@ async def log(ctx):
 
 async def addpremium(ctx, userid, guildid):
     if int(ctx.user.id) in devs:
-
-        connPremium.execute(
-            "INSERT INTO Premium (userid,guildid) VALUES (:userid,:guildid);",
-            {
-                "userid": int(userid),
-                "guildid": int(guildid),
-            },
-        )
-        connPremium.commit()
-        await ctx.send("Guild was added", ephemeral=True)
+        premiumUsers = []
+        cursor = connPremium.execute("SELECT userid FROM Premium")
+        for row in cursor:
+            premiumUsers.append(row[0])
+        
+        if int(userid) not in premiumUsers:
+            connPremium.execute(
+                "INSERT INTO Premium (userid,guildid,lastedit) VALUES (:userid,:guildid,0);",
+                {
+                    "userid": int(userid),
+                    "guildid": int(guildid),
+                },
+            )
+            connPremium.commit()
+            await ctx.send(f"User <@{userid}> was added", ephemeral=True)
+        else:
+            await ctx.send(f"User <@{userid}> is alredy premium", ephemeral=True)
 
     else:
         await ctx.send(
@@ -963,9 +970,10 @@ async def deletepremium(ctx, userid):
 
 
 async def editpremium(ctx, guildid):
-
+    currenttime = floor(time.time())
+    allowedtime = currenttime - 86400 * 2
     premiumUsers = []
-    cursor = connPremium.execute("SELECT userid FROM Premium")
+    cursor = connPremium.execute("SELECT userid FROM Premium WHERE lastedit < :allowedtime;",{"allowedtime":allowedtime},)
     for row in cursor:
         premiumUsers.append(row[0])
     
@@ -975,6 +983,10 @@ async def editpremium(ctx, guildid):
         connPremium.execute(
             "UPDATE Premium set guildid = :guildid WHERE userid = :userid;",
             {"userid": userid, "guildid": int(guildid)},
+        )
+        connPremium.execute(
+            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid;",
+            {"userid": userid, "currenttime": int(currenttime)},
         )
         connPremium.commit()
 
@@ -988,7 +1000,7 @@ async def editpremium(ctx, guildid):
 
     else:
         await ctx.send(
-            "Sorry, you need to be a premium user to use this command", ephemeral=True
+            "Sorry, you need to be a premium user to use this command. Or wait 2 days since you last used it", ephemeral=True
         )
 
 
@@ -999,7 +1011,7 @@ async def listpremium(ctx, page):
         cursor = connPremium.execute("SELECT COUNT (*) FROM Premium")
         for row in cursor:
             numberofcountdown = int(row[0])
-        cursor = connPremium.execute("SELECT guildid,userid FROM Premium")
+        cursor = connPremium.execute("SELECT guildid,userid,lastedit FROM Premium")
         lines = 15
         maxpage = ceil(numberofcountdown / lines)
         if maxpage < page:
@@ -1014,7 +1026,8 @@ async def listpremium(ctx, page):
             if currentLine >= goalLine - lines:
                 guildid = int(row[0])
                 userid = int(row[1])
-                embed.add_field(f"-----", f"<@{userid}> have guild {guildid}")
+                lastedit = int(row[2])
+                embed.add_field(f"-----", f"<@{userid}> have guild {guildid}. Edited <t:{lastedit}>")
             elif currentLine < goalLine - lines:
                 pass
             else:
