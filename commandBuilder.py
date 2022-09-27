@@ -38,7 +38,9 @@ connCountdowns.execute(
 # makes connPremium into the connected database for premium.
 connPremium = sqlite3.connect("premiumGuilds.db")
 # Make the table if there is noe
-connPremium.execute("""CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int)""")
+connPremium.execute(
+    """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int)"""
+)
 
 
 # This checks so premium features can only be used by premium users.
@@ -789,43 +791,6 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
     await ctx.send(timestring, ephemeral=True)
 
 
-async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
-
-    if sub_command == "mine":
-        try:
-            msgid = showmine.split(": ")[1]
-        except:
-            return await ctx.send("Please use one of the options ", ephemeral=True)
-    elif sub_command == "channel":
-        try:
-            msgid = showchannel.split(": ")[1]
-        except:
-            return await ctx.send("Please use one of the options ", ephemeral=True)
-    elif sub_command == "guild":
-        try:
-            msgid = showguild.split(": ")[1]
-        except:
-            return await ctx.send("Please use one of the options ", ephemeral=True)
-
-    timestamp = 0
-
-    cursor = connCountdowns.execute(
-        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
-    )
-    for row in cursor:
-        timestamp = int(row[0])
-
-    if timestamp == 0:
-        return await ctx.send("Please use one of the options ", ephemeral=True)
-
-    currenttime = floor(time.time())
-    length = timestamp - currenttime
-
-    timestring = "Exact time left: "
-    timestring = getExactTimestring(timestring, length)
-    await ctx.send(timestring, ephemeral=True)
-
-
 async def timeleftThis(ctx):
 
     msgid = int(ctx.target.id)
@@ -900,6 +865,76 @@ async def translate(ctx, language):
         )
 
 
+async def editpremium(ctx, guildid):
+    currenttime = floor(time.time())
+    allowedtime = currenttime - 86400 * 2
+    premiumUsers = []
+    cursor = connPremium.execute(
+        "SELECT userid FROM Premium WHERE lastedit < :allowedtime;",
+        {"allowedtime": allowedtime},
+    )
+    for row in cursor:
+        premiumUsers.append(row[0])
+
+    userid = int(ctx.user.id)
+    if userid in premiumUsers:
+        check = connPremium.total_changes
+        connPremium.execute(
+            "UPDATE Premium set guildid = :guildid WHERE userid = :userid;",
+            {"userid": userid, "guildid": int(guildid)},
+        )
+        connPremium.execute(
+            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid;",
+            {"userid": userid, "currenttime": int(currenttime)},
+        )
+        connPremium.commit()
+
+        if check == connPremium.total_changes:
+            await ctx.send(
+                "An error occurred",
+                ephemeral=True,
+            )
+        else:
+            await ctx.send(f"Guild was updated to: {guildid}", ephemeral=True)
+
+    else:
+        await ctx.send(
+            "Sorry, you need to be a premium user to use this command. Or wait 2 days since you last used it",
+            ephemeral=True,
+        )
+
+
+async def premiuminfo(ctx):
+    embed = interactions.Embed()
+    embed.title = "Premium info"
+    embed.description = "To get premium you can head over to [Patreon](https://www.patreon.com/livecountdownbot)"
+    embed.add_field(
+        "Why premium?",
+        "Premium gives you access to:\n• More countdowns in a guild\n• Adding images at the end of a countdown\n• Repeating countdowns",
+    )
+    embed.add_field(
+        "How do I activate it?",
+        "Unfortunatly there isnt a good way of doing this yet. For now ping either <@238006908664020993> or <@729791860674920488> after reciving the patreon role in the [Discord Support Guild](https://discord.com/invite/b2fY4z4xBY)",
+    )
+    embed.add_field(
+        "How do I pick what guild?",
+        "You can use the command /editpremium and enter the guildid of the guild you want to be premium. \n**BEWARE!** There is a cooldown between uses of it.",
+    )
+    embed.add_field(
+        "Can I have premium in multiple guilds?",
+        "No. Not yet at least. Currently it is limited to one guild per user.",
+    )
+
+    embed.footer = interactions.EmbedFooter(
+        text=("Thanks for considering supporting this bot")
+    )
+
+    embed.color = int(
+        ("#%02x%02x%02x" % (255, 20, 147)).replace("#", "0x"), base=16
+    )  # Set the colour to pink
+    await ctx.send(embeds=embed, ephemeral=True)
+
+
 # HERE COME DEVS COMMANDS
 devs = [238006908664020993, 360084558265450496, 729791860674920488]
 
@@ -925,7 +960,7 @@ async def addpremium(ctx, userid, guildid):
         cursor = connPremium.execute("SELECT userid FROM Premium")
         for row in cursor:
             premiumUsers.append(row[0])
-        
+
         if int(userid) not in premiumUsers:
             connPremium.execute(
                 "INSERT INTO Premium (userid,guildid,lastedit) VALUES (:userid,:guildid,0);",
@@ -961,49 +996,14 @@ async def deletepremium(ctx, userid):
                 ephemeral=True,
             )
         else:
-            await ctx.send(f"User <@{userid}> was deleted from premium users", ephemeral=True)
+            await ctx.send(
+                f"User <@{userid}> was deleted from premium users", ephemeral=True
+            )
 
     else:
         await ctx.send(
             "Sorry, you need to be the dev to use this command", ephemeral=True
         )
-
-
-async def editpremium(ctx, guildid):
-    currenttime = floor(time.time())
-    allowedtime = currenttime - 86400 * 2
-    premiumUsers = []
-    cursor = connPremium.execute("SELECT userid FROM Premium WHERE lastedit < :allowedtime;",{"allowedtime":allowedtime},)
-    for row in cursor:
-        premiumUsers.append(row[0])
-    
-    userid = int(ctx.user.id)
-    if userid in premiumUsers:   
-        check = connPremium.total_changes
-        connPremium.execute(
-            "UPDATE Premium set guildid = :guildid WHERE userid = :userid;",
-            {"userid": userid, "guildid": int(guildid)},
-        )
-        connPremium.execute(
-            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid;",
-            {"userid": userid, "currenttime": int(currenttime)},
-        )
-        connPremium.commit()
-
-        if check == connPremium.total_changes:
-            await ctx.send(
-                "An error occurred",
-                ephemeral=True,
-            )
-        else:
-            await ctx.send(f"Guild was updated to: {guildid}", ephemeral=True)
-
-    else:
-        await ctx.send(
-            "Sorry, you need to be a premium user to use this command. Or wait 2 days since you last used it", ephemeral=True
-        )
-
-
 
 
 async def listpremium(ctx, page):
@@ -1027,7 +1027,9 @@ async def listpremium(ctx, page):
                 guildid = int(row[0])
                 userid = int(row[1])
                 lastedit = int(row[2])
-                embed.add_field(f"-----", f"<@{userid}> have guild {guildid}. Edited <t:{lastedit}>")
+                embed.add_field(
+                    f"-----", f"<@{userid}> have guild {guildid}. Edited <t:{lastedit}>"
+                )
             elif currentLine < goalLine - lines:
                 pass
             else:
@@ -1046,27 +1048,6 @@ async def listpremium(ctx, page):
         await ctx.send(
             "Sorry, you need to be the dev to use this command", ephemeral=True
         )
-
-
-async def timeleftThis(ctx):
-    msgid = int(ctx.target.id)
-    timestamp = 0
-
-    cursor = connCountdowns.execute(
-        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
-    )
-    for row in cursor:
-        timestamp = int(row[0])
-
-    if timestamp == 0:
-        return await ctx.send("Please use one of the options ", ephemeral=True)
-
-    currenttime = floor(time.time())
-    length = timestamp - currenttime
-
-    timestring = "Exact time left: "
-    timestring = getExactTimestring(timestring, length)
-    await ctx.send(timestring, ephemeral=True)
 
 
 async def checkDone(bot):

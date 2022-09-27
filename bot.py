@@ -56,6 +56,14 @@ async def help(ctx: interactions.CommandContext):
 
 
 @bot.command(
+    name="premiuminfo",
+    description="Get information about how premium works",
+)
+async def premiuminfo(ctx: interactions.CommandContext):
+    await commandBuilder.premiuminfo(ctx)
+
+
+@bot.command(
     name="countdown",
     description="Countdown to what you tells it to.",
     options=[
@@ -585,6 +593,7 @@ async def addpremium(ctx: interactions.CommandContext, userid, guildid=0):
 async def deletepremium(ctx: interactions.CommandContext, userid):
     await commandBuilder.deletepremium(ctx, userid)
 
+
 @bot.command(
     name="editpremium",
     description="Edit your premium guild",
@@ -602,27 +611,23 @@ async def editpremium(ctx: interactions.CommandContext, guildid):
     await commandBuilder.editpremium(ctx, guildid)
 
 
-
-
 @bot.command(
     name="listpremium",
     description="List all premium guild",
     scope=1010636307216728094,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     options=[
-            interactions.Option(
-                name="page",
-                description="What page number",
-                type=interactions.OptionType.INTEGER,
-                required=False,
-                max_value=50,
-            ),
-        ],
+        interactions.Option(
+            name="page",
+            description="What page number",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+            max_value=50,
+        ),
+    ],
 )
 async def listpremium(ctx: interactions.CommandContext, page=1):
     await commandBuilder.listpremium(ctx, page)
-
-
 
 
 # Here are message commands - commands that are activated by a message
@@ -644,9 +649,7 @@ async def timeleftthis(ctx: interactions.CommandContext):
     await commandBuilder.timeleftThis(ctx)
 
 
-
-
-#Jokes
+# Jokes
 @bot.command(
     name="whoisthegreatest",
     description="If you are curious about who the greatest is",
@@ -654,15 +657,16 @@ async def timeleftthis(ctx: interactions.CommandContext):
 async def timeleftthis(ctx: interactions.CommandContext):
     await ctx.send("<@729791860674920488>")
 
+
 @bot.command(
     name="whoistheboss",
     description="If you are curious about who the boss is",
 )
 async def timeleftthis(ctx: interactions.CommandContext):
-    await ctx.send("<@360084558265450496>", ephemeral=True,)
-
-
-
+    await ctx.send(
+        "<@360084558265450496>",
+        ephemeral=True,
+    )
 
 
 # This is the task that keeps looking if any countdowns are done.
