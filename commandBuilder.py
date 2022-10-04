@@ -123,7 +123,7 @@ async def sendAndAddToDatabase(
             guildid = 0
         startedby = ctx.user.id
         # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
-        if msg.id == None or msg.channel.id == None or guildid == None:
+        if msg.id == None or msg.channel_id == None or guildid == None:
             return True
 
         if mention != "0":
@@ -136,7 +136,7 @@ async def sendAndAddToDatabase(
             {
                 "timestamp": int(timestamp),
                 "msgid": int(msg.id),
-                "channelid": int(msg.channel.id),
+                "channelid": int(msg.channel_id),
                 "guildid": int(guildid),
                 "mention": int(roleid),
                 "startedby": int(startedby),
@@ -714,6 +714,7 @@ async def deletebutton(ctx, option):
                 ephemeral=True,
             )
         else:
+            await ctx.edit(components=[])
             await ctx.send(f"Guilds Countdown(s) Deleted by {user}")
     elif option == "channel":
         channelid = int(ctx.channel.id)
@@ -730,6 +731,7 @@ async def deletebutton(ctx, option):
             )
         else:
             user = ctx.user
+            await ctx.edit(components=[])
             await ctx.send(f"Channels Countdown(s) Deleted by {user}")
     elif option == "mine":
         if ctx.guild.id == None:
@@ -749,6 +751,7 @@ async def deletebutton(ctx, option):
                 ephemeral=True,
             )
         else:
+            await ctx.edit(components=[])
             await ctx.send(f"All {user} Countdown(s) Deleted")
     elif option == "cancel":
         # Just edit away the buttons and say that contdowns are kept
