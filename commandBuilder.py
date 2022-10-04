@@ -1074,20 +1074,7 @@ async def checkDone(bot):
             channel = await interactions.get(
                 bot, interactions.Channel, object_id=channelid
             )
-        except Exception as error:
-            if str(error)[19:34] == "Unknown Channel":
-                connCountdowns.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msgid},
-                )
-                connCountdowns.commit()
-                return
-            reportchannel = await interactions.get(
-                bot, interactions.Channel, object_id=1017484839131283566
-            )
-            await reportchannel.send(
-                f"Time: {timestamp}\nmsg: {msgid}\nchannel: {channelid}\nguild: {guildid}\nrole: {roleid}\nstartedby: {startedby}\ntimes: {times}\nlength: {length}\nimage: {imagelink}\nstart: {messagestart}\nEnd: {messageend}\n\n Error: {error}"
-            )
+        except Exception as error: 
             connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
                 {"msgid": msgid},
@@ -1154,24 +1141,10 @@ async def checkDone(bot):
                     )
             else:
                 await channel.send(embeds=embed)
-        except Exception as error:
-            if str(error)[19:33] == "Missing Access":
-                connCountdowns.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msgid},
-                )
-                connCountdowns.commit()
-                return
-            else:
-                reportchannel = await interactions.get(
-                    bot, interactions.Channel, object_id=1017484839131283566
-                )
-                await reportchannel.send(
-                    f"Time: {timestamp}\nmsg: {msgid}\nchannel: {channelid}\nguild: {guildid}\nrole: {roleid}\nstartedby: {startedby}\ntimes: {times}\nlength: {length}\nimage: {imagelink}\nstart: {messagestart}\nEnd: {messageend}\n\n Error: {error}"
-                )
-                connCountdowns.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msgid},
-                )
-                connCountdowns.commit()
-                return
+        except Exception as error:            
+            connCountdowns.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid;",
+                {"msgid": msgid},
+            )
+            connCountdowns.commit()
+            return
