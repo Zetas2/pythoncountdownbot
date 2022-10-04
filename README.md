@@ -4,7 +4,7 @@ Sooo. This is a readme. Written in markdown. Sure.. That will be fun
 
 ## Links
 
-**[Discord Support](https://discord.com/invite/b2fY4z4xBY "Join the support guild!")** | **[Invite the Bot](https://top.gg/bot/710486805836988507)** | **[Patreon](https://www.patreon.com/livecountdownbot)**
+**[Discord Support](https://discord.com/invite/b2fY4z4xBY "Join the support guild!")** | **[Invite the Bot](https://top.gg/bot/1015703443358363789)** | **[Patreon](https://www.patreon.com/livecountdownbot)**
 
 ## Requirements
 
