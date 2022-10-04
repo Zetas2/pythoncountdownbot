@@ -853,7 +853,7 @@ async def botstats(ctx, bot):
     embed.add_field("Disk :minidisc:", f"{disk}%")
     embed.add_field("Active countdowns :clock1:", f"{number}")
     embed.add_field("Guilds :timer:", f"{guilds}")
-    embed.add_field("Uptime :up:", f"Since <t:{botstarttime}>")
+    embed.add_field("Uptime :up:", f"Since <t:{botstarttime}:R>")
     embed.add_field("Ping! :satellite:", f"{ping} ms")
     embed.add_field("Log size :scroll:", f"{logsize} rows")
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
