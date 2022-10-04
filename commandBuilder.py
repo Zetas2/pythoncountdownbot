@@ -86,8 +86,9 @@ def getExactTimestring(timestring, length):
         amount = meassurement // 60
         meassurement = meassurement - amount * 60
         timestring = timestring + " " + str(amount) + " minute(s)"
-    if startstring == timestring:
-        timestring = timestring + "less than a minute"
+    if meassurement > 0:
+        amount = meassurement
+        timestring = timestring + " " + str(amount) + " second(s)"
     return timestring
 
 
@@ -775,18 +776,20 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
     timestamp = 0
 
     cursor = connCountdowns.execute(
-        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+        "SELECT timestamp,channelid,guildid from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
     )
     for row in cursor:
         timestamp = int(row[0])
+        channelid = int(row[1])
+        guildid = int(row[2])
 
     if timestamp == 0:
         return await ctx.send("Please use one of the options ", ephemeral=True)
 
     currenttime = floor(time.time())
     length = timestamp - currenttime
-
-    timestring = "Exact time left: "
+                
+    timestring = f"Exact time left for countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message'): "
     timestring = getExactTimestring(timestring, length)
     await ctx.send(timestring, ephemeral=True)
 
