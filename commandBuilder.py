@@ -1074,7 +1074,7 @@ async def checkDone(bot):
             channel = await interactions.get(
                 bot, interactions.Channel, object_id=channelid
             )
-        except Exception as error: 
+        except Exception as error:
             connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
                 {"msgid": msgid},
@@ -1141,7 +1141,7 @@ async def checkDone(bot):
                     )
             else:
                 await channel.send(embeds=embed)
-        except Exception as error:            
+        except Exception as error:
             connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
                 {"msgid": msgid},
