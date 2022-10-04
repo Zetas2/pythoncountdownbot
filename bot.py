@@ -27,7 +27,7 @@ TOKENSTRING = getenv("DISCORD_TOKEN")
 
 bot = interactions.Client(token=TOKENSTRING, intents=interactions.Intents.GUILDS)
 
-devservers = [1010636307216728094, 970764356289712160]
+devservers = [1010636307216728094, 719541990580289557]
 
 
 # Check this when activating shards
