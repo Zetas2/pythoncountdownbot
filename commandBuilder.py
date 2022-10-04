@@ -45,7 +45,7 @@ connPremium.execute(
 
 # This checks so premium features can only be used by premium users.
 async def checkNoPremium(ctx, feature):
-    guildid = int(ctx.guild.id)
+    guildid = int(ctx.guild_id)
 
     cursor = connPremium.execute(
         "SELECT guildid FROM Premium WHERE guildid = :guildid;",
@@ -118,7 +118,7 @@ async def sendAndAddToDatabase(
     msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
 
     if alert:
-        guildid = ctx.guild.id
+        guildid = ctx.guild_id
         if guildid == None:
             guildid = 0
         startedby = ctx.user.id
@@ -163,10 +163,10 @@ async def checkLength(ctx, length):
 
 # Checks so that active countdowns isnt too many and that the user have permission to ping
 async def checkActiveAndMention(ctx, mention):
-    if ctx.guild.id == None:
+    if ctx.guild_id == None:
         cursor = connCountdowns.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
-            {"channelid": int(ctx.channel.id)},
+            {"channelid": int(ctx.channel_id)},
         )
         for row in cursor:
             channel = int(row[0])
@@ -181,13 +181,13 @@ async def checkActiveAndMention(ctx, mention):
 
         cursor = connCountdowns.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE guildid= :guildid;",
-            {"guildid": int(ctx.guild.id)},
+            {"guildid": int(ctx.guild_id)},
         )
         for row in cursor:
             guild = int(row[0])
         cursor = connCountdowns.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
-            {"channelid": int(ctx.channel.id)},
+            {"channelid": int(ctx.channel_id)},
         )
         for row in cursor:
             channel = int(row[0])
@@ -392,14 +392,14 @@ async def timer(
 
 
 async def list(ctx, sub_command, page):
-    if ctx.guild.id == None and sub_command != "channel":
+    if ctx.guild_id == None and sub_command != "channel":
         return await ctx.send("Sorry, only /list channel works in DMs", ephemeral=True)
     # Links for DMs are @me instead of the guildid
-    if ctx.guild.id == None:
+    if ctx.guild_id == None:
         guildid = "@me"
     else:
-        guildid = int(ctx.guild.id)
-    channelid = int(ctx.channel.id)
+        guildid = int(ctx.guild_id)
+    channelid = int(ctx.channel_id)
     if sub_command == "channel":
         place = "in this channel"
         cursor = connCountdowns.execute(
@@ -646,35 +646,35 @@ async def fillChoices(ctx, cursor, value):
 def getPossibleCountdowns(ctx, option):
     if option == "mine":
         userid = int(ctx.user.id)
-        if ctx.guild.id == None:
-            channelid = int(ctx.channel.id)
+        if ctx.guild_id == None:
+            channelid = int(ctx.channel_id)
             cursor = connCountdowns.execute(
                 "SELECT msgid FROM Countdowns WHERE startedby = :userid AND channelid = :channelid ORDER BY timestamp ASC;",
                 {"userid": userid, "channelid": channelid},
             )
         else:
-            guildid = int(ctx.guild.id)
+            guildid = int(ctx.guild_id)
             cursor = connCountdowns.execute(
                 "SELECT msgid FROM Countdowns WHERE startedby = :userid AND guildid = :guildid ORDER BY timestamp ASC;",
                 {"userid": userid, "guildid": guildid},
             )
 
     elif option == "channel":
-        channelid = int(ctx.channel.id)
+        channelid = int(ctx.channel_id)
         cursor = connCountdowns.execute(
             "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
             {"channelid": channelid},
         )
     elif option == "guild":
 
-        if ctx.guild.id == None:
-            channelid = int(ctx.channel.id)
+        if ctx.guild_id == None:
+            channelid = int(ctx.channel_id)
             cursor = connCountdowns.execute(
                 "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
                 {"channelid": channelid},
             )
         else:
-            guildid = int(ctx.guild.id)
+            guildid = int(ctx.guild_id)
             cursor = connCountdowns.execute(
                 "SELECT msgid FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
                 {"guildid": guildid},
@@ -699,9 +699,9 @@ def deletedChannel(channel):
 
 async def deletebutton(ctx, option):
     if option == "guild":
-        if ctx.guild.id == None:
+        if ctx.guild_id == None:
             return ctx.send("You cant use this in DMs", ephemeral=True)
-        guildid = int(ctx.guild.id)
+        guildid = int(ctx.guild_id)
         check = connCountdowns.total_changes
         connCountdowns.execute(
             "DELETE from Countdowns WHERE guildid = :guildid;", {"guildid": guildid}
@@ -717,7 +717,7 @@ async def deletebutton(ctx, option):
             await ctx.edit(components=[])
             await ctx.send(f"Guilds Countdown(s) Deleted by {user}")
     elif option == "channel":
-        channelid = int(ctx.channel.id)
+        channelid = int(ctx.channel_id)
         check = connCountdowns.total_changes
         connCountdowns.execute(
             "DELETE from Countdowns WHERE channelid = :channelid;",
@@ -734,9 +734,9 @@ async def deletebutton(ctx, option):
             await ctx.edit(components=[])
             await ctx.send(f"Channels Countdown(s) Deleted by {user}")
     elif option == "mine":
-        if ctx.guild.id == None:
+        if ctx.guild_id == None:
             return ctx.send("You cant use this in DMs", ephemeral=True)
-        guildid = int(ctx.guild.id)
+        guildid = int(ctx.guild_id)
         userid = int(ctx.user.id)
         check = connCountdowns.total_changes
         connCountdowns.execute(
@@ -872,7 +872,7 @@ async def translate(ctx, language):
 
 
 async def makethispremium(ctx):
-    guildid = ctx.guild.id
+    guildid = ctx.guild_id
     currenttime = floor(time.time())
     allowedtime = currenttime - 86400 * 2
     premiumUsers = []

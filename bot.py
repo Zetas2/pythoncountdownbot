@@ -397,6 +397,7 @@ async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
 @bot.command(
     name="delete",
     description="Deletes countdowns",
+    dm_permission=False,
     options=[
         interactions.Option(
             name="single",
@@ -527,6 +528,7 @@ async def botstats(ctx: interactions.CommandContext):
     description="Translate the bot",
     scope=devservers,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    dm_permission=False,
     options=[
         interactions.Option(
             name="language",
@@ -600,6 +602,7 @@ async def deletepremium(ctx: interactions.CommandContext, userid):
 @bot.command(
     name="makethispremium",
     description="Changes so this guild becomes your premium guild",
+    dm_permission=False,
 )
 async def makethispremium(ctx: interactions.CommandContext):
     await commandBuilder.makethispremium(ctx)
