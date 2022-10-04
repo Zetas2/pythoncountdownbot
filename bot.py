@@ -27,6 +27,9 @@ TOKENSTRING = getenv("DISCORD_TOKEN")
 
 bot = interactions.Client(token=TOKENSTRING, intents=interactions.Intents.GUILDS)
 
+devservers = [1010636307216728094, 970764356289712160]
+
+
 # Check this when activating shards
 # This sets the bots presence to "Listening to /help"
 @bot.event
@@ -522,7 +525,7 @@ async def botstats(ctx: interactions.CommandContext):
 @bot.command(
     name="translate",
     description="Translate the bot",
-    scope=1010636307216728094,
+    scope=devservers,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     options=[
         interactions.Option(
@@ -542,7 +545,7 @@ async def translate(ctx: interactions.CommandContext, language):
 @bot.command(
     name="log",
     description="Show the log",
-    scope=1010636307216728094,
+    scope=devservers,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
 )
 async def log(ctx: interactions.CommandContext):
@@ -552,7 +555,7 @@ async def log(ctx: interactions.CommandContext):
 @bot.command(
     name="addpremium",
     description="add a premium guild",
-    scope=1010636307216728094,
+    scope=devservers,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     options=[
         interactions.Option(
@@ -578,7 +581,7 @@ async def addpremium(ctx: interactions.CommandContext, userid, guildid=0):
 @bot.command(
     name="deletepremium",
     description="Delete a premium user",
-    scope=1010636307216728094,
+    scope=devservers,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     options=[
         interactions.Option(
@@ -614,7 +617,7 @@ async def editpremium(ctx: interactions.CommandContext, guildid):
 @bot.command(
     name="listpremium",
     description="List all premium guild",
-    scope=1010636307216728094,
+    scope=devservers,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     options=[
         interactions.Option(
