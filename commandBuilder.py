@@ -42,9 +42,14 @@ connPremium.execute(
     """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int)"""
 )
 
+botstarttime = floor(time.time())
+
 
 # This checks so premium features can only be used by premium users.
 async def checkNoPremium(ctx, feature):
+    if ctx.guild_id == None:
+        await ctx.send("You cant use premium features in DMs", ephemeral=True)
+        return True
     guildid = int(ctx.guild_id)
 
     cursor = connPremium.execute(
@@ -72,7 +77,6 @@ async def checkLink(ctx, imagelink):
 
 
 def getExactTimestring(timestring, length):
-    startstring = timestring
     meassurement = length
     if meassurement >= 86400:
         amount = meassurement // 86400
@@ -170,7 +174,7 @@ async def checkActiveAndMention(ctx, mention):
         )
         for row in cursor:
             channel = int(row[0])
-        if channel > 5:
+        if channel > 4:
             await ctx.send(
                 "Max countdowns in dms reached. Delete one or wait for one to run out to add more.",
                 ephemeral=True,
@@ -191,7 +195,7 @@ async def checkActiveAndMention(ctx, mention):
         )
         for row in cursor:
             channel = int(row[0])
-        if guild > 49:  # Limits number of active countdowns to 50
+        if guild > 48:  # Limits number of active countdowns to 50
             if await checkNoPremium(
                 ctx,
                 "Increased amount of countdowns in this guild. Get premium or delete some of the active ones.",
@@ -849,6 +853,7 @@ async def botstats(ctx, bot):
     embed.add_field("Disk :minidisc:", f"{disk}%")
     embed.add_field("Active countdowns :clock1:", f"{number}")
     embed.add_field("Guilds :timer:", f"{guilds}")
+    embed.add_field("Uptime :up:", f"Since <t:{botstarttime}>")
     embed.add_field("Ping! :satellite:", f"{ping} ms")
     embed.add_field("Log size :scroll:", f"{logsize} rows")
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
