@@ -842,6 +842,17 @@ async def botstats(ctx, bot):
 
     guilds = len(bot.guilds)
 
+    
+    try:
+        channel = await ctx.get_channel()
+        member = await interactions.get(bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id)
+        if await member.has_permissions(interactions.Permissions.SEND_MESSAGES, channel=channel):
+            print("SEND")
+        else:
+            print("NO SEND")            
+    except:
+        print("NO ACCESS")
+
     # Check this when activating shards
     ping = round(bot.latency)
 
@@ -1140,20 +1151,27 @@ async def checkDone(bot):
             )
             connCountdowns.commit()
 
+
         try:
             if roleid != 0:
-                try:
-                    await interactions.get(bot, interactions.User, object_id=roleid)
+                notSent = True
+                guildinfo = await interactions.get(bot,interactions.Guild, object_id=guildid)
+                listofid = guildinfo.roles
+                for roleids in listofid:
+                    if roleid == int(roleids.id):
+                        await channel.send(
+                            f"{'<@&' + str(roleid) + '>' if roleid != guildid else '@everyone'}",
+                            embeds=embed,
+                            allowed_mentions={"parse": ["roles", "everyone"]},
+                        )
+                        notSent = False
+                if notSent:    
                     await channel.send(f"<@{roleid}>", embeds=embed)
-                except:
-                    await channel.send(
-                        f"{'<@&' + str(roleid) + '>' if roleid != guildid else '@everyone'}",
-                        embeds=embed,
-                        allowed_mentions={"parse": ["roles", "everyone"]},
-                    )
+                        
+                        
             else:
                 await channel.send(embeds=embed)
-        except Exception as error:
+        except:
             connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
                 {"msgid": msgid},
