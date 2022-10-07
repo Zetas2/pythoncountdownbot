@@ -112,8 +112,19 @@ async def sendAndAddToDatabase(
 ):
     try:
         channel = await ctx.get_channel()
-        member = await interactions.get(bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id)
-        if await member.has_permissions(interactions.Permissions.EMBED_LINKS, channel=channel):
+        member = await interactions.get(
+            bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
+        )
+        gotpermission = await member.has_permissions(
+            interactions.Permissions.EMBED_LINKS, channel=channel
+        )
+    except:
+        await ctx.send(
+            f"I am missing the permission to view this channel. Please give me it!",
+            ephemeral=True,
+        )
+    else:
+        if gotpermission:
             messagestart = messagestart.replace("\\n", "\n")
             messageend = messageend.replace("\\n", "\n")
             currenttime = floor(time.time())
@@ -124,7 +135,9 @@ async def sendAndAddToDatabase(
                     timestring = "\n*Exact time from start: "
                     timestring = getExactTimestring(timestring, timeleft)
                     timestring = timestring + "*"
-            msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
+            msg = await ctx.send(
+                f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}"
+            )
 
             if alert:
                 guildid = ctx.guild_id
@@ -159,10 +172,10 @@ async def sendAndAddToDatabase(
                 connCountdowns.commit()
             return False
         else:
-            await ctx.send(f"I am missing the permission to send embeds in this channel. Please give me it!", ephemeral=True)            
-    except:
-        await ctx.send(f"I am missing the permission to view this channel. Please give me it!", ephemeral=True)
-        
+            await ctx.send(
+                f"I am missing the permission to send embeds in this channel. Please give me it!",
+                ephemeral=True,
+            )
 
 
 async def checkLength(ctx, length):
@@ -317,16 +330,18 @@ async def countdown(
 
     try:
         wholedate = dateparser.parse("in " + timestring)
-        timestamp = floor(wholedate.timestamp())
-        validDate = True
     except:
         try:
             wholedate = dateparser.parse(timestring)
-            timestamp = floor(wholedate.timestamp())
-            validDate = True
         except:
             await ctx.send("Not a valid date.", ephemeral=True)
             validDate = False
+        else:
+            timestamp = floor(wholedate.timestamp())
+            validDate = True
+    else:
+        timestamp = floor(wholedate.timestamp())
+        validDate = True
 
     if validDate:
         currenttime = floor(time.time())
@@ -797,7 +812,8 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
     timestamp = 0
 
     cursor = connCountdowns.execute(
-        "SELECT timestamp,channelid,guildid from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+        "SELECT timestamp,channelid,guildid from Countdowns WHERE msgid = :msgid;",
+        {"msgid": msgid},
     )
     for row in cursor:
         timestamp = int(row[0])
@@ -809,7 +825,7 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
 
     currenttime = floor(time.time())
     length = timestamp - currenttime
-                
+
     timestring = f"Exact time left for countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message'): "
     timestring = getExactTimestring(timestring, length)
     await ctx.send(timestring, ephemeral=True)
@@ -878,12 +894,13 @@ async def translate(ctx, language):
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
             await ctx.guild.set_preferred_locale(language)
-            await ctx.send(f"{ctx.user} translated the bot to {language}")
         except:
             await ctx.send(
                 "Sorry, I need to be able to manage guild to use this command",
                 ephemeral=True,
             )
+        else:
+            await ctx.send(f"{ctx.user} translated the bot to {language}")
     else:
         await ctx.send(
             "Sorry, you need to be administrator to use this command", ephemeral=True
@@ -1100,7 +1117,7 @@ async def checkDone(bot):
             channel = await interactions.get(
                 bot, interactions.Channel, object_id=channelid
             )
-        except Exception as error:
+        except:
             connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
                 {"msgid": msgid},
@@ -1154,11 +1171,20 @@ async def checkDone(bot):
             )
             connCountdowns.commit()
 
-
-        try:
-            if roleid != 0:
-                notSent = True
-                guildinfo = await interactions.get(bot,interactions.Guild, object_id=guildid)
+        if roleid != 0:
+            notSent = True
+            try:
+                guildinfo = await interactions.get(
+                    bot, interactions.Guild, object_id=guildid
+                )
+            except:
+                connCountdowns.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msgid},
+                )
+                connCountdowns.commit()
+                return
+            else:
                 listofid = guildinfo.roles
                 for roleids in listofid:
                     if roleid == int(roleids.id):
@@ -1168,16 +1194,7 @@ async def checkDone(bot):
                             allowed_mentions={"parse": ["roles", "everyone"]},
                         )
                         notSent = False
-                if notSent:    
+                if notSent:
                     await channel.send(f"<@{roleid}>", embeds=embed)
-                        
-                        
-            else:
-                await channel.send(embeds=embed)
-        except:
-            connCountdowns.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid;",
-                {"msgid": msgid},
-            )
-            connCountdowns.commit()
-            return
+        else:
+            await channel.send(embeds=embed)
