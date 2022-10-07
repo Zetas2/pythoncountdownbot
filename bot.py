@@ -16,7 +16,6 @@ logging.basicConfig(
     filename="log.txt", level=logging.WARNING, format="%(asctime)s - %(message)s"
 )
 
-
 # These two are used to have the token as a .env file.
 from os import getenv
 from dotenv import load_dotenv
@@ -35,12 +34,13 @@ devservers = [1010636307216728094, 719541990580289557]
 @bot.event
 async def on_start():
     await bot.change_presence(
-        presence=interactions.ClientPresence(
+        interactions.ClientPresence(
+            status=interactions.StatusType.ONLINE,
             activities=[
                 interactions.PresenceActivity(
                     name="/help", type=interactions.PresenceActivityType.LISTENING
                 )
-            ]
+            ],
         )
     )
 
