@@ -143,6 +143,7 @@ async def countdown(
     image="",
     exact=True,
     alert=True,
+    bot=bot
 ):
     await commandBuilder.countdown(
         ctx,
@@ -155,6 +156,7 @@ async def countdown(
         image,
         exact,
         alert,
+        bot,
     )
 
 
@@ -251,6 +253,7 @@ async def timer(
     image="",
     exact=True,
     alert=True,
+    bot=bot,
 ):
 
     await commandBuilder.timer(
@@ -266,6 +269,7 @@ async def timer(
         image,
         exact,
         alert,
+        bot,
     )
 
 

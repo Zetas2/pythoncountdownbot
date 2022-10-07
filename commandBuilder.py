@@ -108,51 +108,61 @@ async def sendAndAddToDatabase(
     imagelink,
     exact,
     alert,
+    bot,
 ):
-    messagestart = messagestart.replace("\\n", "\n")
-    messageend = messageend.replace("\\n", "\n")
-    currenttime = floor(time.time())
-    timeleft = int(timestamp) - int(currenttime)
-    timestring = ""
-    if exact:
-        if timeleft > 3600:
-            timestring = "\n*Exact time from start: "
-            timestring = getExactTimestring(timestring, timeleft)
-            timestring = timestring + "*"
-    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
+    try:
+        channel = await ctx.get_channel()
+        member = await interactions.get(bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id)
+        if await member.has_permissions(interactions.Permissions.EMBED_LINKS, channel=channel):
+            messagestart = messagestart.replace("\\n", "\n")
+            messageend = messageend.replace("\\n", "\n")
+            currenttime = floor(time.time())
+            timeleft = int(timestamp) - int(currenttime)
+            timestring = ""
+            if exact:
+                if timeleft > 3600:
+                    timestring = "\n*Exact time from start: "
+                    timestring = getExactTimestring(timestring, timeleft)
+                    timestring = timestring + "*"
+            msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
 
-    if alert:
-        guildid = ctx.guild_id
-        if guildid == None:
-            guildid = 0
-        startedby = ctx.user.id
-        # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
-        if msg.id == None or msg.channel_id == None or guildid == None:
-            return True
+            if alert:
+                guildid = ctx.guild_id
+                if guildid == None:
+                    guildid = 0
+                startedby = ctx.user.id
+                # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
+                if msg.id == None or msg.channel_id == None or guildid == None:
+                    return True
 
-        if mention != "0":
-            roleid = mention.id
+                if mention != "0":
+                    roleid = mention.id
+                else:
+                    roleid = 0
+
+                connCountdowns.execute(
+                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
+                    {
+                        "timestamp": int(timestamp),
+                        "msgid": int(msg.id),
+                        "channelid": int(msg.channel_id),
+                        "guildid": int(guildid),
+                        "mention": int(roleid),
+                        "startedby": int(startedby),
+                        "times": int(times),
+                        "length": int(length),
+                        "imagelink": str(imagelink),
+                        "messagestart": str(messagestart),
+                        "messageend": str(messageend),
+                    },
+                )
+                connCountdowns.commit()
+            return False
         else:
-            roleid = 0
-
-        connCountdowns.execute(
-            "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
-            {
-                "timestamp": int(timestamp),
-                "msgid": int(msg.id),
-                "channelid": int(msg.channel_id),
-                "guildid": int(guildid),
-                "mention": int(roleid),
-                "startedby": int(startedby),
-                "times": int(times),
-                "length": int(length),
-                "imagelink": str(imagelink),
-                "messagestart": str(messagestart),
-                "messageend": str(messageend),
-            },
-        )
-        connCountdowns.commit()
-    return False
+            await ctx.send(f"I am missing the permission to send embeds in this channel. Please give me it!", ephemeral=True)            
+    except:
+        await ctx.send(f"I am missing the permission to view this channel. Please give me it!", ephemeral=True)
+        
 
 
 async def checkLength(ctx, length):
@@ -289,6 +299,7 @@ async def countdown(
     imagelink,
     exact,
     alert,
+    bot,
 ):
 
     if await checkActiveAndMention(ctx, mention):
@@ -336,6 +347,7 @@ async def countdown(
                 imagelink,
                 exact,
                 alert,
+                bot,
             )
             if writeerror:
                 await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -359,6 +371,7 @@ async def timer(
     imagelink,
     exact,
     alert,
+    bot,
 ):
     if await checkActiveAndMention(ctx, mention):
         return
@@ -390,6 +403,7 @@ async def timer(
         imagelink,
         exact,
         alert,
+        bot,
     )
     if writeerror:
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -841,17 +855,6 @@ async def botstats(ctx, bot):
         logsize = count + 1
 
     guilds = len(bot.guilds)
-
-    
-    try:
-        channel = await ctx.get_channel()
-        member = await interactions.get(bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id)
-        if await member.has_permissions(interactions.Permissions.SEND_MESSAGES, channel=channel):
-            print("SEND")
-        else:
-            print("NO SEND")            
-    except:
-        print("NO ACCESS")
 
     # Check this when activating shards
     ping = round(bot.latency)
