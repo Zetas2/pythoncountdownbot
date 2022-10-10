@@ -10,7 +10,7 @@ Sooo. This is a readme. Written in markdown. Sure.. That will be fun
 
 For this bot to work, you need at least the following:
 
-- discord-py-interactions 4.3.1
+- discord-py-interactions 4.3.2
 - interactions-tasks 1.0.0
 - interactions-wait-for 1.0.6
 - dateparser 1.1.1
