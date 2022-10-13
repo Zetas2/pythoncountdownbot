@@ -42,10 +42,15 @@ connPremium.execute(
     """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int)"""
 )
 
+botstarttime = floor(time.time())
+
 
 # This checks so premium features can only be used by premium users.
 async def checkNoPremium(ctx, feature):
-    guildid = int(ctx.guild.id)
+    if ctx.guild_id == None:
+        await ctx.send("You cant use premium features in DMs", ephemeral=True)
+        return True
+    guildid = int(ctx.guild_id)
 
     cursor = connPremium.execute(
         "SELECT guildid FROM Premium WHERE guildid = :guildid;",
@@ -72,7 +77,6 @@ async def checkLink(ctx, imagelink):
 
 
 def getExactTimestring(timestring, length):
-    startstring = timestring
     meassurement = length
     if meassurement >= 86400:
         amount = meassurement // 86400
@@ -86,8 +90,9 @@ def getExactTimestring(timestring, length):
         amount = meassurement // 60
         meassurement = meassurement - amount * 60
         timestring = timestring + " " + str(amount) + " minute(s)"
-    if startstring == timestring:
-        timestring = timestring + "less than a minute"
+    if meassurement > 0:
+        amount = meassurement
+        timestring = timestring + " " + str(amount) + " second(s)"
     return timestring
 
 
@@ -103,51 +108,77 @@ async def sendAndAddToDatabase(
     imagelink,
     exact,
     alert,
+    bot,
 ):
-    messagestart = messagestart.replace("\\n", "\n")
-    messageend = messageend.replace("\\n", "\n")
-    currenttime = floor(time.time())
-    timeleft = int(timestamp) - int(currenttime)
-    timestring = ""
-    if exact:
-        if timeleft > 3600:
-            timestring = "\n*Exact time from start: "
-            timestring = getExactTimestring(timestring, timeleft)
-            timestring = timestring + "*"
-    msg = await ctx.send(f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}")
-
-    if alert:
-        guildid = ctx.guild_id
-        if guildid == None:
-            guildid = 0
-        startedby = ctx.user.id
-        # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
-        if msg.id == None or msg.channel_id == None or guildid == None:
-            return True
-
-        if mention != "0":
-            roleid = mention.id
+    try:
+        if alert:
+            channel = await ctx.get_channel()
+            member = await interactions.get(
+                bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
+            )
+            gotpermission = await member.has_permissions(
+                interactions.Permissions.EMBED_LINKS, channel=channel
+            )
         else:
-            roleid = 0
-
-        connCountdowns.execute(
-            "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
-            {
-                "timestamp": int(timestamp),
-                "msgid": int(msg.id),
-                "channelid": int(msg.channel_id),
-                "guildid": int(guildid),
-                "mention": int(roleid),
-                "startedby": int(startedby),
-                "times": int(times),
-                "length": int(length),
-                "imagelink": str(imagelink),
-                "messagestart": str(messagestart),
-                "messageend": str(messageend),
-            },
+            gotpermission = True
+    except:
+        await ctx.send(
+            f"I am missing the permission to view this channel. Please give me it!",
+            ephemeral=True,
         )
-        connCountdowns.commit()
-    return False
+    else:
+        if gotpermission:
+            messagestart = messagestart.replace("\\n", "\n")
+            messageend = messageend.replace("\\n", "\n")
+            currenttime = floor(time.time())
+            timeleft = int(timestamp) - int(currenttime)
+            timestring = ""
+            if exact:
+                if timeleft > 3600:
+                    timestring = "\n*Exact time from start: "
+                    timestring = getExactTimestring(timestring, timeleft)
+                    timestring = timestring + "*"
+            msg = await ctx.send(
+                f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}"
+            )
+
+            if alert:
+                guildid = ctx.guild_id
+                if guildid == None:
+                    guildid = 0
+                startedby = ctx.user.id
+                # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
+                if msg.id == None or msg.channel_id == None or guildid == None:
+                    return True
+
+                if mention != "0":
+                    roleid = mention.id
+                else:
+                    roleid = 0
+
+                connCountdowns.execute(
+                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
+                    {
+                        "timestamp": int(timestamp),
+                        "msgid": int(msg.id),
+                        "channelid": int(msg.channel_id),
+                        "guildid": int(guildid),
+                        "mention": int(roleid),
+                        "startedby": int(startedby),
+                        "times": int(times),
+                        "length": int(length),
+                        "imagelink": str(imagelink),
+                        "messagestart": str(messagestart),
+                        "messageend": str(messageend),
+                    },
+                )
+                connCountdowns.commit()
+            return False
+        else:
+            await ctx.send(
+                f"I am missing the permission to send embeds in this channel. Please give me it!",
+                ephemeral=True,
+            )
 
 
 async def checkLength(ctx, length):
@@ -169,7 +200,7 @@ async def checkActiveAndMention(ctx, mention):
         )
         for row in cursor:
             channel = int(row[0])
-        if channel > 5:
+        if channel > 4:
             await ctx.send(
                 "Max countdowns in dms reached. Delete one or wait for one to run out to add more.",
                 ephemeral=True,
@@ -190,7 +221,7 @@ async def checkActiveAndMention(ctx, mention):
         )
         for row in cursor:
             channel = int(row[0])
-        if guild > 49:  # Limits number of active countdowns to 50
+        if guild > 48:  # Limits number of active countdowns to 50
             if await checkNoPremium(
                 ctx,
                 "Increased amount of countdowns in this guild. Get premium or delete some of the active ones.",
@@ -284,6 +315,7 @@ async def countdown(
     imagelink,
     exact,
     alert,
+    bot,
 ):
 
     if await checkActiveAndMention(ctx, mention):
@@ -301,16 +333,18 @@ async def countdown(
 
     try:
         wholedate = dateparser.parse("in " + timestring)
-        timestamp = floor(wholedate.timestamp())
-        validDate = True
     except:
         try:
             wholedate = dateparser.parse(timestring)
-            timestamp = floor(wholedate.timestamp())
-            validDate = True
         except:
             await ctx.send("Not a valid date.", ephemeral=True)
             validDate = False
+        else:
+            timestamp = floor(wholedate.timestamp())
+            validDate = True
+    else:
+        timestamp = floor(wholedate.timestamp())
+        validDate = True
 
     if validDate:
         currenttime = floor(time.time())
@@ -331,6 +365,7 @@ async def countdown(
                 imagelink,
                 exact,
                 alert,
+                bot,
             )
             if writeerror:
                 await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -354,6 +389,7 @@ async def timer(
     imagelink,
     exact,
     alert,
+    bot,
 ):
     if await checkActiveAndMention(ctx, mention):
         return
@@ -385,6 +421,7 @@ async def timer(
         imagelink,
         exact,
         alert,
+        bot,
     )
     if writeerror:
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -713,6 +750,7 @@ async def deletebutton(ctx, option):
                 ephemeral=True,
             )
         else:
+            await ctx.edit(components=[])
             await ctx.send(f"Guilds Countdown(s) Deleted by {user}")
     elif option == "channel":
         channelid = int(ctx.channel_id)
@@ -729,6 +767,7 @@ async def deletebutton(ctx, option):
             )
         else:
             user = ctx.user
+            await ctx.edit(components=[])
             await ctx.send(f"Channels Countdown(s) Deleted by {user}")
     elif option == "mine":
         if ctx.guild_id == None:
@@ -748,6 +787,7 @@ async def deletebutton(ctx, option):
                 ephemeral=True,
             )
         else:
+            await ctx.edit(components=[])
             await ctx.send(f"All {user} Countdown(s) Deleted")
     elif option == "cancel":
         # Just edit away the buttons and say that contdowns are kept
@@ -775,10 +815,13 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
     timestamp = 0
 
     cursor = connCountdowns.execute(
-        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msgid}
+        "SELECT timestamp,channelid,guildid from Countdowns WHERE msgid = :msgid;",
+        {"msgid": msgid},
     )
     for row in cursor:
         timestamp = int(row[0])
+        channelid = int(row[1])
+        guildid = int(row[2])
 
     if timestamp == 0:
         return await ctx.send("Please use one of the options ", ephemeral=True)
@@ -786,7 +829,7 @@ async def timeleft(ctx, sub_command, showmine, showchannel, showguild):
     currenttime = floor(time.time())
     length = timestamp - currenttime
 
-    timestring = "Exact time left: "
+    timestring = f"Exact time left for countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message'): "
     timestring = getExactTimestring(timestring, length)
     await ctx.send(timestring, ephemeral=True)
 
@@ -843,6 +886,7 @@ async def botstats(ctx, bot):
     embed.add_field("Disk :minidisc:", f"{disk}%")
     embed.add_field("Active countdowns :clock1:", f"{number}")
     embed.add_field("Guilds :timer:", f"{guilds}")
+    embed.add_field("Uptime :up:", f"Since <t:{botstarttime}:R>")
     embed.add_field("Ping! :satellite:", f"{ping} ms")
     embed.add_field("Log size :scroll:", f"{logsize} rows")
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
@@ -853,19 +897,21 @@ async def translate(ctx, language):
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
             await ctx.guild.set_preferred_locale(language)
-            await ctx.send(f"{ctx.user} translated the bot to {language}")
         except:
             await ctx.send(
                 "Sorry, I need to be able to manage guild to use this command",
                 ephemeral=True,
             )
+        else:
+            await ctx.send(f"{ctx.user} translated the bot to {language}")
     else:
         await ctx.send(
             "Sorry, you need to be administrator to use this command", ephemeral=True
         )
 
 
-async def editpremium(ctx, guildid):
+async def makethispremium(ctx):
+    guildid = ctx.guild_id
     currenttime = floor(time.time())
     allowedtime = currenttime - 86400 * 2
     premiumUsers = []
@@ -918,7 +964,7 @@ async def premiuminfo(ctx):
     )
     embed.add_field(
         "How do I pick what guild?",
-        "You can use the command /editpremium and enter the guildid of the guild you want to be premium. \n**BEWARE!** There is a cooldown between uses of it.",
+        "You can use the command /makethispremium and it will make the guild you use it in to be premium. \n**BEWARE!** There is a cooldown between uses of it.",
     )
     embed.add_field(
         "Can I have premium in multiple guilds?",
@@ -1074,7 +1120,7 @@ async def checkDone(bot):
             channel = await interactions.get(
                 bot, interactions.Channel, object_id=channelid
             )
-        except Exception as error: 
+        except:
             connCountdowns.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
                 {"msgid": msgid},
@@ -1082,7 +1128,7 @@ async def checkDone(bot):
             connCountdowns.commit()
             return
 
-        # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild_id))
+        # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild.id))
         language = "en-US"  # guild.preferred_locale
 
         embed = interactions.Embed()
@@ -1128,23 +1174,30 @@ async def checkDone(bot):
             )
             connCountdowns.commit()
 
-        try:
-            if roleid != 0:
-                try:
-                    await interactions.get(bot, interactions.User, object_id=roleid)
-                    await channel.send(f"<@{roleid}>", embeds=embed)
-                except:
-                    await channel.send(
-                        f"{'<@&' + str(roleid) + '>' if roleid != guildid else '@everyone'}",
-                        embeds=embed,
-                        allowed_mentions={"parse": ["roles", "everyone"]},
-                    )
+        if roleid != 0:
+            notSent = True
+            try:
+                guildinfo = await interactions.get(
+                    bot, interactions.Guild, object_id=guildid
+                )
+            except:
+                connCountdowns.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msgid},
+                )
+                connCountdowns.commit()
+                return
             else:
-                await channel.send(embeds=embed)
-        except Exception as error:            
-            connCountdowns.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid;",
-                {"msgid": msgid},
-            )
-            connCountdowns.commit()
-            return
+                listofid = guildinfo.roles
+                for roleids in listofid:
+                    if roleid == int(roleids.id):
+                        await channel.send(
+                            f"{'<@&' + str(roleid) + '>' if roleid != guildid else '@everyone'}",
+                            embeds=embed,
+                            allowed_mentions={"parse": ["roles", "everyone"]},
+                        )
+                        notSent = False
+                if notSent:
+                    await channel.send(f"<@{roleid}>", embeds=embed)
+        else:
+            await channel.send(embeds=embed)

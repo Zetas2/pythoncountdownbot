@@ -16,7 +16,6 @@ logging.basicConfig(
     filename="log.txt", level=logging.WARNING, format="%(asctime)s - %(message)s"
 )
 
-
 # These two are used to have the token as a .env file.
 from os import getenv
 from dotenv import load_dotenv
@@ -27,7 +26,7 @@ TOKENSTRING = getenv("DISCORD_TOKEN")
 
 bot = interactions.Client(token=TOKENSTRING, intents=interactions.Intents.GUILDS)
 
-devservers = [1010636307216728094, 970764356289712160]
+devservers = [1010636307216728094, 719541990580289557]
 
 
 # Check this when activating shards
@@ -35,12 +34,13 @@ devservers = [1010636307216728094, 970764356289712160]
 @bot.event
 async def on_start():
     await bot.change_presence(
-        presence=interactions.ClientPresence(
+        interactions.ClientPresence(
+            status=interactions.StatusType.ONLINE,
             activities=[
                 interactions.PresenceActivity(
                     name="/help", type=interactions.PresenceActivityType.LISTENING
                 )
-            ]
+            ],
         )
     )
 
@@ -143,6 +143,7 @@ async def countdown(
     image="",
     exact=True,
     alert=True,
+    bot=bot,
 ):
     await commandBuilder.countdown(
         ctx,
@@ -155,6 +156,7 @@ async def countdown(
         image,
         exact,
         alert,
+        bot,
     )
 
 
@@ -251,6 +253,7 @@ async def timer(
     image="",
     exact=True,
     alert=True,
+    bot=bot,
 ):
 
     await commandBuilder.timer(
@@ -266,6 +269,7 @@ async def timer(
         image,
         exact,
         alert,
+        bot,
     )
 
 
@@ -397,6 +401,7 @@ async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
 @bot.command(
     name="delete",
     description="Deletes countdowns",
+    dm_permission=False,
     options=[
         interactions.Option(
             name="single",
@@ -527,6 +532,7 @@ async def botstats(ctx: interactions.CommandContext):
     description="Translate the bot",
     scope=devservers,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    dm_permission=False,
     options=[
         interactions.Option(
             name="language",
@@ -598,20 +604,12 @@ async def deletepremium(ctx: interactions.CommandContext, userid):
 
 
 @bot.command(
-    name="editpremium",
-    description="Edit your premium guild",
-    options=[
-        interactions.Option(
-            name="guildid",
-            description="What guild do you want to be premium",
-            type=interactions.OptionType.STRING,
-            max_length=50,
-            required=True,
-        ),
-    ],
+    name="makethispremium",
+    description="Changes so this guild becomes your premium guild",
+    dm_permission=False,
 )
-async def editpremium(ctx: interactions.CommandContext, guildid):
-    await commandBuilder.editpremium(ctx, guildid)
+async def makethispremium(ctx: interactions.CommandContext):
+    await commandBuilder.makethispremium(ctx)
 
 
 @bot.command(
