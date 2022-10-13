@@ -111,13 +111,16 @@ async def sendAndAddToDatabase(
     bot,
 ):
     try:
-        channel = await ctx.get_channel()
-        member = await interactions.get(
-            bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
-        )
-        gotpermission = await member.has_permissions(
-            interactions.Permissions.EMBED_LINKS, channel=channel
-        )
+        if alert:
+            channel = await ctx.get_channel()
+            member = await interactions.get(
+                bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
+            )
+            gotpermission = await member.has_permissions(
+                interactions.Permissions.EMBED_LINKS, channel=channel
+            )
+        else:
+            gotpermission = True
     except:
         await ctx.send(
             f"I am missing the permission to view this channel. Please give me it!",
