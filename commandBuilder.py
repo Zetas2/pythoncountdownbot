@@ -330,22 +330,18 @@ async def countdown(
     if times != 0:
         if await checkNoPremium(ctx, "repeating timer"):
             return
-
+            
+    wholedate = dateparser.parse("in " + timestring)
     try:
-        wholedate = dateparser.parse("in " + timestring)
-    except:
-        try:
-            wholedate = dateparser.parse(timestring)
-        except:
-            await ctx.send("Not a valid date.", ephemeral=True)
-            validDate = False
-        else:
-            timestamp = floor(wholedate.timestamp())
-            validDate = True
-    else:
         timestamp = floor(wholedate.timestamp())
         validDate = True
-
+    except:
+        await ctx.send(
+            f"Sorry, I dont understand that date!",
+            ephemeral=True,
+        )
+        validDate = False
+    
     if validDate:
         currenttime = floor(time.time())
         if currenttime < timestamp:  # Make sure the time is in the future
