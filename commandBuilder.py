@@ -114,11 +114,11 @@ async def sendAndAddToDatabase(
         if alert:
             channel = await ctx.get_channel()
             member = await interactions.get(
-                bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
-            )
+                    bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
+                )
             gotpermission = await member.has_permissions(
-                interactions.Permissions.EMBED_LINKS, channel=channel
-            )
+            interactions.Permissions.EMBED_LINKS^interactions.Permissions.SEND_MESSAGES, channel=channel
+            )        
         else:
             gotpermission = True
     except:
@@ -176,7 +176,7 @@ async def sendAndAddToDatabase(
             return False
         else:
             await ctx.send(
-                f"I am missing the permission to send embeds in this channel. Please give me it!",
+                f"I am missing the permission to send embeds/messages in this channel. Please give me it!",
                 ephemeral=True,
             )
 
