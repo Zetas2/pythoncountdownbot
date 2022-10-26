@@ -330,7 +330,7 @@ async def countdown(
     if times != 0:
         if await checkNoPremium(ctx, "repeating timer"):
             return
-            
+
     wholedate = dateparser.parse("in " + timestring)
     try:
         timestamp = floor(wholedate.timestamp())
@@ -536,7 +536,9 @@ async def delete(
             else:
 
                 user = ctx.user
-                await ctx.send(f"Countdown {msgid} was deleted by {user}")
+                guildid = ctx.guild_id
+                channelid = ctx.channel_id
+                await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
         else:
             await ctx.send(
                 "Are you sure you want to delete all your countdowns in this guild?",
@@ -593,7 +595,9 @@ async def delete(
                 )
             else:
                 user = ctx.user
-                await ctx.send(f"Countdown {msgid} was deleted by {user}")
+                guildid = ctx.guild_id
+                channelid = ctx.channel_id
+                await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
 
         else:
             if sub_command == "channel":
@@ -652,7 +656,9 @@ async def deleteThis(ctx):
             )
         else:
             user = ctx.user
-            return await ctx.send(f"Countdown {msgid} was deleted by {user}")
+            guildid = ctx.guild_id
+            channelid = ctx.channel_id
+            return await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
