@@ -20,9 +20,9 @@ For this bot to work, you need at least the following:
 
 Sure.. I might have missed something, but thats the main stuff at least.
 
-## How to use
+## How to self host
 
-To use this bot? Well, just get the code, install the required stuff, fill in the .env file with your own bot token and you are off.
+To run this bot yourself? Well, just get the code, install the required stuff, fill in the .env file with your own bot token and you are off.
 
 Well, github is being mean, so you need to create your own .env file. The content should be this:
 
@@ -31,6 +31,8 @@ Well, github is being mean, so you need to create your own .env file. The conten
 
 DISCORD_TOKEN=YourLongAndComplicatedToken
 ```
+
+Oh, and then you go into bot.py and edit devservers to be the id of your guild.
 
 ## History
 

@@ -114,11 +114,11 @@ async def sendAndAddToDatabase(
         if alert:
             channel = await ctx.get_channel()
             member = await interactions.get(
-                bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
-            )
+                    bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
+                )
             gotpermission = await member.has_permissions(
-                interactions.Permissions.EMBED_LINKS, channel=channel
-            )
+            interactions.Permissions.EMBED_LINKS^interactions.Permissions.SEND_MESSAGES, channel=channel
+            )        
         else:
             gotpermission = True
     except:
@@ -176,7 +176,7 @@ async def sendAndAddToDatabase(
             return False
         else:
             await ctx.send(
-                f"I am missing the permission to send embeds in this channel. Please give me it!",
+                f"I am missing the permission to send embeds/messages in this channel. Please give me it!",
                 ephemeral=True,
             )
 
@@ -331,21 +331,17 @@ async def countdown(
         if await checkNoPremium(ctx, "repeating timer"):
             return
 
+    wholedate = dateparser.parse("in " + timestring)
     try:
-        wholedate = dateparser.parse("in " + timestring)
-    except:
-        try:
-            wholedate = dateparser.parse(timestring)
-        except:
-            await ctx.send("Not a valid date.", ephemeral=True)
-            validDate = False
-        else:
-            timestamp = floor(wholedate.timestamp())
-            validDate = True
-    else:
         timestamp = floor(wholedate.timestamp())
         validDate = True
-
+    except:
+        await ctx.send(
+            f"Sorry, I dont understand that date!",
+            ephemeral=True,
+        )
+        validDate = False
+    
     if validDate:
         currenttime = floor(time.time())
         if currenttime < timestamp:  # Make sure the time is in the future
@@ -540,7 +536,9 @@ async def delete(
             else:
 
                 user = ctx.user
-                await ctx.send(f"Countdown {msgid} was deleted by {user}")
+                guildid = ctx.guild_id
+                channelid = ctx.channel_id
+                await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
         else:
             await ctx.send(
                 "Are you sure you want to delete all your countdowns in this guild?",
@@ -597,7 +595,9 @@ async def delete(
                 )
             else:
                 user = ctx.user
-                await ctx.send(f"Countdown {msgid} was deleted by {user}")
+                guildid = ctx.guild_id
+                channelid = ctx.channel_id
+                await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
 
         else:
             if sub_command == "channel":
@@ -656,7 +656,9 @@ async def deleteThis(ctx):
             )
         else:
             user = ctx.user
-            return await ctx.send(f"Countdown {msgid} was deleted by {user}")
+            guildid = ctx.guild_id
+            channelid = ctx.channel_id
+            return await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
