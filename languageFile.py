@@ -12,7 +12,7 @@ translations = {
         "helpDeleteTitle": "/delete (deletethis)",
         "helpDeleteDesc": "To use this with other than `mine` you need to have the `MANAGE_MESSAGE` permission.\n`single` ~ Pick one of the list presented to you. `/list` for more info.\n`mine` ~ Delete the countdown you created.\n`channel` ~ Deletes all countdowns in this channel.\n`guild` ~ Deletes all countdowns in this guild.",
         "helpHelpTitle": "/help",
-        "helpHelpDesc": "Shows this help message.\n",
+        "helpHelpDesc": "Shows this help message.",
         "helpMentionTitle": "Mention",
         "helpMentionDesc": "To be able to mention people at the end of the countdown you currently need to have the `MENTION_EVERYONE` premission",
         "helpLinksTitle": "Links",
