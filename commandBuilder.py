@@ -275,10 +275,6 @@ async def help(ctx):
         (translations[(language)]["helpDeleteTitle"]),
         (translations[(language)]["helpDeleteDesc"]),
     )
-    embed.add_field(
-        (translations[(language)]["helpMentionTitle"]),
-        (translations[(language)]["helpMentionDesc"]),
-    )
     try:
         # Only show Translate if the user got ADMINISTRATOR Permission
         if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
@@ -290,8 +286,7 @@ async def help(ctx):
         # If they are in DM, dont show these stuff.
         pass
     embed.add_field(
-        (translations[(language)]["helpLinksTitle"]),
-        (translations[(language)]["helpLinksDesc"]),
+        (translations[(language)]["helpLinksDesc"])
     )
 
     embed.footer = interactions.EmbedFooter(
