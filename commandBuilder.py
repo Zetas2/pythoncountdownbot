@@ -286,7 +286,7 @@ async def help(ctx):
         # If they are in DM, dont show these stuff.
         pass
     embed.add_field(
-        (translations[(language)]["helpLinksDesc"])
+        translations[(language)]["helpLinksDesc"]
     )
 
     embed.footer = interactions.EmbedFooter(
