@@ -7,6 +7,9 @@ import sqlite3
 # parses the human date to a date that computer understands
 import dateparser
 
+# To get a random thanks
+import random
+
 # To get information about system usage (ram and cpu)
 import psutil
 
@@ -275,10 +278,6 @@ async def help(ctx):
         (translations[(language)]["helpDeleteTitle"]),
         (translations[(language)]["helpDeleteDesc"]),
     )
-    embed.add_field(
-        (translations[(language)]["helpMentionTitle"]),
-        (translations[(language)]["helpMentionDesc"]),
-    )
     try:
         # Only show Translate if the user got ADMINISTRATOR Permission
         if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
@@ -295,7 +294,7 @@ async def help(ctx):
     )
 
     embed.footer = interactions.EmbedFooter(
-        text=(translations[(language)]["helpFooter"])
+        text=(translations[(language)]["helpFooter"+str(random.randint(1,6))])
     )
 
     embed.color = int(
