@@ -64,7 +64,11 @@ async def check_no_premium(ctx, feature):
     )
 
     # This checks if cursor got any rows, if it does, then the guild is premium
-    for row in cursor: # ¤ check how sqlite.cursor works, if theres an easier way of doing this
+    for (
+        row
+    ) in (
+        cursor
+    ):  # ¤ check how sqlite.cursor works, if theres an easier way of doing this
         return False
 
     # If the code havent returned yet, its not a premium user
@@ -75,13 +79,14 @@ async def check_no_premium(ctx, feature):
 
 
 # Make sure that the url given is a valid url
-async def check_link(ctx, imagelink):    
+async def check_link(ctx, imagelink):
     if validurl(imagelink):
         return False
 
     # If the code havent returned yet, its not a valid link
     await ctx.send("You need to send a link to the image", ephemeral=True)
     return True
+
 
 # This is what creates the message Exact time from start X minutes...
 def get_exact_timestring(timestring, length):
@@ -125,11 +130,16 @@ async def send_and_add_to_database(
         if alert:
             channel = await ctx.get_channel()
             member = await interactions.get(
-                    bot, interactions.Member, object_id=int(bot.me.id), parent_id=ctx.guild_id
-                )
+                bot,
+                interactions.Member,
+                object_id=int(bot.me.id),
+                parent_id=ctx.guild_id,
+            )
             got_permission = await member.has_permissions(
-            interactions.Permissions.EMBED_LINKS^interactions.Permissions.SEND_MESSAGES, channel=channel
-            )        
+                interactions.Permissions.EMBED_LINKS
+                ^ interactions.Permissions.SEND_MESSAGES,
+                channel=channel,
+            )
         else:
             got_permission = True
     except:
@@ -140,22 +150,28 @@ async def send_and_add_to_database(
     else:
         if got_permission:
             # Message is built and sent
-            messagestart = messagestart.replace("\\n", "\n") # Allow for \n to be used as newline charachter
+            messagestart = messagestart.replace(
+                "\\n", "\n"
+            )  # Allow for \n to be used as newline charachter
             messageend = messageend.replace("\\n", "\n")
             currenttime = floor(time.time())
             timeleft = int(timestamp) - int(currenttime)
             timestring = ""
             if exact:
-                if timeleft > 3600: # Since timestamps are exact to the minute the last hour, only use exact if time is longer
+                if (
+                    timeleft > 3600
+                ):  # Since timestamps are exact to the minute the last hour, only use exact if time is longer
                     timestring = "\n*Exact time from start: "
                     timestring = f"{get_exact_timestring(timestring, timeleft)}*"
             msg = await ctx.send(
                 f"{messagestart} <t:{timestamp}:R> {messageend}{timestring}"
             )
 
-            if alert: # If the bot should notify when countdown is done - save it to database:
+            if (
+                alert
+            ):  # If the bot should notify when countdown is done - save it to database:
                 guildid = ctx.guild_id
-                if guildid == None: # Will be that in DMs.
+                if guildid == None:  # Will be that in DMs.
                     guildid = 0
                 startedby = ctx.user.id
                 # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
@@ -192,10 +208,13 @@ async def send_and_add_to_database(
                 ephemeral=True,
             )
 
+
 # Check so that a countdown is at least one minute long
 async def check_length(ctx, length):
     if length < 60:
-        if int(ctx.user.id) != 238006908664020993: # I am the dev and want to be able to test timers without wating, ok?
+        if (
+            int(ctx.user.id) != 238006908664020993
+        ):  # I am the dev and want to be able to test timers without wating, ok?
             await ctx.send(
                 "Minimum length of a countdown is one minute", ephemeral=True
             )
@@ -205,9 +224,11 @@ async def check_length(ctx, length):
 
 # Checks so the limit of active countdowns isnt reached and that the user have permission to ping
 async def check_active_and_mention(ctx, mention):
-    if ctx.guild_id == None: # This is in DMs, there channelid is used instead of guildid
+    if (
+        ctx.guild_id == None
+    ):  # This is in DMs, there channelid is used instead of guildid
         cursor = conn_countdowns_db.execute(
-            "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;", 
+            "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
             {"channelid": int(ctx.channel_id)},
         )
         for row in cursor:
@@ -239,7 +260,9 @@ async def check_active_and_mention(ctx, mention):
                 "Increased amount of countdowns in this guild. Get premium or delete some of the active ones.",
             ):
                 return True
-        elif number_of_countdowns_channel > 19:  # limits number of active countdowns to 20
+        elif (
+            number_of_countdowns_channel > 19
+        ):  # limits number of active countdowns to 20
             if await check_no_premium(
                 ctx,
                 "Increased amount of countdowns in this channel. Get premium or delete some of the active ones.",
@@ -252,11 +275,12 @@ async def check_active_and_mention(ctx, mention):
         ):
             await ctx.send("You dont have permission to ping", ephemeral=True)
             return True
-        #mention is a thingy, I just want the id of it.
+        # mention is a thingy, I just want the id of it.
         if mention != "0":
             mention = mention.id
 
         return False
+
 
 # A single function for all checks required before a dountdown/timer starts
 async def do_all_checks(ctx, mention, imagelink, times):
@@ -274,7 +298,7 @@ async def do_all_checks(ctx, mention, imagelink, times):
             return
 
 
-#Help command
+# Help command
 async def help(ctx):
     language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to. Wont do anything until bot is translated
     # Create a embed and add in all fields to it.
@@ -305,7 +329,7 @@ async def help(ctx):
         (translations[(language)]["helpDeleteTitle"]),
         (translations[(language)]["helpDeleteDesc"]),
     )
-    try: # This try will fail in DM
+    try:  # This try will fail in DM
         # Only show Translate if the user got ADMINISTRATOR Permission
         if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
             embed.add_field(
@@ -321,13 +345,14 @@ async def help(ctx):
     )
 
     embed.footer = interactions.EmbedFooter(
-        text=(translations[(language)]["helpFooter"+str(random.randint(1,6))])
+        text=(translations[(language)]["helpFooter" + str(random.randint(1, 6))])
     )
 
     embed.color = int(
         ("#%02x%02x%02x" % (90, 232, 240)).replace("#", "0x"), base=16
     )  # Set the colour to light blue
     await ctx.send(embeds=embed, ephemeral=True)
+
 
 # Countdown command
 async def countdown(
@@ -344,10 +369,10 @@ async def countdown(
     bot,
 ):
 
-    await do_all_checks(ctx,mention,imagelink,times)
+    await do_all_checks(ctx, mention, imagelink, times)
 
     wholedate = dateparser.parse("in " + timestring)
-    try: # If wholedate cant be floored, it is not a valid date.
+    try:  # If wholedate cant be floored, it is not a valid date.
         timestamp = floor(wholedate.timestamp())
         validDate = True
     except:
@@ -356,7 +381,7 @@ async def countdown(
             ephemeral=True,
         )
         validDate = False
-    
+
     if validDate:
         currenttime = floor(time.time())
         if currenttime < timestamp:  # Make sure the time is in the future
@@ -402,8 +427,8 @@ async def timer(
     alert,
     bot,
 ):
-    
-    await do_all_checks(ctx,mention,imagelink,times)
+
+    await do_all_checks(ctx, mention, imagelink, times)
 
     currenttime = floor(time.time())
     length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
@@ -426,6 +451,7 @@ async def timer(
     )
     if writeerror:
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
+
 
 # List command
 async def list(ctx, sub_command, page):
@@ -543,7 +569,9 @@ async def delete(
                 user = ctx.user
                 guildid = ctx.guild_id
                 channelid = ctx.channel_id
-                await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
+                await ctx.send(
+                    f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}"
+                )
         else:
             await ctx.send(
                 "Are you sure you want to delete all your countdowns in this guild?",
@@ -602,7 +630,9 @@ async def delete(
                 user = ctx.user
                 guildid = ctx.guild_id
                 channelid = ctx.channel_id
-                await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
+                await ctx.send(
+                    f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}"
+                )
 
         else:
             if sub_command == "channel":
@@ -663,7 +693,9 @@ async def deleteThis(ctx):
             user = ctx.user
             guildid = ctx.guild_id
             channelid = ctx.channel_id
-            return await ctx.send(f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}")
+            return await ctx.send(
+                f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}"
+            )
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
