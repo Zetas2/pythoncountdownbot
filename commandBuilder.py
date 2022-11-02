@@ -1,4 +1,5 @@
 # ¤ are points of optimasation
+# +++ where I am at the first readability check
 
 # Main library
 import interactions
@@ -453,7 +454,7 @@ async def timer(
         await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
 
 
-# List command
+# List command +++
 async def list(ctx, sub_command, page):
     if ctx.guild_id == None and sub_command != "channel":
         return await ctx.send("Sorry, only /list channel works in DMs", ephemeral=True)
