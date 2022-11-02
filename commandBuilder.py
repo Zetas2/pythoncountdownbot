@@ -463,6 +463,7 @@ async def list(ctx, sub_command, page):
     else:
         guildid = int(ctx.guild_id)
     channelid = int(ctx.channel_id)
+
     if sub_command == "channel":
         place = "in this channel"
         cursor = conn_countdowns_db.execute(
@@ -476,6 +477,7 @@ async def list(ctx, sub_command, page):
             "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
             {"channelid": channelid},
         )
+
     elif sub_command == "guild":
         place = "in this guild"
         cursor = conn_countdowns_db.execute(
@@ -488,6 +490,7 @@ async def list(ctx, sub_command, page):
             "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
             {"guildid": guildid},
         )
+
     elif sub_command == "mine":
         place = "from you"
         userid = int(ctx.user.id)
@@ -501,7 +504,9 @@ async def list(ctx, sub_command, page):
             "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid AND startedby = :userid ORDER BY timestamp ASC;",
             {"guildid": guildid, "userid": userid},
         )
+
     maxpage = ceil(numberofcountdown / 5)
+
     if maxpage < page:
         page = maxpage
 
