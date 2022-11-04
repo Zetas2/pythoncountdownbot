@@ -547,7 +547,7 @@ async def delete(
 ):
     if sub_command == "mine":
         if sub_command_group == "single":
-            cursor = getPossibleCountdowns(ctx, "mine")
+            cursor = get_possible_countdowns(ctx, "mine")
             try:
                 msgid = deletemine.split(": ")[1]
             except:
@@ -588,7 +588,7 @@ async def delete(
     elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
         if sub_command_group == "single":
             if sub_command == "channel":
-                cursor = getPossibleCountdowns(ctx, "channel")
+                cursor = get_possible_countdowns(ctx, "channel")
                 try:
                     msgid = deletechannel.split(": ")[1]
                 except:
@@ -605,7 +605,7 @@ async def delete(
                         "Please use one of the options ", ephemeral=True
                     )
             if sub_command == "guild":
-                cursor = getPossibleCountdowns(ctx, "guild")
+                cursor = get_possible_countdowns(ctx, "guild")
                 try:
                     msgid = deleteguild.split(": ")[1]
                 except:
@@ -705,7 +705,7 @@ async def deleteThis(ctx):
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
-async def fillChoices(ctx, cursor, value):
+async def fill_choices(ctx, cursor, value):
     countdowns = []
     id = 0
     for row in cursor:
@@ -724,7 +724,7 @@ async def fillChoices(ctx, cursor, value):
     await ctx.populate(choices)
 
 
-def getPossibleCountdowns(ctx, option):
+def get_possible_countdowns(ctx, option):
     if option == "mine":
         userid = int(ctx.user.id)
         if ctx.guild_id == None:
@@ -764,12 +764,12 @@ def getPossibleCountdowns(ctx, option):
 
 
 async def autocompleteCountdowns(ctx, value, option):
-    cursor = getPossibleCountdowns(ctx, option)
+    cursor = get_possible_countdowns(ctx, option)
 
-    await fillChoices(ctx, cursor, value)
+    await fill_choices(ctx, cursor, value)
 
 
-def deletedChannel(channel):
+def deleted_channel(channel):
     channelid = int(channel.id)
     conn_countdowns_db.execute(
         "DELETE from Countdowns WHERE channelid = :channelid;",

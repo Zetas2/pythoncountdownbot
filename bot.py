@@ -47,7 +47,7 @@ async def on_start():
 
 @bot.event
 async def on_channel_delete(channel):
-    commandBuilder.deletedChannel(channel)
+    commandBuilder.deleted_channel(channel)
 
 
 @bot.command(
