@@ -299,6 +299,15 @@ async def do_all_checks(ctx, mention, imagelink, times):
             return
 
 
+async def delete_message(ctx,msgid):
+    user = ctx.user
+    guildid = ctx.guild_id
+    channelid = ctx.channel_id
+    await ctx.send(
+        f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}"
+    )
+
+
 # Help command
 async def help(ctx):
     language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to. Wont do anything until bot is translated
@@ -572,12 +581,7 @@ async def delete(
                 )
             else:
 
-                user = ctx.user
-                guildid = ctx.guild_id
-                channelid = ctx.channel_id
-                await ctx.send(
-                    f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}"
-                )
+                delete_message(ctx,msgid)
         else:
             await ctx.send(
                 "Are you sure you want to delete all your countdowns in this guild?",
@@ -633,12 +637,7 @@ async def delete(
                     ephemeral=True,
                 )
             else:
-                user = ctx.user
-                guildid = ctx.guild_id
-                channelid = ctx.channel_id
-                await ctx.send(
-                    f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}"
-                )
+                delete_message(ctx,msgid)
 
         else:
             if sub_command == "channel":
@@ -696,12 +695,7 @@ async def deleteThis(ctx):
                 ephemeral=True,
             )
         else:
-            user = ctx.user
-            guildid = ctx.guild_id
-            channelid = ctx.channel_id
-            return await ctx.send(
-                f"Countdown [{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') was deleted by {user}"
-            )
+            delete_message(ctx,msgid)
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
@@ -1034,7 +1028,7 @@ async def log(ctx):
     if int(ctx.user.id) in devs:
         logs = ""
         with open("log.txt", "r") as file:
-            for line in file.readlines()[-15:]:
+            for line in file.readlines()[-19:]:
                 logs = logs + line
 
         await ctx.send(f"Logs are:\n```{logs}```", ephemeral=True)
