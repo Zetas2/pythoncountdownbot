@@ -905,10 +905,8 @@ async def botstats(ctx, bot):
     number = len(cursor.fetchall())
 
     with open("log.txt", "r") as file:
-        for count, line in enumerate(file):
-            pass
-        logsize = count + 1
-
+        logsize = len(file.readlines())
+    
     guilds = len(bot.guilds)
 
     # Check this when activating shards
