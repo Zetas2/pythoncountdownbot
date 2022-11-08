@@ -1,3 +1,7 @@
+"""
+All commands are made in here. For translating there is languageFile.
+"""
+
 # ¤ are points of optimasation
 # +++ where I am at the first readability check
 
@@ -305,7 +309,7 @@ async def delete_message(ctx, msg_id):
     )
 
 
-async def help(ctx):
+async def help_information(ctx):
     """The help command. This looks different than the rest since it is prepped for translation by using the translations file"""
     language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to. Wont do anything until bot is translated
     # Create a embed and add in all fields to it.
@@ -462,7 +466,7 @@ async def timer(
 
 
 # +++
-async def list(ctx, sub_command, page):
+async def list_countdowns(ctx, sub_command, page):
     """List command. List all active countdowns based on sub command."""
     if ctx.guild_id is None and sub_command != "channel":
         return await ctx.send("Sorry, only /list channel works in DMs", ephemeral=True)

@@ -55,7 +55,7 @@ async def on_channel_delete(channel):
     description="Shows a help message",
 )
 async def help(ctx: interactions.CommandContext):
-    await commandBuilder.help(ctx)
+    await commandBuilder.help_information(ctx)
 
 
 @bot.command(
@@ -321,7 +321,7 @@ async def timer(
     ],
 )
 async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
-    await commandBuilder.list(ctx, sub_command, page)
+    await commandBuilder.list_countdowns(ctx, sub_command, page)
 
 
 @bot.command(
