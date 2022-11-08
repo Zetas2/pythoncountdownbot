@@ -1,8 +1,6 @@
 # ¤ are points of optimasation
 # +++ where I am at the first readability check
 
-# Main library
-import interactions
 
 # Handeling the database
 import sqlite3
@@ -24,6 +22,9 @@ from math import floor, ceil
 
 # Used for... getting time.
 import time
+
+# Main library
+import interactions
 
 # Here all components are
 import components
@@ -54,7 +55,7 @@ botstarttime = floor(time.time())
 
 # This checks so premium features can only be used by premium users.
 async def check_no_premium(ctx, feature):
-    if ctx.guild_id == None:
+    if ctx.guild_id is None:
         await ctx.send("You cant use premium features in DMs", ephemeral=True)
         return True
     guildid = int(ctx.guild_id)
@@ -65,18 +66,14 @@ async def check_no_premium(ctx, feature):
     )
 
     # This checks if cursor got any rows, if it does, then the guild is premium
-    for (
-        row
-    ) in (
-        cursor
-    ):  # ¤ check how sqlite.cursor works, if theres an easier way of doing this
+    if len(cursor.fetchall()) !=0:
         return False
-
+    else:
     # If the code havent returned yet, its not a premium user
-    await ctx.send(
-        f"Sorry, you tried to use a premium only feature: {feature}", ephemeral=True
-    )
-    return True
+        await ctx.send(
+            f"Sorry, you tried to use a premium only feature: {feature}", ephemeral=True
+        )
+        return True
 
 
 # Make sure that the url given is a valid url
@@ -172,11 +169,11 @@ async def send_and_add_to_database(
                 alert
             ):  # If the bot should notify when countdown is done - save it to database:
                 guildid = ctx.guild_id
-                if guildid == None:  # Will be that in DMs.
+                if guildid is None:  # Will be that in DMs.
                     guildid = 0
                 startedby = ctx.user.id
                 # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
-                if msg.id == None or msg.channel_id == None:
+                if msg.id is None or msg.channel_id is None:
                     return True
 
                 if mention != "0":
@@ -226,7 +223,7 @@ async def check_length(ctx, length):
 # Checks so the limit of active countdowns isnt reached and that the user have permission to ping
 async def check_active_and_mention(ctx, mention):
     if (
-        ctx.guild_id == None
+        ctx.guild_id is None
     ):  # This is in DMs, there channelid is used instead of guildid
         cursor = conn_countdowns_db.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
@@ -286,20 +283,22 @@ async def check_active_and_mention(ctx, mention):
 # A single function for all checks required before a dountdown/timer starts
 async def do_all_checks(ctx, mention, imagelink, times):
     if await check_active_and_mention(ctx, mention):
-        return
+        return False
 
     if imagelink != "":
         if await check_no_premium(ctx, "adding image"):
-            return
+            return False
         if await check_link(ctx, imagelink):
-            return
+            return False
 
     if times != 0:
         if await check_no_premium(ctx, "repeating timer"):
-            return
+            return False
+    
+    return True
 
 
-async def delete_message(ctx,msgid):
+async def delete_message(ctx, msgid):
     user = ctx.user
     guildid = ctx.guild_id
     channelid = ctx.channel_id
@@ -379,47 +378,47 @@ async def countdown(
     bot,
 ):
 
-    await do_all_checks(ctx, mention, imagelink, times)
+    if await do_all_checks(ctx, mention, imagelink, times):
 
-    wholedate = dateparser.parse("in " + timestring)
-    try:  # If wholedate cant be floored, it is not a valid date.
-        timestamp = floor(wholedate.timestamp())
-        validDate = True
-    except:
-        await ctx.send(
-            f"Sorry, I dont understand that date!",
-            ephemeral=True,
-        )
-        validDate = False
-
-    if validDate:
-        currenttime = floor(time.time())
-        if currenttime < timestamp:  # Make sure the time is in the future
-            length = timestamp - currenttime
-            if await check_length(ctx, length):
-                return
-            if times != 0:
-                length = repeattime * 3600
-            writeerror = await send_and_add_to_database(
-                timestamp,
-                ctx,
-                mention,
-                times,
-                length,
-                messagestart,
-                messageend,
-                imagelink,
-                exact,
-                alert,
-                bot,
-            )
-            if writeerror:
-                await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
-        else:
+        wholedate = dateparser.parse("in " + timestring)
+        try:  # If wholedate cant be floored, it is not a valid date.
+            timestamp = floor(wholedate.timestamp())
+            validDate = True
+        except:
             await ctx.send(
-                "You cant set time in the past. Try be more specific about your time.",
+                f"Sorry, I dont understand that date!",
                 ephemeral=True,
             )
+            validDate = False
+
+        if validDate:
+            currenttime = floor(time.time())
+            if currenttime < timestamp:  # Make sure the time is in the future
+                length = timestamp - currenttime
+                if await check_length(ctx, length):
+                    return
+                if times != 0:
+                    length = repeattime * 3600
+                writeerror = await send_and_add_to_database(
+                    timestamp,
+                    ctx,
+                    mention,
+                    times,
+                    length,
+                    messagestart,
+                    messageend,
+                    imagelink,
+                    exact,
+                    alert,
+                    bot,
+                )
+                if writeerror:
+                    await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
+            else:
+                await ctx.send(
+                    "You cant set time in the past. Try be more specific about your time.",
+                    ephemeral=True,
+                )
 
 
 async def timer(
@@ -438,37 +437,37 @@ async def timer(
     bot,
 ):
 
-    await do_all_checks(ctx, mention, imagelink, times)
+    if await do_all_checks(ctx, mention, imagelink, times):
 
-    currenttime = floor(time.time())
-    length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
-    if await check_length(ctx, length):
-        return
-    timestamp = currenttime + length
+        currenttime = floor(time.time())
+        length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
+        if await check_length(ctx, length):
+            return
+        timestamp = currenttime + length
 
-    writeerror = await send_and_add_to_database(
-        timestamp,
-        ctx,
-        mention,
-        times,
-        length,
-        messagestart,
-        messageend,
-        imagelink,
-        exact,
-        alert,
-        bot,
-    )
-    if writeerror:
-        await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
+        writeerror = await send_and_add_to_database(
+            timestamp,
+            ctx,
+            mention,
+            times,
+            length,
+            messagestart,
+            messageend,
+            imagelink,
+            exact,
+            alert,
+            bot,
+        )
+        if writeerror:
+            await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
 
 
 # List command +++
 async def list(ctx, sub_command, page):
-    if ctx.guild_id == None and sub_command != "channel":
+    if ctx.guild_id is None and sub_command != "channel":
         return await ctx.send("Sorry, only /list channel works in DMs", ephemeral=True)
     # Links for DMs are @me instead of the guildid
-    if ctx.guild_id == None:
+    if ctx.guild_id is None:
         guildid = "@me"
     else:
         guildid = int(ctx.guild_id)
@@ -581,7 +580,7 @@ async def delete(
                 )
             else:
 
-                delete_message(ctx,msgid)
+                delete_message(ctx, msgid)
         else:
             await ctx.send(
                 "Are you sure you want to delete all your countdowns in this guild?",
@@ -637,7 +636,7 @@ async def delete(
                     ephemeral=True,
                 )
             else:
-                delete_message(ctx,msgid)
+                delete_message(ctx, msgid)
 
         else:
             if sub_command == "channel":
@@ -695,7 +694,7 @@ async def deleteThis(ctx):
                 ephemeral=True,
             )
         else:
-            delete_message(ctx,msgid)
+            delete_message(ctx, msgid)
 
 
 # this function is used for the autocompletion of what active countdowns there is to delete in all categories.
@@ -721,7 +720,7 @@ async def fill_choices(ctx, cursor, value):
 def get_possible_countdowns(ctx, option):
     if option == "mine":
         userid = int(ctx.user.id)
-        if ctx.guild_id == None:
+        if ctx.guild_id is None:
             channelid = int(ctx.channel_id)
             cursor = conn_countdowns_db.execute(
                 "SELECT msgid FROM Countdowns WHERE startedby = :userid AND channelid = :channelid ORDER BY timestamp ASC;",
@@ -742,7 +741,7 @@ def get_possible_countdowns(ctx, option):
         )
     elif option == "guild":
 
-        if ctx.guild_id == None:
+        if ctx.guild_id is None:
             channelid = int(ctx.channel_id)
             cursor = conn_countdowns_db.execute(
                 "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
@@ -774,7 +773,7 @@ def deleted_channel(channel):
 
 async def deletebutton(ctx, option):
     if option == "guild":
-        if ctx.guild_id == None:
+        if ctx.guild_id is None:
             return ctx.send("You cant use this in DMs", ephemeral=True)
         guildid = int(ctx.guild_id)
         check = conn_countdowns_db.total_changes
@@ -809,7 +808,7 @@ async def deletebutton(ctx, option):
             await ctx.edit(components=[])
             await ctx.send(f"Channels Countdown(s) Deleted by {user}")
     elif option == "mine":
-        if ctx.guild_id == None:
+        if ctx.guild_id is None:
             return ctx.send("You cant use this in DMs", ephemeral=True)
         guildid = int(ctx.guild_id)
         userid = int(ctx.user.id)
@@ -904,8 +903,7 @@ async def botstats(ctx, bot):
     ram = psutil.virtual_memory()[2]
     disk = psutil.disk_usage("/").percent
     cursor = conn_countdowns_db.execute("SELECT COUNT(*) FROM Countdowns;")
-    for row in cursor:
-        number = int(row[0])
+    number = len(cursor.fetchall())
 
     with open("log.txt", "r") as file:
         for count, line in enumerate(file):
