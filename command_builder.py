@@ -4,7 +4,7 @@ All commands are made in here. For translating there is languageFile.
 
 # ¤ are points of optimasation
 # +++ where I am at the first readability check
-
+#¤All sql statements can be moved into a seperate file
 
 # Handeling the database
 import sqlite3
@@ -73,12 +73,11 @@ async def check_no_premium(ctx, feature):
     # This checks if cursor got any rows, if it does, then the guild is premium
     if len(cursor.fetchall()) != 0:
         return False
-    else:
-        # If the code havent returned yet, its not a premium user
-        await ctx.send(
-            f"Sorry, you tried to use a premium only feature: {feature}", ephemeral=True
-        )
-        return True
+    # If the code havent returned yet, its not a premium user
+    await ctx.send(
+        f"Sorry, you tried to use a premium only feature: {feature}", ephemeral=True
+    )
+    return True
 
 
 # ¤ Make it check for http in start
@@ -126,7 +125,11 @@ async def send_and_add_to_database(
     alert,
     bot,
 ):
-    """This makes the countdown message. If alert is false it will just send the message about how long time it is left, but dont save it to the database."""
+    """
+    This makes the countdown message.
+    If alert is False it will just send the message about how long time it is left,
+    but dont save it to the database.
+    """
     # If the bot dont have the permission to view the channel, this try will fail.
     try:
         # It is only required to check if the bot can send messages/embeds if it need to alert
@@ -161,7 +164,8 @@ async def send_and_add_to_database(
             time_left = int(timestamp) - int(current_time)
             timestring = ""
             if exact:
-                # Since timestamps are exact to the minute the last hour, only use exact if time is longer
+                # Since timestamps are exact to the minute the last hour,
+                # only use exact if time is longer
                 if time_left > 3600:
                     timestring = "\n*Exact time from start: "
                     timestring = f"{get_exact_timestring(timestring, time_left)}*"
@@ -175,7 +179,8 @@ async def send_and_add_to_database(
                 if guild_id is None:  # Will be that in DMs.
                     guild_id = 0
                 started_by = ctx.user.id
-                # Had problems with these numbers being "None" for some unknown reason, so added a check so they cant come into the database
+                # Had problems with these numbers being "None" for some unknown reason,
+                # so added a check so they cant come into the database
                 if msg.id is None or msg.channel_id is None:
                     return True
 
@@ -223,7 +228,10 @@ async def check_length(ctx, length):
 
 
 async def check_active_and_mention(ctx, mention):
-    """Checks so the limit of active countdowns isnt reached and that the user have permission to ping"""
+    """
+    Checks so the limit of active countdowns isnt reached
+    and that the user have permission to ping
+    """
     # This is in DMs, there channelid is used instead of guildid
     if ctx.guild_id is None:
         cursor = conn_countdowns_db.execute(
@@ -240,7 +248,8 @@ async def check_active_and_mention(ctx, mention):
             return True
 
     else:
-        # In a guild, first grab number of countdowns from the database, then check if limit is reached. ¤Check one then the other
+        # In a guild, first grab number of countdowns from the database,
+        # then check if limit is reached. ¤Check one then the other
         cursor = conn_countdowns_db.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE guildid= :guildid;",
             {"guildid": int(ctx.guild_id)},
@@ -310,8 +319,16 @@ async def delete_message(ctx, msg_id):
 
 
 async def help_information(ctx):
-    """The help command. This looks different than the rest since it is prepped for translation by using the translations file"""
-    language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to. Wont do anything until bot is translated
+    """
+    The help command.
+    This looks different than the rest since it is prepped
+    for translation by using the translations file
+    """
+    language = "en-US"
+    # ctx.guild.preferred_locale
+    # The thing to check what language the guild is set to.
+    # Wont do anything until bot is translated.
+
     # Create a embed and add in all fields to it.
     embed = interactions.Embed()
     embed.title = translations[(language)]["helpHeader"]
@@ -388,7 +405,7 @@ async def countdown(
             valid_date = True
         except:
             await ctx.send(
-                f"Sorry, I dont understand that date!",
+                "Sorry, I dont understand that date!",
                 ephemeral=True,
             )
             valid_date = False
@@ -530,7 +547,8 @@ async def list_countdowns(ctx, sub_command, page):
     current_line = 0
     goal_line = page * 5
 
-    # Loops through all active countowns in the correct place to pick out the ones that should be on specified page
+    # Loops through all active countowns in the correct place
+    # to pick out the ones that should be on specified page
     for row in cursor:
         if current_line >= goal_line - 5:
             timestamp = int(row[0])
@@ -688,34 +706,35 @@ async def delete_this(ctx):
             "Sorry, you need `MANAGE_MESSAGES` to use this, unless you want to delete your own",
             ephemeral=True,
         )
-    else:
-        check = conn_countdowns_db.total_changes
-        conn_countdowns_db.execute(
-            "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msg_id}
+
+    check = conn_countdowns_db.total_changes
+    conn_countdowns_db.execute(
+        "DELETE from Countdowns WHERE msgid = :msgid;", {"msgid": msg_id}
+    )
+    conn_countdowns_db.commit()
+    if check == conn_countdowns_db.total_changes:
+        return await ctx.send(
+            "An error occurred (could be that there is none to delete)",
+            ephemeral=True,
         )
-        conn_countdowns_db.commit()
-        if check == conn_countdowns_db.total_changes:
-            return await ctx.send(
-                "An error occurred (could be that there is none to delete)",
-                ephemeral=True,
-            )
-        else:
-            delete_message(ctx, msg_id)
+
+    delete_message(ctx, msg_id)
 
 
 async def fill_choices(ctx, cursor, value):
     """
-    This function is used for the autocompletion of what active countdowns there is to delete in all categories.
+    This function is used for the autocompletion of what
+    active countdowns there is to delete in all categories.
     How it really works? Good question...
     """
     countdowns = []
-    id = 0
+    countdown_id = 0
     for row in cursor:
         if (
-            id < 24
+            countdown_id < 24
         ):  # Need to be limited due to discord not allowing more than 25 options
-            countdowns.append(str(id) + ": " + str(row[0]))
-            id = id + 1
+            countdowns.append(str(countdown_id) + ": " + str(row[0]))
+            countdown_id = countdown_id + 1
         else:
             break
     choices = [
@@ -981,7 +1000,7 @@ async def make_this_premium(ctx):
             ephemeral=True,
         )
 
-
+#¤Move these into langguage_file
 async def premium_info(ctx):
     """Sends some info about premium."""
     embed = interactions.Embed()
@@ -1109,7 +1128,7 @@ async def list_premium(ctx, page):
                 user_id = int(row[1])
                 last_edit = int(row[2])
                 embed.add_field(
-                    f"-----",
+                    "-----",
                     f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>",
                 )
             elif current_line < goal_line - lines:
