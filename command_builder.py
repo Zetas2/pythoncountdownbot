@@ -13,17 +13,17 @@ import sqlite3
 # To get a random thanks
 import random
 
-# To get information about system usage (ram and cpu)
-import psutil
-
-# To validate a url
-from validators import url as validurl
-
 # Used for rounding down timestamps to whole numbers and to get the max pages needed.
 from math import floor, ceil
 
 # Used for... getting time.
 import time
+
+# To validate a url
+from validators import url as validurl
+
+# To get information about system usage (ram and cpu)
+import psutil
 
 # parses the human date to a date that computer understands
 import dateparser
@@ -35,7 +35,7 @@ import interactions
 import components
 
 # Import a list of all translations
-from languageFile import translations
+from language_file import translations
 
 
 # makes connCountdowns into the connected database for countdowns.
