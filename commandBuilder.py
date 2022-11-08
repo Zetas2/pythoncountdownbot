@@ -5,8 +5,7 @@
 # Handeling the database
 import sqlite3
 
-# parses the human date to a date that computer understands
-import dateparser
+
 
 # To get a random thanks
 import random
@@ -22,6 +21,9 @@ from math import floor, ceil
 
 # Used for... getting time.
 import time
+
+# parses the human date to a date that computer understands
+import dateparser
 
 # Main library
 import interactions
@@ -66,10 +68,10 @@ async def check_no_premium(ctx, feature):
     )
 
     # This checks if cursor got any rows, if it does, then the guild is premium
-    if len(cursor.fetchall()) !=0:
+    if len(cursor.fetchall()) != 0:
         return False
     else:
-    # If the code havent returned yet, its not a premium user
+        # If the code havent returned yet, its not a premium user
         await ctx.send(
             f"Sorry, you tried to use a premium only feature: {feature}", ephemeral=True
         )
@@ -142,15 +144,14 @@ async def send_and_add_to_database(
             got_permission = True
     except:
         await ctx.send(
-            f"I am missing the permission to view this channel. Please give me it!",
+            "I am missing the permission to view this channel. Please give me it!",
             ephemeral=True,
         )
     else:
         if got_permission:
             # Message is built and sent
-            messagestart = messagestart.replace(
-                "\\n", "\n"
-            )  # Allow for \n to be used as newline charachter
+            messagestart = messagestart.replace("\\n", "\n")
+            # Allow for \n to be used as newline charachter
             messageend = messageend.replace("\\n", "\n")
             currenttime = floor(time.time())
             timeleft = int(timestamp) - int(currenttime)
@@ -202,7 +203,7 @@ async def send_and_add_to_database(
             return False
         else:
             await ctx.send(
-                f"I am missing the permission to send embeds/messages in this channel. Please give me it!",
+                "I am missing the permission to send embeds/messages in this channel. Please give me it!",
                 ephemeral=True,
             )
 
@@ -210,9 +211,8 @@ async def send_and_add_to_database(
 # Check so that a countdown is at least one minute long
 async def check_length(ctx, length):
     if length < 60:
-        if (
-            int(ctx.user.id) != 238006908664020993
-        ):  # I am the dev and want to be able to test timers without wating, ok?
+        # I am the dev and want to be able to test timers without wating, ok?
+        if int(ctx.user.id) != 238006908664020993:
             await ctx.send(
                 "Minimum length of a countdown is one minute", ephemeral=True
             )
@@ -222,9 +222,8 @@ async def check_length(ctx, length):
 
 # Checks so the limit of active countdowns isnt reached and that the user have permission to ping
 async def check_active_and_mention(ctx, mention):
-    if (
-        ctx.guild_id is None
-    ):  # This is in DMs, there channelid is used instead of guildid
+    # This is in DMs, there channelid is used instead of guildid
+    if ctx.guild_id is None:
         cursor = conn_countdowns_db.execute(
             "SELECT COUNT(*) FROM Countdowns WHERE channelid=:channelid;",
             {"channelid": int(ctx.channel_id)},
@@ -252,15 +251,15 @@ async def check_active_and_mention(ctx, mention):
         )
         for row in cursor:
             number_of_countdowns_channel = int(row[0])
-        if number_of_countdowns_guild > 49:  # Limits number of active countdowns to 50
+        # Limits number of active countdowns to 50
+        if number_of_countdowns_guild > 49:
             if await check_no_premium(
                 ctx,
                 "Increased amount of countdowns in this guild. Get premium or delete some of the active ones.",
             ):
                 return True
-        elif (
-            number_of_countdowns_channel > 19
-        ):  # limits number of active countdowns to 20
+        # limits number of active countdowns to 20
+        elif number_of_countdowns_channel > 19:
             if await check_no_premium(
                 ctx,
                 "Increased amount of countdowns in this channel. Get premium or delete some of the active ones.",
@@ -294,7 +293,7 @@ async def do_all_checks(ctx, mention, imagelink, times):
     if times != 0:
         if await check_no_premium(ctx, "repeating timer"):
             return False
-    
+
     return True
 
 
@@ -523,26 +522,26 @@ async def list(ctx, sub_command, page):
     embed.title = "ACTIVE COUNTDOWNS"
     embed.description = "These are the countdowns active " + place
 
-    currentLine = 0
-    goalLine = page * 5
+    current_line = 0
+    goal_line = page * 5
 
     # Loops through all active countowns in the correct place to pick out the ones that should be on specified page
     for row in cursor:
-        if currentLine >= goalLine - 5:
+        if current_line >= goal_line - 5:
             timeid = int(row[0])
             msgid = int(row[1])
             channelid = int(row[2])
             startedby = int(row[3])
             embed.add_field(
-                f"{currentLine}: <t:{timeid}:R>",
+                f"{current_line}: <t:{timeid}:R>",
                 f"[{msgid}](https://discord.com/channels/{guildid}/{channelid}/{msgid} 'Click here to jump to the message') Started by <@!{startedby}>\n",
             )
-        elif currentLine < goalLine - 5:
+        elif current_line < goal_line - 5:
             pass
         else:
             break
-        currentLine = currentLine + 1
-        if currentLine >= goalLine:
+        current_line = current_line + 1
+        if current_line >= goal_line:
             break
 
     embed.footer = interactions.EmbedFooter(text=f"Page {page} of {maxpage}")
@@ -1039,12 +1038,9 @@ async def log(ctx):
 
 async def addpremium(ctx, userid, guildid):
     if int(ctx.user.id) in devs:
-        premiumUsers = []
-        cursor = conn_premium_db.execute("SELECT userid FROM Premium")
-        for row in cursor:
-            premiumUsers.append(row[0])
-
-        if int(userid) not in premiumUsers:
+        cursor = conn_premium_db.execute("SELECT userid FROM Premium WHERE userid = :userid;",
+            {"userid": userid})
+        if len(cursor.fetchall()) == 0:
             conn_premium_db.execute(
                 "INSERT INTO Premium (userid,guildid,lastedit) VALUES (:userid,:guildid,0);",
                 {
@@ -1212,7 +1208,7 @@ async def checkDone(bot):
             conn_countdowns_db.commit()
 
         if roleid != 0:
-            notSent = True
+            not_sent = True
             try:
                 guildinfo = await interactions.get(
                     bot, interactions.Guild, object_id=guildid
@@ -1233,8 +1229,8 @@ async def checkDone(bot):
                             embeds=embed,
                             allowed_mentions={"parse": ["roles", "everyone"]},
                         )
-                        notSent = False
-                if notSent:
+                        not_sent = False
+                if not_sent:
                     await channel.send(f"<@{roleid}>", embeds=embed)
         else:
             await channel.send(embeds=embed)
