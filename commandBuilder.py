@@ -6,7 +6,6 @@
 import sqlite3
 
 
-
 # To get a random thanks
 import random
 
@@ -55,8 +54,8 @@ conn_premium_db.execute(
 bot_starttime = floor(time.time())
 
 
-# This checks so premium features can only be used by premium users.
 async def check_no_premium(ctx, feature):
+    """Make sure that a feature can only be used by premium users."""
     if ctx.guild_id is None:
         await ctx.send("You cant use premium features in DMs", ephemeral=True)
         return True
@@ -78,8 +77,9 @@ async def check_no_premium(ctx, feature):
         return True
 
 
-# Make sure that the url given is a valid url
+# ¤ Make it check for http in start
 async def check_link(ctx, image_link):
+    """Checks so that the link is valid."""
     if validurl(image_link):
         return False
 
@@ -88,8 +88,8 @@ async def check_link(ctx, image_link):
     return True
 
 
-# This is what creates the message Exact time from start X minutes...
 def get_exact_timestring(timestring, length):
+    """Creates the Exact time from start message. Fills in the time that is left."""
     meassurement = length
     if meassurement >= 86400:
         amount = meassurement // 86400
@@ -109,7 +109,6 @@ def get_exact_timestring(timestring, length):
     return timestring
 
 
-# The function that adds in the countdowns in the database
 async def send_and_add_to_database(
     timestamp,
     ctx,
@@ -123,6 +122,7 @@ async def send_and_add_to_database(
     alert,
     bot,
 ):
+    """This makes the countdown message. If alert is false it will just send the message about how long time it is left, but dont save it to the database."""
     # If the bot dont have the permission to view the channel, this try will fail.
     try:
         # It is only required to check if the bot can send messages/embeds if it need to alert
@@ -157,18 +157,16 @@ async def send_and_add_to_database(
             time_left = int(timestamp) - int(current_time)
             timestring = ""
             if exact:
-                if (
-                    time_left > 3600
-                ):  # Since timestamps are exact to the minute the last hour, only use exact if time is longer
+                # Since timestamps are exact to the minute the last hour, only use exact if time is longer
+                if time_left > 3600:
                     timestring = "\n*Exact time from start: "
                     timestring = f"{get_exact_timestring(timestring, time_left)}*"
             msg = await ctx.send(
                 f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
             )
 
-            if (
-                alert
-            ):  # If the bot should notify when countdown is done - save it to database:
+            # If the bot should notify when countdown is done - save it to database:
+            if alert:
                 guild_id = ctx.guild_id
                 if guild_id is None:  # Will be that in DMs.
                     guild_id = 0
@@ -208,8 +206,8 @@ async def send_and_add_to_database(
             )
 
 
-# Check so that a countdown is at least one minute long
 async def check_length(ctx, length):
+    """Check so that a countdown is at least one minute long"""
     if length < 60:
         # I am the dev and want to be able to test timers without wating, ok?
         if int(ctx.user.id) != 238006908664020993:
@@ -220,8 +218,8 @@ async def check_length(ctx, length):
     return False
 
 
-# Checks so the limit of active countdowns isnt reached and that the user have permission to ping
 async def check_active_and_mention(ctx, mention):
+    """Checks so the limit of active countdowns isnt reached and that the user have permission to ping"""
     # This is in DMs, there channelid is used instead of guildid
     if ctx.guild_id is None:
         cursor = conn_countdowns_db.execute(
@@ -279,8 +277,8 @@ async def check_active_and_mention(ctx, mention):
         return False
 
 
-# A single function for all checks required before a dountdown/timer starts
 async def do_all_checks(ctx, mention, image_link, times):
+    """A single function for all checks required before a dountdown/timer starts"""
     if await check_active_and_mention(ctx, mention):
         return False
 
@@ -298,6 +296,7 @@ async def do_all_checks(ctx, mention, image_link, times):
 
 
 async def delete_message(ctx, msg_id):
+    """Send the message if a message is deleted"""
     user = ctx.user
     guild_id = ctx.guild_id
     channel_id = ctx.channel_id
@@ -306,8 +305,8 @@ async def delete_message(ctx, msg_id):
     )
 
 
-# Help command
 async def help(ctx):
+    """The help command. This looks different than the rest since it is prepped for translation by using the translations file"""
     language = "en-US"  # ctx.guild.preferred_locale <-The thing to check what language the guild is set to. Wont do anything until bot is translated
     # Create a embed and add in all fields to it.
     embed = interactions.Embed()
@@ -362,7 +361,6 @@ async def help(ctx):
     await ctx.send(embeds=embed, ephemeral=True)
 
 
-# Countdown command
 async def countdown(
     ctx,
     timestring,
@@ -376,6 +374,7 @@ async def countdown(
     alert,
     bot,
 ):
+    """The countdown command. The main use of this bot. Creates a new countdown."""
 
     if await do_all_checks(ctx, mention, image_link, times):
 
@@ -435,6 +434,7 @@ async def timer(
     alert,
     bot,
 ):
+    """For those that dont want to use countdown."""
 
     if await do_all_checks(ctx, mention, image_link, times):
 
@@ -461,8 +461,9 @@ async def timer(
             await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
 
 
-# List command +++
+# +++
 async def list(ctx, sub_command, page):
+    """List command. List all active countdowns based on sub command."""
     if ctx.guild_id is None and sub_command != "channel":
         return await ctx.send("Sorry, only /list channel works in DMs", ephemeral=True)
     # Links for DMs are @me instead of the guildid
@@ -552,6 +553,7 @@ async def list(ctx, sub_command, page):
 async def delete(
     ctx, sub_command, sub_command_group, delete_mine, delete_channel, delete_guild
 ):
+    """Deletes a countdown based on subcommand."""
     if sub_command == "mine":
         if sub_command_group == "single":
             cursor = get_possible_countdowns(ctx, "mine")
@@ -659,6 +661,7 @@ async def delete(
 
 
 async def delete_this(ctx):
+    """App command for deleting. Use on a active countdown message and it will be deleted."""
     msg_id = int(ctx.target.id)
     user_id = int(ctx.user.id)
     started_by = 0
@@ -696,9 +699,11 @@ async def delete_this(ctx):
             delete_message(ctx, msg_id)
 
 
-# this function is used for the autocompletion of what active countdowns there is to delete in all categories.
-# How it really works? Good question...
 async def fill_choices(ctx, cursor, value):
+    """
+    This function is used for the autocompletion of what active countdowns there is to delete in all categories.
+    How it really works? Good question...
+    """
     countdowns = []
     id = 0
     for row in cursor:
@@ -718,6 +723,7 @@ async def fill_choices(ctx, cursor, value):
 
 
 def get_possible_countdowns(ctx, option):
+    """Generates a cursor for the option picked with all active countdowns in it."""
     if option == "mine":
         user_id = int(ctx.user.id)
         if ctx.guild_id is None:
@@ -757,11 +763,14 @@ def get_possible_countdowns(ctx, option):
 
 
 async def autocomplete_countdowns(ctx, value, option):
+    """Fills the options when using timeleft or delete commands"""
     cursor = get_possible_countdowns(ctx, option)
     await fill_choices(ctx, cursor, value)
 
 
+# ¤Expand to threads as well
 def deleted_channel(channel):
+    """Delete countdowns from database if the channel they were in get deleted."""
     channel_id = int(channel.id)
     conn_countdowns_db.execute(
         "DELETE from Countdowns WHERE channelid = :channelid;",
@@ -771,6 +780,7 @@ def deleted_channel(channel):
 
 
 async def delete_button(ctx, option):
+    """If a button used for deleting is used."""
     user = ctx.user
     if option == "guild":
         if ctx.guild_id is None:
@@ -781,7 +791,7 @@ async def delete_button(ctx, option):
             "DELETE from Countdowns WHERE guildid = :guildid;", {"guildid": guild_id}
         )
         conn_countdowns_db.commit()
-        
+
         if check == conn_countdowns_db.total_changes:
             await ctx.send(
                 "An error occurred (could be that there is none to delete)",
@@ -830,24 +840,9 @@ async def delete_button(ctx, option):
         await ctx.edit("All countdowns are kept", components=[])
 
 
-
-
-async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
-
-    if sub_command == "mine":
-        show = show_mine
-    elif sub_command == "channel":
-        show = show_channel
-    elif sub_command == "guild":
-        show = show_guild
-    
-    try:
-        msg_id = show.split(": ")[1]
-    except:
-        return await ctx.send("Please use one of the options ", ephemeral=True)
-
+async def time_left_message(ctx, msg_id):
+    """Send the message for time left"""
     timestamp = 0
-
     cursor = conn_countdowns_db.execute(
         "SELECT timestamp,channelid,guildid from Countdowns WHERE msgid = :msgid;",
         {"msgid": msg_id},
@@ -858,7 +853,7 @@ async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
         guild_id = int(row[2])
 
     if timestamp == 0:
-        return await ctx.send("Please use one of the options ", ephemeral=True)
+        return await ctx.send("The countdown was not found. ", ephemeral=True)
 
     current_time = floor(time.time())
     length = timestamp - current_time
@@ -868,46 +863,47 @@ async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
     await ctx.send(timestring, ephemeral=True)
 
 
-async def timeleft_this(ctx):
+async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
+    """Show how long time it is left for a countdown"""
 
+    if sub_command == "mine":
+        show = show_mine
+    elif sub_command == "channel":
+        show = show_channel
+    elif sub_command == "guild":
+        show = show_guild
+
+    try:
+        msg_id = show.split(": ")[1]
+    except:
+        return await ctx.send("Please use one of the options ", ephemeral=True)
+
+    time_left_message(ctx, msg_id)
+
+
+async def timeleft_this(ctx):
+    """App command for timeleft."""
     msg_id = int(ctx.target.id)
 
-    timestamp = 0
-
-    cursor = conn_countdowns_db.execute(
-        "SELECT timestamp from Countdowns WHERE msgid = :msgid;", {"msgid": msg_id}
-    )
-    for row in cursor:
-        timestamp = int(row[0])
-
-    if timestamp == 0:
-        return await ctx.send(
-            "Please only use this on active countdowns", ephemeral=True
-        )
-
-    current_time = floor(time.time())
-    length = timestamp - current_time
-
-    timestring = "Exact time left: "
-    timestring = get_exact_timestring(timestring, length)
-    await ctx.send(timestring, ephemeral=True)
+    time_left_message(ctx, msg_id)
 
 
 async def botstats(ctx, bot):
+    """Botstat command. Gathers a bunch of information about the bot."""
     await ctx.defer(ephemeral=True)
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
     disk = psutil.disk_usage("/").percent
     guilds = len(bot.guilds)
 
-    #Get the number of active countdowns
+    # Get the number of active countdowns
     cursor = conn_countdowns_db.execute("SELECT COUNT(*) FROM Countdowns;")
     number = len(cursor.fetchall())
 
-    #Get size of log file
+    # Get size of log file
     with open("log.txt", "r") as file:
         logsize = len(file.readlines())
-    
+
     # Check this when activating shards
     ping = round(bot.latency)
 
@@ -927,6 +923,7 @@ async def botstats(ctx, bot):
 
 
 async def translate(ctx, language):
+    """Allows for tranlsating the bot to another language. NOT YET SUPPORTED"""
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
             await ctx.guild.set_preferred_locale(language)
@@ -944,6 +941,7 @@ async def translate(ctx, language):
 
 
 async def make_this_premium(ctx):
+    """Change the premium guild to the one where the command is used. Cooldown of 2 days."""
     guild_id = ctx.guild_id
     current_time = floor(time.time())
     allowed_time = current_time - 86400 * 2
@@ -952,7 +950,7 @@ async def make_this_premium(ctx):
         "SELECT userid FROM Premium WHERE lastedit > :allowedtime AND userid = :userid;",
         {"allowedtime": allowed_time, "userid": user_id},
     )
-    
+
     if len(cursor.fetchall()) == 0:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
@@ -981,6 +979,7 @@ async def make_this_premium(ctx):
 
 
 async def premium_info(ctx):
+    """Sends some info about premium."""
     embed = interactions.Embed()
     embed.title = "Premium info"
     embed.description = "To get premium you can head over to [Patreon](https://www.patreon.com/livecountdownbot)"
@@ -1016,10 +1015,11 @@ devs = (238006908664020993, 360084558265450496, 729791860674920488)
 
 
 async def log(ctx):
+    """Shows the log"""
     if int(ctx.user.id) in devs:
         logs = ""
         with open("log.txt", "r") as file:
-            #Read the last lines in the log file
+            # Read the last lines in the log file
             for line in file.readlines()[-19:]:
                 logs = logs + line
 
@@ -1032,9 +1032,11 @@ async def log(ctx):
 
 
 async def add_premium(ctx, user_id, guild_id):
+    """Add a premium user."""
     if int(ctx.user.id) in devs:
-        cursor = conn_premium_db.execute("SELECT userid FROM Premium WHERE userid = :userid;",
-            {"userid": user_id})
+        cursor = conn_premium_db.execute(
+            "SELECT userid FROM Premium WHERE userid = :userid;", {"userid": user_id}
+        )
         if len(cursor.fetchall()) == 0:
             conn_premium_db.execute(
                 "INSERT INTO Premium (userid,guildid,lastedit) VALUES (:userid,:guildid,0);",
@@ -1055,7 +1057,7 @@ async def add_premium(ctx, user_id, guild_id):
 
 
 async def delete_premium(ctx, user_id):
-
+    """Delete a premium user."""
     if int(ctx.user.id) in devs:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
@@ -1081,6 +1083,7 @@ async def delete_premium(ctx, user_id):
 
 
 async def list_premium(ctx, page):
+    """List all premium users."""
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute("SELECT COUNT (*) FROM Premium")
         for row in cursor:
@@ -1102,7 +1105,8 @@ async def list_premium(ctx, page):
                 user_id = int(row[1])
                 last_edit = int(row[2])
                 embed.add_field(
-                    f"-----", f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>"
+                    f"-----",
+                    f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>",
                 )
             elif current_line < goal_line - lines:
                 pass
@@ -1125,6 +1129,7 @@ async def list_premium(ctx, page):
 
 
 async def check_done(bot):
+    """Checks if a countdown is done. If it is, send the countdown completed message."""
     current_time = int(floor(time.time()))
     cursor = conn_countdowns_db.execute(
         "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend FROM Countdowns WHERE timestamp < :currenttime;",
