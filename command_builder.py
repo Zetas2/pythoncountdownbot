@@ -602,7 +602,7 @@ async def delete(
                 )
             else:
 
-                delete_message(ctx, msg_id)
+                await delete_message(ctx, msg_id)
         else:
             await ctx.send(
                 "Are you sure you want to delete all your countdowns in this guild?",
@@ -658,7 +658,7 @@ async def delete(
                     ephemeral=True,
                 )
             else:
-                delete_message(ctx, msg_id)
+                await delete_message(ctx, msg_id)
 
         else:
             if sub_command == "channel":
@@ -717,7 +717,7 @@ async def delete_this(ctx):
             ephemeral=True,
         )
 
-    delete_message(ctx, msg_id)
+    await delete_message(ctx, msg_id)
 
 
 async def fill_choices(ctx, cursor, value):
@@ -900,14 +900,14 @@ async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
     except:
         return await ctx.send("Please use one of the options ", ephemeral=True)
 
-    time_left_message(ctx, msg_id)
+    await time_left_message(ctx, msg_id)
 
 
 async def timeleft_this(ctx):
     """App command for timeleft."""
     msg_id = int(ctx.target.id)
 
-    time_left_message(ctx, msg_id)
+    await time_left_message(ctx, msg_id)
 
 
 async def botstats(ctx, bot):
