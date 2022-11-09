@@ -1183,6 +1183,26 @@ async def check_done(bot):
             )
             conn_countdowns_db.commit()
             return
+        member = await interactions.get(
+                bot,
+                interactions.Member,
+                object_id=int(bot.me.id),
+                parent_id=guild_id,
+            )
+        got_permission = await member.has_permissions(
+                interactions.Permissions.EMBED_LINKS
+                ^ interactions.Permissions.SEND_MESSAGES ^ interactions.Permissions.VIEW_CHANNEL,
+                channel=channel,
+            )
+        
+        if not got_permission:
+            conn_countdowns_db.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid;",
+                {"msgid": msg_id},
+            )
+            conn_countdowns_db.commit()
+            return
+        
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild.id))
         language = "en-US"  # guild.preferred_locale
