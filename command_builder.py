@@ -4,7 +4,7 @@ All commands are made in here. For translating there is languageFile.
 
 # ¤ are points of optimasation
 # +++ where I am at the first readability check
-#¤All sql statements can be moved into a seperate file
+# ¤All sql statements can be moved into a seperate file
 
 # Handeling the database
 import sqlite3
@@ -80,7 +80,6 @@ async def check_no_premium(ctx, feature):
     return True
 
 
-# ¤ Make it check for http in start
 async def check_link(ctx, image_link):
     """Checks so that the link is valid."""
     if validurl(image_link):
@@ -1000,7 +999,8 @@ async def make_this_premium(ctx):
             ephemeral=True,
         )
 
-#¤Move these into langguage_file
+
+# ¤Move these into langguage_file
 async def premium_info(ctx):
     """Sends some info about premium."""
     embed = interactions.Embed()
