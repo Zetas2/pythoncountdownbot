@@ -49,6 +49,10 @@ async def on_start():
 async def on_channel_delete(channel):
     command_builder.deleted_channel(channel)
 
+@bot.event
+async def on_thread_delete(thread):
+    command_builder.deleted_channel(thread)
+
 
 @bot.command(
     name="help",
