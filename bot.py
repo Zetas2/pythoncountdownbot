@@ -8,7 +8,7 @@ from interactions.ext.tasks import IntervalTrigger, create_task
 # from interactions.ext.autosharder import shard
 
 # This is where the commands are made
-import commandBuilder
+import command_builder
 
 import logging
 
@@ -47,7 +47,11 @@ async def on_start():
 
 @bot.event
 async def on_channel_delete(channel):
-    commandBuilder.deletedChannel(channel)
+    command_builder.deleted_channel(channel)
+
+@bot.event
+async def on_thread_delete(thread):
+    command_builder.deleted_channel(thread)
 
 
 @bot.command(
@@ -55,7 +59,7 @@ async def on_channel_delete(channel):
     description="Shows a help message",
 )
 async def help(ctx: interactions.CommandContext):
-    await commandBuilder.help(ctx)
+    await command_builder.help_information(ctx)
 
 
 @bot.command(
@@ -63,7 +67,7 @@ async def help(ctx: interactions.CommandContext):
     description="Get information about how premium works",
 )
 async def premiuminfo(ctx: interactions.CommandContext):
-    await commandBuilder.premiuminfo(ctx)
+    await command_builder.premium_info(ctx)
 
 
 @bot.command(
@@ -145,7 +149,7 @@ async def countdown(
     alert=True,
     bot=bot,
 ):
-    await commandBuilder.countdown(
+    await command_builder.countdown(
         ctx,
         timestring,
         messagestart,
@@ -256,7 +260,7 @@ async def timer(
     bot=bot,
 ):
 
-    await commandBuilder.timer(
+    await command_builder.timer(
         ctx,
         day,
         week,
@@ -321,7 +325,7 @@ async def timer(
     ],
 )
 async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
-    await commandBuilder.list(ctx, sub_command, page)
+    await command_builder.list_countdowns(ctx, sub_command, page)
 
 
 @bot.command(
@@ -380,22 +384,22 @@ async def timeleft(
     showguild: str = "",
 ):
 
-    await commandBuilder.timeleft(ctx, sub_command, showmine, showchannel, showguild)
+    await command_builder.time_left(ctx, sub_command, showmine, showchannel, showguild)
 
 
 @bot.autocomplete("timeleft", "showmine")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteCountdowns(ctx, value, "mine")
+    await command_builder.autocomplete_countdowns(ctx, value, "mine")
 
 
 @bot.autocomplete("timeleft", "showchannel")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteCountdowns(ctx, value, "channel")
+    await command_builder.autocomplete_countdowns(ctx, value, "channel")
 
 
 @bot.autocomplete("timeleft", "showguild")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteCountdowns(ctx, value, "guild")
+    await command_builder.autocomplete_countdowns(ctx, value, "guild")
 
 
 @bot.command(
@@ -477,45 +481,45 @@ async def delete(
     deletechannel: str = "",
     deleteguild: str = "",
 ):
-    await commandBuilder.delete(
+    await command_builder.delete(
         ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
     )
 
 
 @bot.autocomplete("delete", "deletemine")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteCountdowns(ctx, value, "mine")
+    await command_builder.autocomplete_countdowns(ctx, value, "mine")
 
 
 @bot.autocomplete("delete", "deletechannel")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteCountdowns(ctx, value, "channel")
+    await command_builder.autocomplete_countdowns(ctx, value, "channel")
 
 
 @bot.autocomplete("delete", "deleteguild")
 async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
-    await commandBuilder.autocompleteCountdowns(ctx, value, "guild")
+    await command_builder.autocomplete_countdowns(ctx, value, "guild")
 
 
 # Here are the functions that runs when the verify/cancel buttons are pressed
 @bot.component("deleteguild")
 async def button_response(ctx):
-    await commandBuilder.deletebutton(ctx, "guild")
+    await command_builder.delete_button(ctx, "guild")
 
 
 @bot.component("deletechannel")
 async def button_response(ctx):
-    await commandBuilder.deletebutton(ctx, "channel")
+    await command_builder.delete_button(ctx, "channel")
 
 
 @bot.component("deletemine")
 async def button_response(ctx):
-    await commandBuilder.deletebutton(ctx, "mine")
+    await command_builder.delete_button(ctx, "mine")
 
 
 @bot.component("deletecancel")
 async def button_response(ctx):
-    await commandBuilder.deletebutton(ctx, "cancel")
+    await command_builder.delete_button(ctx, "cancel")
 
 
 @bot.command(
@@ -523,7 +527,7 @@ async def button_response(ctx):
     description="Shows stats of bot",
 )
 async def botstats(ctx: interactions.CommandContext):
-    await commandBuilder.botstats(ctx, bot)
+    await command_builder.botstats(ctx, bot)
 
 
 # This command is not entierly active yet. It is just a prototype for when the bot is availible in multiple languages.
@@ -544,7 +548,7 @@ async def botstats(ctx: interactions.CommandContext):
     ],
 )
 async def translate(ctx: interactions.CommandContext, language):
-    await commandBuilder.translate(ctx, language)
+    await command_builder.translate(ctx, language)
 
 
 # a dev program
@@ -555,7 +559,7 @@ async def translate(ctx: interactions.CommandContext, language):
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
 )
 async def log(ctx: interactions.CommandContext):
-    await commandBuilder.log(ctx)
+    await command_builder.log(ctx)
 
 
 @bot.command(
@@ -581,7 +585,7 @@ async def log(ctx: interactions.CommandContext):
     ],
 )
 async def addpremium(ctx: interactions.CommandContext, userid, guildid=0):
-    await commandBuilder.addpremium(ctx, userid, guildid)
+    await command_builder.add_premium(ctx, userid, guildid)
 
 
 @bot.command(
@@ -600,7 +604,7 @@ async def addpremium(ctx: interactions.CommandContext, userid, guildid=0):
     ],
 )
 async def deletepremium(ctx: interactions.CommandContext, userid):
-    await commandBuilder.deletepremium(ctx, userid)
+    await command_builder.delete_premium(ctx, userid)
 
 
 @bot.command(
@@ -609,7 +613,7 @@ async def deletepremium(ctx: interactions.CommandContext, userid):
     dm_permission=False,
 )
 async def makethispremium(ctx: interactions.CommandContext):
-    await commandBuilder.makethispremium(ctx)
+    await command_builder.make_this_premium(ctx)
 
 
 @bot.command(
@@ -628,7 +632,7 @@ async def makethispremium(ctx: interactions.CommandContext):
     ],
 )
 async def listpremium(ctx: interactions.CommandContext, page=1):
-    await commandBuilder.listpremium(ctx, page)
+    await command_builder.list_premium(ctx, page)
 
 
 # Here are message commands - commands that are activated by a message
@@ -638,7 +642,7 @@ async def listpremium(ctx: interactions.CommandContext, page=1):
     type=interactions.ApplicationCommandType.MESSAGE,
 )
 async def deletethis(ctx: interactions.CommandContext):
-    await commandBuilder.deleteThis(ctx)
+    await command_builder.delete_this(ctx)
 
 
 @bot.command(
@@ -647,7 +651,7 @@ async def deletethis(ctx: interactions.CommandContext):
     type=interactions.ApplicationCommandType.MESSAGE,
 )
 async def timeleftthis(ctx: interactions.CommandContext):
-    await commandBuilder.timeleftThis(ctx)
+    await command_builder.timeleft_this(ctx)
 
 
 # Jokes
@@ -673,7 +677,7 @@ async def timeleftthis(ctx: interactions.CommandContext):
 # This is the task that keeps looking if any countdowns are done.
 @create_task(IntervalTrigger(5))  # 5 means execute task each 5 second
 async def timer_check():
-    await commandBuilder.checkDone(bot)
+    await command_builder.check_done(bot)
 
 
 timer_check.start()
