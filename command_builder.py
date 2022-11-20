@@ -3,7 +3,6 @@ All commands are made in here. For translating there is languageFile.
 """
 
 # ¤ are points of optimasation
-# +++ where I am at the first readability check
 # ¤All sql statements can be moved into a seperate file
 # ¤Move responses into langguage_file
 
@@ -482,7 +481,6 @@ async def timer(
             await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
 
 
-# +++
 async def list_countdowns(ctx, sub_command, page):
     """List command. List all active countdowns based on sub command."""
     if ctx.guild_id is None and sub_command != "channel":
@@ -577,7 +575,7 @@ async def list_countdowns(ctx, sub_command, page):
 async def delete(
     ctx, sub_command, sub_command_group, delete_mine, delete_channel, delete_guild
 ):
-    """Deletes a countdown based on subcommand.""" 
+    """Deletes a countdown based on subcommand."""
     # ¤ Make a function that can fit all of these
     if sub_command == "mine":
         if sub_command_group == "single":
@@ -737,12 +735,12 @@ async def fill_choices(ctx, cursor, value):
     countdown_id = 0
     for row in cursor:
         # Need to be limited due to discord not allowing more than 25 options
-        if (countdown_id < 24):  
+        if countdown_id < 24:
             countdowns.append(str(countdown_id) + ": " + str(row[0]))
             countdown_id += 1
         else:
             break
-    
+
     choices = [
         interactions.Choice(name=item, value=item)
         for item in countdowns
@@ -986,8 +984,7 @@ async def make_this_premium(ctx):
         {"allowedtime": allowed_time, "userid": user_id},
     )
 
-    # Somehow checks if there is a result or not.
-    # If there is a result, update it to current guild and time
+    # If there is 0 results there is no to edit.
     if len(cursor.fetchall()) != 0:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
@@ -1013,7 +1010,6 @@ async def make_this_premium(ctx):
             "Sorry, you need to be a premium user to use this command. Or wait 2 days since you last used it",
             ephemeral=True,
         )
-
 
 
 async def premium_info(ctx):
@@ -1072,6 +1068,7 @@ async def add_premium(ctx, user_id, guild_id):
         cursor = conn_premium_db.execute(
             "SELECT userid FROM Premium WHERE userid = :userid;", {"userid": user_id}
         )
+        # Check that the user isnt alredy there
         if len(cursor.fetchall()) == 0:
             conn_premium_db.execute(
                 "INSERT INTO Premium (userid,guildid,lastedit) VALUES (:userid,:guildid,0);",
@@ -1143,10 +1140,9 @@ async def list_premium(ctx, page):
                     "-----",
                     f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>",
                 )
+            # If it is before, go to next one
             elif current_line < goal_line - lines:
                 pass
-            else:
-                break
             current_line = current_line + 1
             if current_line >= goal_line:
                 break
@@ -1170,7 +1166,7 @@ async def check_done(bot):
         "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend FROM Countdowns WHERE timestamp < :currenttime;",
         {"currenttime": current_time},
     )
-    # There will just be an empty row in cursor if theres no countdowns that are active.
+    # There will 0 rows in cursor if theres no countdowns that are done.
     # Therefore this wont run multiple times.
     for row in cursor:
         message_end = str(row[10])
@@ -1184,6 +1180,7 @@ async def check_done(bot):
         channel_id = int(row[2])
         msg_id = int(row[1])
         timestamp = int(row[0])
+        # Check that the channel exsist
         try:
             channel = await interactions.get(
                 bot, interactions.Channel, object_id=channel_id
@@ -1195,18 +1192,21 @@ async def check_done(bot):
             )
             conn_countdowns_db.commit()
             return
+
+        # Check that the bot have permission to
+        # send message, embeds and see the channel.
         member = await interactions.get(
-                bot,
-                interactions.Member,
-                object_id=int(bot.me.id),
-                parent_id=guild_id,
-            )
+            bot,
+            interactions.Member,
+            object_id=int(bot.me.id),
+            parent_id=guild_id,
+        )
         got_permission = await member.has_permissions(
-                interactions.Permissions.EMBED_LINKS
-                ^ interactions.Permissions.SEND_MESSAGES ^ interactions.Permissions.VIEW_CHANNEL,
-                channel=channel,
-            )
-        
+            interactions.Permissions.EMBED_LINKS
+            ^ interactions.Permissions.SEND_MESSAGES
+            ^ interactions.Permissions.VIEW_CHANNEL,
+            channel=channel,
+        )
         if not got_permission:
             conn_countdowns_db.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
@@ -1214,22 +1214,18 @@ async def check_done(bot):
             )
             conn_countdowns_db.commit()
             return
-        
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild.id))
         language = "en-US"  # guild.preferred_locale
 
         embed = interactions.Embed()
-
         embed.title = translations[(language)]["done"]
-
         embed.description = f"{(translations[(language)]['created'])} <@!{started_by}>"
 
         if image_link != "":
             embed.set_image(url=image_link)
 
-        content = f"{message_start} <t:{timestamp}> {message_end}"
-        embed.add_field("Countdown", content)
+        embed.add_field("Countdown", f"{message_start} <t:{timestamp}> {message_end}")
         embed.color = int(("#%02x%02x%02x" % (0, 255, 0)).replace("#", "0x"), base=16)
 
         embed.add_field(
@@ -1262,6 +1258,7 @@ async def check_done(bot):
             )
             conn_countdowns_db.commit()
 
+        # Mention the role/user
         if role_id != 0:
             not_sent = True
             try:
@@ -1277,8 +1274,10 @@ async def check_done(bot):
                 return
             else:
                 list_of_id = guild_info.roles
+                # Go through all roles to see if it is a role to mention
                 for role_ids in list_of_id:
                     if role_id == int(role_ids.id):
+                        # Formatting of mentioning a role and everyone is different.
                         await channel.send(
                             f"{'<@&' + str(role_id) + '>' if role_id != guild_id else '@everyone'}",
                             embeds=embed,
@@ -1286,6 +1285,8 @@ async def check_done(bot):
                         )
                         not_sent = False
                 if not_sent:
+                    # Here its a user that get mentioned.
                     await channel.send(f"<@{role_id}>", embeds=embed)
         else:
+            # no mention.
             await channel.send(embeds=embed)
