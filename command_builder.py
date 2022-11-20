@@ -5,6 +5,7 @@ All commands are made in here. For translating there is languageFile.
 # ¤ are points of optimasation
 # +++ where I am at the first readability check
 # ¤All sql statements can be moved into a seperate file
+# ¤Move responses into langguage_file
 
 # Handeling the database
 import sqlite3
@@ -534,8 +535,10 @@ async def list_countdowns(ctx, sub_command, page):
             {"guildid": guild_id, "userid": user_id},
         )
 
+    # since there are 5 countdowns per page
     max_page = ceil(number_of_countdowns / 5)
 
+    # If requested is higher just make it to the max
     if max_page < page:
         page = max_page
 
@@ -574,7 +577,8 @@ async def list_countdowns(ctx, sub_command, page):
 async def delete(
     ctx, sub_command, sub_command_group, delete_mine, delete_channel, delete_guild
 ):
-    """Deletes a countdown based on subcommand."""
+    """Deletes a countdown based on subcommand.""" 
+    # ¤ Make a function that can fit all of these
     if sub_command == "mine":
         if sub_command_group == "single":
             cursor = get_possible_countdowns(ctx, "mine")
@@ -692,11 +696,14 @@ async def delete_this(ctx):
     )
     for row in cursor:
         started_by = int(row[0])
+    # If there was no entry in the database
+    # it is not an active countdown.
     if started_by == 0:
         return await ctx.send(
             "You can ony use this on active countdowns.",
             ephemeral=True,
         )
+    # Make sure user have permission to delete.
     if (
         started_by != user_id
         and not ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES
@@ -729,13 +736,13 @@ async def fill_choices(ctx, cursor, value):
     countdowns = []
     countdown_id = 0
     for row in cursor:
-        if (
-            countdown_id < 24
-        ):  # Need to be limited due to discord not allowing more than 25 options
+        # Need to be limited due to discord not allowing more than 25 options
+        if (countdown_id < 24):  
             countdowns.append(str(countdown_id) + ": " + str(row[0]))
-            countdown_id = countdown_id + 1
+            countdown_id += 1
         else:
             break
+    
     choices = [
         interactions.Choice(name=item, value=item)
         for item in countdowns
@@ -768,7 +775,7 @@ def get_possible_countdowns(ctx, option):
             {"channelid": channel_id},
         )
     elif option == "guild":
-
+        # The guild_id can be None if it is used in DMs
         if ctx.guild_id is None:
             channel_id = int(ctx.channel_id)
             cursor = conn_countdowns_db.execute(
@@ -855,6 +862,8 @@ async def delete_button(ctx, option):
                 ephemeral=True,
             )
         else:
+            # Remove the buttons from the ephemeral message
+            # and send a message announcing.
             await ctx.edit(components=[])
             await ctx.send(f"All {user} Countdown(s) Deleted")
     elif option == "cancel":
@@ -887,7 +896,8 @@ async def time_left_message(ctx, msg_id):
 
 async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
     """Show how long time it is left for a countdown"""
-
+    # show_mine, show_channel and show_guild contains the ID
+    # To process it easier, it is moved into show
     if sub_command == "mine":
         show = show_mine
     elif sub_command == "channel":
@@ -906,7 +916,6 @@ async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
 async def timeleft_this(ctx):
     """App command for timeleft."""
     msg_id = int(ctx.target.id)
-
     await time_left_message(ctx, msg_id)
 
 
@@ -926,7 +935,8 @@ async def botstats(ctx, bot):
     with open("log.txt", "r") as file:
         logsize = len(file.readlines())
 
-    # Check this when activating shards
+    # Check this when activating shards - might break
+    # (not that it alredy isnt)
     ping = round(bot.latency)
 
     embed = interactions.Embed()
@@ -951,7 +961,7 @@ async def translate(ctx, language):
             await ctx.guild.set_preferred_locale(language)
         except:
             await ctx.send(
-                "Sorry, I need to be able to manage guild to use this command",
+                "Sorry, I need to be able to manage guild to use this command. I use the guilds language to know what language to operate on.",
                 ephemeral=True,
             )
         else:
@@ -966,14 +976,19 @@ async def make_this_premium(ctx):
     """Change the premium guild to the one where the command is used. Cooldown of 2 days."""
     guild_id = ctx.guild_id
     current_time = floor(time.time())
-    allowed_time = current_time - 86400 * 2
+    # 172800 seconds is two days.
+    allowed_time = current_time - 172800
     user_id = int(ctx.user.id)
+    # Find those that are from the user
+    # that havent been recently edited.
     cursor = conn_premium_db.execute(
-        "SELECT userid FROM Premium WHERE lastedit > :allowedtime AND userid = :userid;",
+        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid;",
         {"allowedtime": allowed_time, "userid": user_id},
     )
 
-    if len(cursor.fetchall()) == 0:
+    # Somehow checks if there is a result or not.
+    # If there is a result, update it to current guild and time
+    if len(cursor.fetchall()) != 0:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
             "UPDATE Premium set guildid = :guildid WHERE userid = :userid;",
@@ -1000,7 +1015,7 @@ async def make_this_premium(ctx):
         )
 
 
-# ¤Move these into langguage_file
+
 async def premium_info(ctx):
     """Sends some info about premium."""
     embed = interactions.Embed()
@@ -1026,10 +1041,7 @@ async def premium_info(ctx):
     embed.footer = interactions.EmbedFooter(
         text=("Thanks for considering supporting this bot")
     )
-
-    embed.color = int(
-        ("#%02x%02x%02x" % (255, 20, 147)).replace("#", "0x"), base=16
-    )  # Set the colour to pink
+    embed.color = int(("#%02x%02x%02x" % (255, 20, 147)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed, ephemeral=True)
 
 
