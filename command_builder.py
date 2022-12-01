@@ -1204,8 +1204,8 @@ async def check_done(bot):
         )
         got_permission = await member.has_permissions(
             interactions.Permissions.EMBED_LINKS
-            ^ interactions.Permissions.SEND_MESSAGES
-            ^ interactions.Permissions.VIEW_CHANNEL,
+            | interactions.Permissions.SEND_MESSAGES
+            | interactions.Permissions.VIEW_CHANNEL,
             channel=channel,
         )
         if not got_permission:
