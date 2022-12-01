@@ -927,7 +927,8 @@ async def botstats(ctx, bot):
 
     # Get the number of active countdowns
     cursor = conn_countdowns_db.execute("SELECT COUNT(*) FROM Countdowns;")
-    number = len(cursor.fetchall())
+    for row in cursor:
+        number = int(row[0])
 
     # Get size of log file
     with open("log.txt", "r") as file:
