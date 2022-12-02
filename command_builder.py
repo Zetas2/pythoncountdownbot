@@ -143,7 +143,7 @@ async def send_and_add_to_database(
             )
             got_permission = await member.has_permissions(
                 interactions.Permissions.EMBED_LINKS
-                ^ interactions.Permissions.SEND_MESSAGES,
+                | interactions.Permissions.SEND_MESSAGES,
                 channel=channel,
             )
         else:
