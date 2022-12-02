@@ -143,7 +143,7 @@ async def send_and_add_to_database(
             )
             got_permission = await member.has_permissions(
                 interactions.Permissions.EMBED_LINKS
-                ^ interactions.Permissions.SEND_MESSAGES,
+                | interactions.Permissions.SEND_MESSAGES,
                 channel=channel,
             )
         else:
@@ -927,7 +927,8 @@ async def botstats(ctx, bot):
 
     # Get the number of active countdowns
     cursor = conn_countdowns_db.execute("SELECT COUNT(*) FROM Countdowns;")
-    number = len(cursor.fetchall())
+    for row in cursor:
+        number = int(row[0])
 
     # Get size of log file
     with open("log.txt", "r") as file:
@@ -1203,8 +1204,8 @@ async def check_done(bot):
         )
         got_permission = await member.has_permissions(
             interactions.Permissions.EMBED_LINKS
-            ^ interactions.Permissions.SEND_MESSAGES
-            ^ interactions.Permissions.VIEW_CHANNEL,
+            | interactions.Permissions.SEND_MESSAGES
+            | interactions.Permissions.VIEW_CHANNEL,
             channel=channel,
         )
         if not got_permission:
