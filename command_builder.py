@@ -309,7 +309,7 @@ async def do_all_checks(ctx, mention, image_link, times):
 
 async def delete_message(ctx, msg_id):
     """Send the message if a message is deleted"""
-    user = ctx.user
+    user = ctx.user.username
     guild_id = ctx.guild_id
     channel_id = ctx.channel_id
     await ctx.send(
