@@ -143,7 +143,8 @@ async def send_and_add_to_database(
             )
             got_permission = await member.has_permissions(
                 interactions.Permissions.EMBED_LINKS
-                | interactions.Permissions.SEND_MESSAGES,
+                | interactions.Permissions.SEND_MESSAGES
+                | interactions.Permissions.VIEW_CHANNEL,
                 channel=channel,
             )
         else:
@@ -209,7 +210,7 @@ async def send_and_add_to_database(
             return False
         else:
             await ctx.send(
-                "I am missing the permission to send embeds/messages in this channel. Please give me it!",
+                "I am missing the permission to view and send embeds/messages in this channel. Please give me it!",
                 ephemeral=True,
             )
 
@@ -309,7 +310,7 @@ async def do_all_checks(ctx, mention, image_link, times):
 
 async def delete_message(ctx, msg_id):
     """Send the message if a message is deleted"""
-    user = ctx.user
+    user = ctx.user.username
     guild_id = ctx.guild_id
     channel_id = ctx.channel_id
     await ctx.send(
@@ -808,7 +809,7 @@ def deleted_channel(channel):
 
 async def delete_button(ctx, option):
     """If a button used for deleting is used."""
-    user = ctx.user
+    user = ctx.user.username
     if option == "guild":
         if ctx.guild_id is None:
             return ctx.send("You cant use this in DMs", ephemeral=True)
@@ -964,7 +965,7 @@ async def translate(ctx, language):
                 ephemeral=True,
             )
         else:
-            await ctx.send(f"{ctx.user} translated the bot to {language}")
+            await ctx.send(f"{ctx.user.username} translated the bot to {language}")
     else:
         await ctx.send(
             "Sorry, you need to be administrator to use this command", ephemeral=True
@@ -1202,19 +1203,29 @@ async def check_done(bot):
             object_id=int(bot.me.id),
             parent_id=guild_id,
         )
-        got_permission = await member.has_permissions(
-            interactions.Permissions.EMBED_LINKS
-            | interactions.Permissions.SEND_MESSAGES
-            | interactions.Permissions.VIEW_CHANNEL,
-            channel=channel,
-        )
-        if not got_permission:
-            conn_countdowns_db.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid;",
-                {"msgid": msg_id},
+        # Something in the has_permission is causing a missing access.. So I just... Dont care about it anymore :)
+        try:
+            got_permission = await member.has_permissions(
+                interactions.Permissions.EMBED_LINKS
+                | interactions.Permissions.SEND_MESSAGES
+                | interactions.Permissions.VIEW_CHANNEL,
+                channel=channel,
             )
+            if not got_permission:
+                conn_countdowns_db.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msg_id},
+                )
+                conn_countdowns_db.commit()
+                return
+        except:
+            conn_countdowns_db.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msg_id},
+                )
             conn_countdowns_db.commit()
             return
+
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild.id))
         language = "en-US"  # guild.preferred_locale
