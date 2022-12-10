@@ -1203,19 +1203,29 @@ async def check_done(bot):
             object_id=int(bot.me.id),
             parent_id=guild_id,
         )
-        got_permission = await member.has_permissions(
-            interactions.Permissions.EMBED_LINKS
-            | interactions.Permissions.SEND_MESSAGES
-            | interactions.Permissions.VIEW_CHANNEL,
-            channel=channel,
-        )
-        if not got_permission:
-            conn_countdowns_db.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid;",
-                {"msgid": msg_id},
+        # Something in the has_permission is causing a missing access.. So I just... Dont care about it anymore :)
+        try:
+            got_permission = await member.has_permissions(
+                interactions.Permissions.EMBED_LINKS
+                | interactions.Permissions.SEND_MESSAGES
+                | interactions.Permissions.VIEW_CHANNEL,
+                channel=channel,
             )
+            if not got_permission:
+                conn_countdowns_db.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msg_id},
+                )
+                conn_countdowns_db.commit()
+                return
+        except:
+            conn_countdowns_db.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid;",
+                    {"msgid": msg_id},
+                )
             conn_countdowns_db.commit()
             return
+
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild.id))
         language = "en-US"  # guild.preferred_locale
