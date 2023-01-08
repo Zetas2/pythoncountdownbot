@@ -130,6 +130,7 @@ async def send_and_add_to_database(
     If alert is False it will just send the message about how long time it is left,
     but dont save it to the database.
     """
+    await ctx.defer(ephemeral=False)
     # If the bot dont have the permission to view the channel, this try will fail.
     try:
         # It is only required to check if the bot can send messages/embeds if it need to alert
@@ -138,7 +139,6 @@ async def send_and_add_to_database(
             if otherchannel == None:
                 channel = await ctx.get_channel()
             else:
-                await ctx.defer(ephemeral=True)
                 #channel = otherchannel <- This would have been such a nice solution but nooo... why make it easy???
                 channel = await interactions.get(bot, interactions.Channel, object_id=otherchannel.id, force="http")
             member = await interactions.get(
@@ -816,7 +816,6 @@ async def autocomplete_countdowns(ctx, value, option):
     await fill_choices(ctx, cursor, value)
 
 
-# ¤Expand to threads as well
 def deleted_channel(channel):
     """Delete countdowns from database if the channel they were in get deleted."""
     channel_id = int(channel.id)
