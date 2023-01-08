@@ -816,7 +816,6 @@ async def autocomplete_countdowns(ctx, value, option):
     await fill_choices(ctx, cursor, value)
 
 
-# ¤Expand to threads as well
 def deleted_channel(channel):
     """Delete countdowns from database if the channel they were in get deleted."""
     channel_id = int(channel.id)
