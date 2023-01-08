@@ -120,6 +120,7 @@ async def send_and_add_to_database(
     message_start,
     message_end,
     image_link,
+    otherchannel,
     exact,
     alert,
     bot,
@@ -134,7 +135,12 @@ async def send_and_add_to_database(
         # It is only required to check if the bot can send messages/embeds if it need to alert
         # otherwise it will just reply to the command, which dont require permission.
         if alert:
-            channel = await ctx.get_channel()
+            if otherchannel == None:
+                channel = await ctx.get_channel()
+            else:
+                await ctx.defer(ephemeral=True)
+                #channel = otherchannel <- This would have been such a nice solution but nooo... why make it easy???
+                channel = await interactions.get(bot, interactions.Channel, object_id=otherchannel.id, force="http")
             member = await interactions.get(
                 bot,
                 interactions.Member,
@@ -151,7 +157,7 @@ async def send_and_add_to_database(
             got_permission = True
     except:
         await ctx.send(
-            "I am missing the permission to view this channel. Please give me it!",
+            "I am missing the permission to view the channel. Please give me it!",
             ephemeral=True,
         )
     else:
@@ -169,9 +175,15 @@ async def send_and_add_to_database(
                 if time_left > 3600:
                     timestring = "\n*Exact time from start: "
                     timestring = f"{get_exact_timestring(timestring, time_left)}*"
-            msg = await ctx.send(
-                f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
-            )
+            if otherchannel == None:
+                msg = await ctx.send(
+                    f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
+                )
+            else:
+                msg = await channel.send(
+                    f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
+                )
+                await ctx.send(f"Sent https://discord.com/channels/{ctx.guild_id}/{msg.channel_id}/{msg.id}")
 
             # If the bot should notify when countdown is done - save it to database:
             if alert:
@@ -210,7 +222,7 @@ async def send_and_add_to_database(
             return False
         else:
             await ctx.send(
-                "I am missing the permission to view and send embeds/messages in this channel. Please give me it!",
+                "I am missing the permission to view and send embeds/messages in the channel. Please give me it!",
                 ephemeral=True,
             )
 
@@ -277,12 +289,16 @@ async def check_active_and_mention(ctx, mention):
             ):
                 return True
         # Here the limit wasnt reached, so therefore continue checking permission
-        # If you try to ping someone check that you got the permission ¤ Allow pinging of yourself
-        if mention != "0" and not (
-            ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE
-        ):
-            await ctx.send("You dont have permission to ping", ephemeral=True)
-            return True
+        # If you try to ping someone check that you got the permission
+        # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
+        if mention != "0" and ((not (ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)) and (not mention.id == ctx.user.id)):
+            if hasattr(mention,"mentionable"):
+                if not mention.mentionable:
+                    await ctx.send("You dont have permission to ping that role", ephemeral=True)
+                    return True
+            else:
+                await ctx.send("You dont have permission to ping", ephemeral=True)
+                return True
         # mention is a thingy, I just want the id of it.
         if mention != "0":
             mention = mention.id
@@ -391,6 +407,7 @@ async def countdown(
     times,
     repeat_length,
     image_link,
+    otherchannel,
     exact,
     alert,
     bot,
@@ -427,6 +444,7 @@ async def countdown(
                     message_start,
                     message_end,
                     image_link,
+                    otherchannel,
                     exact,
                     alert,
                     bot,
@@ -451,6 +469,7 @@ async def timer(
     mention,
     times,
     image_link,
+    otherchannel,
     exact,
     alert,
     bot,
@@ -474,6 +493,7 @@ async def timer(
             message_start,
             message_end,
             image_link,
+            otherchannel,
             exact,
             alert,
             bot,
