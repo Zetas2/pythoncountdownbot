@@ -123,6 +123,12 @@ async def premiuminfo(ctx: interactions.CommandContext):
             max_length=200,
         ),
         interactions.Option(
+            name="otherchannel",
+            description="Send the countdown to another channel",
+            type=interactions.OptionType.CHANNEL,
+            required=False
+        ),
+        interactions.Option(
             name="exact",
             description="Set to false if you dont want exact date",
             type=interactions.OptionType.BOOLEAN,
@@ -145,6 +151,7 @@ async def countdown(
     repeat=0,
     repeattime=24,
     image="",
+    otherchannel=None,
     exact=True,
     alert=True,
     bot=bot,
@@ -158,6 +165,7 @@ async def countdown(
         repeat,
         repeattime,
         image,
+        otherchannel,
         exact,
         alert,
         bot,
@@ -231,6 +239,12 @@ async def countdown(
             max_length=200,
         ),
         interactions.Option(
+            name="otherchannel",
+            description="Send the countdown to another channel",
+            type=interactions.OptionType.CHANNEL,
+            required=False
+        ),
+        interactions.Option(
             name="exact",
             description="Set to false if you dont want exact date",
             type=interactions.OptionType.BOOLEAN,
@@ -255,6 +269,7 @@ async def timer(
     mention="0",
     repeat=0,
     image="",
+    otherchannel=None,
     exact=True,
     alert=True,
     bot=bot,
@@ -271,6 +286,7 @@ async def timer(
         mention,
         repeat,
         image,
+        otherchannel,
         exact,
         alert,
         bot,

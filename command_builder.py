@@ -120,6 +120,7 @@ async def send_and_add_to_database(
     message_start,
     message_end,
     image_link,
+    otherchannel,
     exact,
     alert,
     bot,
@@ -134,7 +135,12 @@ async def send_and_add_to_database(
         # It is only required to check if the bot can send messages/embeds if it need to alert
         # otherwise it will just reply to the command, which dont require permission.
         if alert:
-            channel = await ctx.get_channel()
+            if otherchannel == None:
+                channel = await ctx.get_channel()
+            else:
+                await ctx.defer(ephemeral=True)
+                #channel = otherchannel <- This would have been such a nice solution but nooo... why make it easy???
+                channel = await interactions.get(bot, interactions.Channel, object_id=otherchannel.id, force="http")
             member = await interactions.get(
                 bot,
                 interactions.Member,
@@ -151,7 +157,7 @@ async def send_and_add_to_database(
             got_permission = True
     except:
         await ctx.send(
-            "I am missing the permission to view this channel. Please give me it!",
+            "I am missing the permission to view the channel. Please give me it!",
             ephemeral=True,
         )
     else:
@@ -169,9 +175,15 @@ async def send_and_add_to_database(
                 if time_left > 3600:
                     timestring = "\n*Exact time from start: "
                     timestring = f"{get_exact_timestring(timestring, time_left)}*"
-            msg = await ctx.send(
-                f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
-            )
+            if otherchannel == None:
+                msg = await ctx.send(
+                    f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
+                )
+            else:
+                msg = await channel.send(
+                    f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
+                )
+                await ctx.send(f"Sent https://discord.com/channels/{ctx.guild_id}/{msg.channel_id}/{msg.id}")
 
             # If the bot should notify when countdown is done - save it to database:
             if alert:
@@ -210,7 +222,7 @@ async def send_and_add_to_database(
             return False
         else:
             await ctx.send(
-                "I am missing the permission to view and send embeds/messages in this channel. Please give me it!",
+                "I am missing the permission to view and send embeds/messages in the channel. Please give me it!",
                 ephemeral=True,
             )
 
@@ -391,6 +403,7 @@ async def countdown(
     times,
     repeat_length,
     image_link,
+    otherchannel,
     exact,
     alert,
     bot,
@@ -427,6 +440,7 @@ async def countdown(
                     message_start,
                     message_end,
                     image_link,
+                    otherchannel,
                     exact,
                     alert,
                     bot,
@@ -451,6 +465,7 @@ async def timer(
     mention,
     times,
     image_link,
+    otherchannel,
     exact,
     alert,
     bot,
@@ -474,6 +489,7 @@ async def timer(
             message_start,
             message_end,
             image_link,
+            otherchannel,
             exact,
             alert,
             bot,
