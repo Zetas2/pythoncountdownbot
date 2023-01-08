@@ -289,12 +289,16 @@ async def check_active_and_mention(ctx, mention):
             ):
                 return True
         # Here the limit wasnt reached, so therefore continue checking permission
-        # If you try to ping someone check that you got the permission ¤ Allow pinging of yourself
-        if mention != "0" and not (
-            ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE
-        ):
-            await ctx.send("You dont have permission to ping", ephemeral=True)
-            return True
+        # If you try to ping someone check that you got the permission
+        # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
+        if mention != "0" and ((not (ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)) and (not mention.id == ctx.user.id)):
+            if hasattr(mention,"mentionable"):
+                if not mention.mentionable:
+                    await ctx.send("You dont have permission to ping that role", ephemeral=True)
+                    return True
+            else:
+                await ctx.send("You dont have permission to ping", ephemeral=True)
+                return True
         # mention is a thingy, I just want the id of it.
         if mention != "0":
             mention = mention.id
