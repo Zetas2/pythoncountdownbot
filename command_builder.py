@@ -44,7 +44,7 @@ conn_countdowns_db = sqlite3.connect("Countdowns.db")
 
 # Make the table if there is noe
 conn_countdowns_db.execute(
-    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255));"""
+    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255),number int);"""
 )
 
 # makes connPremium into the connected database for premium.
@@ -201,10 +201,10 @@ async def send_and_add_to_database(
                     role_id = mention.id
                 else:
                     role_id = 0
-
+                # ¤ Implement number usage
                 # Add it into database
                 conn_countdowns_db.execute(
-                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend,:messagecompleted);",
+                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend,:messagecompleted,:number);",
                     {
                         "timestamp": int(timestamp),
                         "msgid": int(msg.id),
@@ -217,7 +217,8 @@ async def send_and_add_to_database(
                         "imagelink": str(image_link),
                         "messagestart": str(message_start),
                         "messageend": str(message_end),
-                        "messagecompleted": str(message_completed)
+                        "messagecompleted": str(message_completed),
+                        "number":(int(1))
                     },
                 )
                 conn_countdowns_db.commit()
@@ -1196,12 +1197,13 @@ async def check_done(bot):
     """Checks if a countdown is done. If it is, send the countdown completed message."""
     current_time = int(floor(time.time()))
     cursor = conn_countdowns_db.execute(
-        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted FROM Countdowns WHERE timestamp < :currenttime;",
+        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number FROM Countdowns WHERE timestamp < :currenttime;",
         {"currenttime": current_time},
     )
     # There will 0 rows in cursor if theres no countdowns that are done.
     # Therefore this wont run multiple times.
     for row in cursor:
+        number = str(row[12])
         message_completed = str(row[11])
         message_end = str(row[10])
         message_start = str(row[9])
@@ -1245,15 +1247,15 @@ async def check_done(bot):
             )
             if not got_permission:
                 conn_countdowns_db.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msg_id},
+                    "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                    {"msgid": msg_id, "number": number},
                 )
                 conn_countdowns_db.commit()
                 return
         except:
             conn_countdowns_db.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msg_id},
+                    "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                    {"msgid": msg_id, "number": number},
                 )
             conn_countdowns_db.commit()
             return
@@ -1289,19 +1291,19 @@ async def check_done(bot):
             )
             times = times - 1
             conn_countdowns_db.execute(
-                "UPDATE Countdowns set times = :times where msgid = :msgid;",
-                {"times": times, "msgid": msg_id},
+                "UPDATE Countdowns set times = :times where msgid = :msgid AND number = :number;",
+                {"times": times, "msgid": msg_id, "number":number},
             )
             conn_countdowns_db.execute(
-                "UPDATE Countdowns set timestamp = :timestamp where msgid = :msgid;",
-                {"timestamp": timestamp, "msgid": msg_id},
+                "UPDATE Countdowns set timestamp = :timestamp where msgid = :msgid AND number = :number;",
+                {"timestamp": timestamp, "msgid": msg_id,"number":number},
             )
             conn_countdowns_db.commit()
         # If its not repeating, it should get deleted from the database
         else:
             conn_countdowns_db.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid;",
-                {"msgid": msg_id, "channelid": channel_id},
+                "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid AND number = :number;",
+                {"msgid": msg_id, "channelid": channel_id,"number":number},
             )
             conn_countdowns_db.commit()
 
@@ -1314,8 +1316,8 @@ async def check_done(bot):
                 )
             except:
                 conn_countdowns_db.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msg_id},
+                    "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                    {"msgid": msg_id,"number":number},
                 )
                 conn_countdowns_db.commit()
                 return
