@@ -8,17 +8,7 @@ Sooo. This is a readme. Written in markdown. Sure.. That will be fun
 
 ## Requirements
 
-For this bot to work, you need at least the following:
-
-- discord-py-interactions 4.3.3
-- interactions-tasks 1.0.0
-- interactions-wait-for 1.0.6
-- dateparser 1.1.1
-- psutil 5.9.1
-- validators 0.20.0
-- python-dotenv 0.20.0
-
-Sure.. I might have missed something, but thats the main stuff at least.
+For this bot to work, you need at least the following the stuff in requirements.txt. Sure.. I might have missed something, but thats the main stuff at least.
 
 ## How to self host
 
