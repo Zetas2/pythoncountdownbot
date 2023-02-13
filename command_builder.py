@@ -51,7 +51,7 @@ conn_countdowns_db.execute(
 conn_premium_db = sqlite3.connect("premiumGuilds.db")
 # Make the table if there is noe
 conn_premium_db.execute(
-    """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int)"""
+    """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int,level int)"""
 )
 
 # To keep track of how long the bot have been up, the starttime is saved.
@@ -135,8 +135,8 @@ async def send_and_add_to_database(
     try:
         # It is only required to check if the bot can send messages/embeds if it need to alert
         # otherwise it will just reply to the command, which dont require permission.
+        await ctx.defer(ephemeral=False)
         if alert:
-            await ctx.defer(ephemeral=False)
             if otherchannel == None:
                 channel = await ctx.get_channel()
             else:
@@ -1011,7 +1011,7 @@ async def make_this_premium(ctx):
     # Find those that are from the user
     # that havent been recently edited.
     cursor = conn_premium_db.execute(
-        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid;",
+        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid AND level = 1;",
         {"allowedtime": allowed_time, "userid": user_id},
     )
 
@@ -1019,11 +1019,11 @@ async def make_this_premium(ctx):
     if len(cursor.fetchall()) != 0:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
-            "UPDATE Premium set guildid = :guildid WHERE userid = :userid;",
+            "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = 1;",
             {"userid": user_id, "guildid": int(guild_id)},
         )
         conn_premium_db.execute(
-            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid;",
+            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = 1;",
             {"userid": user_id, "currenttime": int(current_time)},
         )
         conn_premium_db.commit()
@@ -1093,19 +1093,20 @@ async def log(ctx):
         )
 
 
-async def add_premium(ctx, user_id, guild_id):
+async def add_premium(ctx, user_id, guild_id,level):
     """Add a premium user."""
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute(
-            "SELECT userid FROM Premium WHERE userid = :userid;", {"userid": user_id}
+            "SELECT userid FROM Premium WHERE userid = :userid AND level = 1;", {"userid": user_id}
         )
         # Check that the user isnt alredy there
         if len(cursor.fetchall()) == 0:
             conn_premium_db.execute(
-                "INSERT INTO Premium (userid,guildid,lastedit) VALUES (:userid,:guildid,0);",
+                "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,0,:level);",
                 {
                     "userid": int(user_id),
                     "guildid": int(guild_id),
+                    "level": int(level),
                 },
             )
             conn_premium_db.commit()
@@ -1119,13 +1120,13 @@ async def add_premium(ctx, user_id, guild_id):
         )
 
 
-async def delete_premium(ctx, user_id):
+async def delete_premium(ctx, user_id,level):
     """Delete a premium user."""
     if int(ctx.user.id) in devs:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
-            "DELETE from Premium WHERE userid = :userid;",
-            {"userid": user_id},
+            "DELETE from Premium WHERE userid = :userid AND level <= :level;",
+            {"userid": user_id,"level": level},
         )
         conn_premium_db.commit()
 
@@ -1151,7 +1152,7 @@ async def list_premium(ctx, page):
         cursor = conn_premium_db.execute("SELECT COUNT (*) FROM Premium")
         for row in cursor:
             number_of_countdown = int(row[0])
-        cursor = conn_premium_db.execute("SELECT guildid,userid,lastedit FROM Premium")
+        cursor = conn_premium_db.execute("SELECT guildid,userid,lastedit,level FROM Premium")
         lines = 15
         max_page = ceil(number_of_countdown / lines)
         if max_page < page:
@@ -1167,9 +1168,10 @@ async def list_premium(ctx, page):
                 guild_id = int(row[0])
                 user_id = int(row[1])
                 last_edit = int(row[2])
+                level = int(row[3])
                 embed.add_field(
                     "-----",
-                    f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>",
+                    f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>. Level: {level}",
                 )
             # If it is before, go to next one
             elif current_line < goal_line - lines:
