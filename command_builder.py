@@ -389,7 +389,7 @@ async def help_information(ctx):
     )
 
     embed.footer = interactions.EmbedFooter(
-        text=(translations[(language)]["helpFooter" + str(random.randint(1, 6))])
+        text=(translations[(language)]["helpFooter" + str(random.randint(1, 7))])
     )
 
     embed.color = int(

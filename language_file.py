@@ -25,6 +25,7 @@ translations = {
         "helpFooter4": "Thanks Stryker for tasting my spaghetti",
         "helpFooter5": "Thanks Midnightoel for causing me problems to solve",
         "helpFooter6": "Thanks Patreons for supporting the bot",
+        "helpFooter7": "Thanks TFalcon for being the first super patreon.",
         "done": "A countdown is done!",
         "created": "It was started by",
     },
