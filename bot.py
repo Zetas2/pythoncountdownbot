@@ -49,6 +49,7 @@ async def on_start():
 async def on_channel_delete(channel):
     command_builder.deleted_channel(channel)
 
+
 @bot.event
 async def on_thread_delete(thread):
     command_builder.deleted_channel(thread)
@@ -133,7 +134,7 @@ async def premiuminfo(ctx: interactions.CommandContext):
             name="otherchannel",
             description="Send the countdown to another channel",
             type=interactions.OptionType.CHANNEL,
-            required=False
+            required=False,
         ),
         interactions.Option(
             name="exact",
@@ -258,7 +259,7 @@ async def countdown(
             name="otherchannel",
             description="Send the countdown to another channel",
             type=interactions.OptionType.CHANNEL,
-            required=False
+            required=False,
         ),
         interactions.Option(
             name="exact",
@@ -625,7 +626,7 @@ async def log(ctx: interactions.CommandContext):
         ),
     ],
 )
-async def addpremium(ctx: interactions.CommandContext, userid, guildid=0,level=1):
+async def addpremium(ctx: interactions.CommandContext, userid, guildid=0, level=1):
     await command_builder.add_premium(ctx, userid, guildid, level)
 
 
@@ -651,8 +652,8 @@ async def addpremium(ctx: interactions.CommandContext, userid, guildid=0,level=1
         ),
     ],
 )
-async def deletepremium(ctx: interactions.CommandContext, userid,level=1):
-    await command_builder.delete_premium(ctx, userid,level)
+async def deletepremium(ctx: interactions.CommandContext, userid, level=1):
+    await command_builder.delete_premium(ctx, userid, level)
 
 
 @bot.command(
