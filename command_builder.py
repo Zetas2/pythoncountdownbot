@@ -119,6 +119,7 @@ async def send_and_add_to_database(
     length,
     message_start,
     message_end,
+    message_completed,
     image_link,
     otherchannel,
     exact,
@@ -203,7 +204,7 @@ async def send_and_add_to_database(
 
                 # Add it into database
                 conn_countdowns_db.execute(
-                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
+                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend,:messagecompleted);",
                     {
                         "timestamp": int(timestamp),
                         "msgid": int(msg.id),
@@ -216,6 +217,7 @@ async def send_and_add_to_database(
                         "imagelink": str(image_link),
                         "messagestart": str(message_start),
                         "messageend": str(message_end),
+                        "messagecompleted": str(message_completed)
                     },
                 )
                 conn_countdowns_db.commit()
@@ -306,7 +308,7 @@ async def check_active_and_mention(ctx, mention):
         return False
 
 
-async def do_all_checks(ctx, mention, image_link, times):
+async def do_all_checks(ctx, mention, image_link, times,message_completed):
     """A single function for all checks required before a dountdown/timer starts"""
     if await check_active_and_mention(ctx, mention):
         return False
@@ -319,6 +321,10 @@ async def do_all_checks(ctx, mention, image_link, times):
 
     if times != 0:
         if await check_no_premium(ctx, "repeating timer"):
+            return False
+        
+    if message_completed != "":
+        if await check_no_premium(ctx, "custom message after complete"):
             return False
 
     return True
@@ -403,6 +409,7 @@ async def countdown(
     timestring,
     message_start,
     message_end,
+    message_completed,
     mention,
     times,
     repeat_length,
@@ -414,7 +421,7 @@ async def countdown(
 ):
     """The countdown command. The main use of this bot. Creates a new countdown."""
 
-    if await do_all_checks(ctx, mention, image_link, times):
+    if await do_all_checks(ctx, mention, image_link, times,message_completed):
 
         wholedate = dateparser.parse("in " + timestring)
         try:  # If wholedate cant be floored, it is not a valid date.
@@ -443,6 +450,7 @@ async def countdown(
                     length,
                     message_start,
                     message_end,
+                    message_completed,
                     image_link,
                     otherchannel,
                     exact,
@@ -466,6 +474,7 @@ async def timer(
     minute,
     message_start,
     message_end,
+    message_completed,
     mention,
     times,
     image_link,
@@ -476,7 +485,7 @@ async def timer(
 ):
     """For those that dont want to use countdown."""
 
-    if await do_all_checks(ctx, mention, image_link, times):
+    if await do_all_checks(ctx, mention, image_link, times,message_completed):
 
         current_time = floor(time.time())
         length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
@@ -492,6 +501,7 @@ async def timer(
             length,
             message_start,
             message_end,
+            message_completed,
             image_link,
             otherchannel,
             exact,
@@ -1184,12 +1194,13 @@ async def check_done(bot):
     """Checks if a countdown is done. If it is, send the countdown completed message."""
     current_time = int(floor(time.time()))
     cursor = conn_countdowns_db.execute(
-        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend FROM Countdowns WHERE timestamp < :currenttime;",
+        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted FROM Countdowns WHERE timestamp < :currenttime;",
         {"currenttime": current_time},
     )
     # There will 0 rows in cursor if theres no countdowns that are done.
     # Therefore this wont run multiple times.
     for row in cursor:
+        message_completed = str(row[11])
         message_end = str(row[10])
         message_start = str(row[9])
         image_link = str(row[8])
@@ -1256,7 +1267,10 @@ async def check_done(bot):
         if image_link != "":
             embed.set_image(url=image_link)
 
-        embed.add_field("Countdown", f"{message_start} <t:{timestamp}> {message_end}")
+        if message_completed == "":
+            embed.add_field("Countdown", f"{message_start} <t:{timestamp}> {message_end}")
+        else:
+            embed.add_field("Message", f"{message_completed}")
         embed.color = int(("#%02x%02x%02x" % (0, 255, 0)).replace("#", "0x"), base=16)
 
         embed.add_field(
