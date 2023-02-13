@@ -44,7 +44,7 @@ conn_countdowns_db = sqlite3.connect("Countdowns.db")
 
 # Make the table if there is noe
 conn_countdowns_db.execute(
-    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255));"""
+    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255));"""
 )
 
 # makes connPremium into the connected database for premium.
@@ -130,12 +130,12 @@ async def send_and_add_to_database(
     If alert is False it will just send the message about how long time it is left,
     but dont save it to the database.
     """
-    await ctx.defer(ephemeral=False)
     # If the bot dont have the permission to view the channel, this try will fail.
     try:
         # It is only required to check if the bot can send messages/embeds if it need to alert
         # otherwise it will just reply to the command, which dont require permission.
         if alert:
+            await ctx.defer(ephemeral=False)
             if otherchannel == None:
                 channel = await ctx.get_channel()
             else:
