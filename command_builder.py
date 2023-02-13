@@ -1037,14 +1037,14 @@ async def premium_info(ctx):
     """Sends some info about premium."""
     embed = interactions.Embed()
     embed.title = "Premium info"
-    embed.description = "To get premium you can head over to [Patreon](https://www.patreon.com/livecountdownbot)"
+    embed.description = "To get premium you can head over to [Patreon](https://www.patreon.com/HourglassTimelord)"
     embed.add_field(
         "Why premium?",
         "Premium gives you access to:\n• More countdowns in a guild\n• Adding images at the end of a countdown\n• Repeating countdowns",
     )
     embed.add_field(
         "How do I activate it?",
-        "Unfortunatly there isnt a good way of doing this yet. For now ping either <@238006908664020993> or <@729791860674920488> after reciving the patreon role in the [Discord Support Guild](https://discord.com/invite/b2fY4z4xBY)",
+        "Unfortunatly there isnt a good way of doing this yet. For now ping either <@238006908664020993> or <@729791860674920488> after reciving the patreon role in the [Discord Support Guild]( https://discord.gg/YTxTms4Sp7)",
     )
     embed.add_field(
         "How do I pick what guild?",
