@@ -16,7 +16,7 @@ translations = {
         "helpMentionTitle": "Mention",
         "helpMentionDesc": "To be able to mention people at the end of the countdown you currently need to have the `MENTION_EVERYONE` premission",
         "helpLinksTitle": "Links",
-        "helpLinksDesc": "[Discord Support](https://discord.com/invite/b2fY4z4xBY 'Join the support guild!') | [Invite the Bot](https://top.gg/bot/1015703443358363789) | [Patreon](https://www.patreon.com/livecountdownbot)",
+        "helpLinksDesc": "[Discord Support]( https://discord.gg/YTxTms4Sp7 'Join the support guild!') | [Invite the Bot](https://top.gg/bot/1015703443358363789) | [Patreon](https://patreon.com/HourglassTimelord)",
         "helpTranslateTitle": "/Translate",
         "helpTranslateDesc": "Allows you as an administrator to switch the language of the bot",
         "helpFooter1": "Thanks Zetas2 for developing this bot",
