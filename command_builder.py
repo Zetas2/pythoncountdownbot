@@ -1111,7 +1111,7 @@ async def add_premium(ctx, user_id, guild_id, level):
             {"userid": user_id},
         )
         # Check that the user isnt alredy there
-        if len(cursor.fetchall()) == 0 and level != 1:
+        if len(cursor.fetchall()) == 0 and level == 1:
             conn_premium_db.execute(
                 "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,0,:level);",
                 {
