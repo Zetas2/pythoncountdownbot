@@ -49,6 +49,7 @@ async def on_start():
 async def on_channel_delete(channel):
     command_builder.deleted_channel(channel)
 
+
 @bot.event
 async def on_thread_delete(thread):
     command_builder.deleted_channel(thread)
@@ -96,6 +97,13 @@ async def premiuminfo(ctx: interactions.CommandContext):
             required=False,
         ),
         interactions.Option(
+            name="messageaftercomplete",
+            description="Custom message when timer runs out (PREMIUM FEATURE)",
+            type=interactions.OptionType.STRING,
+            max_length=100,
+            required=False,
+        ),
+        interactions.Option(
             name="mention",
             description="Who to mention",
             type=interactions.OptionType.MENTIONABLE,
@@ -126,7 +134,7 @@ async def premiuminfo(ctx: interactions.CommandContext):
             name="otherchannel",
             description="Send the countdown to another channel",
             type=interactions.OptionType.CHANNEL,
-            required=False
+            required=False,
         ),
         interactions.Option(
             name="exact",
@@ -147,6 +155,7 @@ async def countdown(
     timestring,
     messagestart="Countdown will end",
     messageend="!",
+    messageaftercomplete="",
     mention="0",
     repeat=0,
     repeattime=24,
@@ -161,6 +170,7 @@ async def countdown(
         timestring,
         messagestart,
         messageend,
+        messageaftercomplete,
         mention,
         repeat,
         repeattime,
@@ -219,6 +229,13 @@ async def countdown(
             required=False,
         ),
         interactions.Option(
+            name="messageaftercomplete",
+            description="Custom message when timer runs out (PREMIUM FEATURE)",
+            type=interactions.OptionType.STRING,
+            max_length=100,
+            required=False,
+        ),
+        interactions.Option(
             name="mention",
             description="Who to mention",
             type=interactions.OptionType.MENTIONABLE,
@@ -242,7 +259,7 @@ async def countdown(
             name="otherchannel",
             description="Send the countdown to another channel",
             type=interactions.OptionType.CHANNEL,
-            required=False
+            required=False,
         ),
         interactions.Option(
             name="exact",
@@ -266,6 +283,7 @@ async def timer(
     minute=0,
     messagestart="Timer will end",
     messageend="!",
+    messageaftercomplete="",
     mention="0",
     repeat=0,
     image="",
@@ -283,6 +301,7 @@ async def timer(
         minute,
         messagestart,
         messageend,
+        messageaftercomplete,
         mention,
         repeat,
         image,
@@ -598,10 +617,17 @@ async def log(ctx: interactions.CommandContext):
             max_length=50,
             required=False,
         ),
+        interactions.Option(
+            name="level",
+            description="What level?",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+            max_value=50,
+        ),
     ],
 )
-async def addpremium(ctx: interactions.CommandContext, userid, guildid=0):
-    await command_builder.add_premium(ctx, userid, guildid)
+async def addpremium(ctx: interactions.CommandContext, userid, guildid=0, level=1):
+    await command_builder.add_premium(ctx, userid, guildid, level)
 
 
 @bot.command(
@@ -617,10 +643,17 @@ async def addpremium(ctx: interactions.CommandContext, userid, guildid=0):
             max_length=50,
             required=True,
         ),
+        interactions.Option(
+            name="level",
+            description="Up to what level?",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+            max_value=50,
+        ),
     ],
 )
-async def deletepremium(ctx: interactions.CommandContext, userid):
-    await command_builder.delete_premium(ctx, userid)
+async def deletepremium(ctx: interactions.CommandContext, userid, level=1):
+    await command_builder.delete_premium(ctx, userid, level)
 
 
 @bot.command(
@@ -643,7 +676,7 @@ async def makethispremium(ctx: interactions.CommandContext):
             description="What page number",
             type=interactions.OptionType.INTEGER,
             required=False,
-            max_value=50,
+            max_value=100,
         ),
     ],
 )

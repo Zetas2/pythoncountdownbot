@@ -44,14 +44,14 @@ conn_countdowns_db = sqlite3.connect("Countdowns.db")
 
 # Make the table if there is noe
 conn_countdowns_db.execute(
-    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255));"""
+    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255),number int);"""
 )
 
 # makes connPremium into the connected database for premium.
 conn_premium_db = sqlite3.connect("premiumGuilds.db")
 # Make the table if there is noe
 conn_premium_db.execute(
-    """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int)"""
+    """CREATE TABLE IF NOT EXISTS Premium (guildid int,userid int,lastedit int,level int)"""
 )
 
 # To keep track of how long the bot have been up, the starttime is saved.
@@ -119,6 +119,7 @@ async def send_and_add_to_database(
     length,
     message_start,
     message_end,
+    message_completed,
     image_link,
     otherchannel,
     exact,
@@ -130,17 +131,19 @@ async def send_and_add_to_database(
     If alert is False it will just send the message about how long time it is left,
     but dont save it to the database.
     """
-    await ctx.defer(ephemeral=False)
     # If the bot dont have the permission to view the channel, this try will fail.
     try:
         # It is only required to check if the bot can send messages/embeds if it need to alert
         # otherwise it will just reply to the command, which dont require permission.
+        await ctx.defer(ephemeral=False)
         if alert:
-            if otherchannel == None:
+            if otherchannel is None:
                 channel = await ctx.get_channel()
             else:
-                #channel = otherchannel <- This would have been such a nice solution but nooo... why make it easy???
-                channel = await interactions.get(bot, interactions.Channel, object_id=otherchannel.id, force="http")
+                # channel = otherchannel <- This would have been such a nice solution but nooo... why make it easy???
+                channel = await interactions.get(
+                    bot, interactions.Channel, object_id=otherchannel.id, force="http"
+                )
             member = await interactions.get(
                 bot,
                 interactions.Member,
@@ -175,7 +178,7 @@ async def send_and_add_to_database(
                 if time_left > 3600:
                     timestring = "\n*Exact time from start: "
                     timestring = f"{get_exact_timestring(timestring, time_left)}*"
-            if otherchannel == None:
+            if otherchannel is None:
                 msg = await ctx.send(
                     f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
                 )
@@ -183,7 +186,9 @@ async def send_and_add_to_database(
                 msg = await channel.send(
                     f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
                 )
-                await ctx.send(f"Sent https://discord.com/channels/{ctx.guild_id}/{msg.channel_id}/{msg.id}")
+                await ctx.send(
+                    f"Sent https://discord.com/channels/{ctx.guild_id}/{msg.channel_id}/{msg.id}"
+                )
 
             # If the bot should notify when countdown is done - save it to database:
             if alert:
@@ -200,10 +205,10 @@ async def send_and_add_to_database(
                     role_id = mention.id
                 else:
                     role_id = 0
-
+                # ¤ Implement number usage
                 # Add it into database
                 conn_countdowns_db.execute(
-                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend);",
+                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend,:messagecompleted,:number);",
                     {
                         "timestamp": int(timestamp),
                         "msgid": int(msg.id),
@@ -216,6 +221,8 @@ async def send_and_add_to_database(
                         "imagelink": str(image_link),
                         "messagestart": str(message_start),
                         "messageend": str(message_end),
+                        "messagecompleted": str(message_completed),
+                        "number": (int(1)),
                     },
                 )
                 conn_countdowns_db.commit()
@@ -291,10 +298,15 @@ async def check_active_and_mention(ctx, mention):
         # Here the limit wasnt reached, so therefore continue checking permission
         # If you try to ping someone check that you got the permission
         # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
-        if mention != "0" and ((not (ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)) and (not mention.id == ctx.user.id)):
-            if hasattr(mention,"mentionable"):
+        if mention != "0" and (
+            (not ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)
+            and (not mention.id == ctx.user.id)
+        ):
+            if hasattr(mention, "mentionable"):
                 if not mention.mentionable:
-                    await ctx.send("You dont have permission to ping that role", ephemeral=True)
+                    await ctx.send(
+                        "You dont have permission to ping that role", ephemeral=True
+                    )
                     return True
             else:
                 await ctx.send("You dont have permission to ping", ephemeral=True)
@@ -306,7 +318,7 @@ async def check_active_and_mention(ctx, mention):
         return False
 
 
-async def do_all_checks(ctx, mention, image_link, times):
+async def do_all_checks(ctx, mention, image_link, times, message_completed):
     """A single function for all checks required before a dountdown/timer starts"""
     if await check_active_and_mention(ctx, mention):
         return False
@@ -319,6 +331,10 @@ async def do_all_checks(ctx, mention, image_link, times):
 
     if times != 0:
         if await check_no_premium(ctx, "repeating timer"):
+            return False
+
+    if message_completed != "":
+        if await check_no_premium(ctx, "custom message after complete"):
             return False
 
     return True
@@ -389,7 +405,7 @@ async def help_information(ctx):
     )
 
     embed.footer = interactions.EmbedFooter(
-        text=(translations[(language)]["helpFooter" + str(random.randint(1, 6))])
+        text=(translations[(language)]["helpFooter" + str(random.randint(1, 7))])
     )
 
     embed.color = int(
@@ -403,6 +419,7 @@ async def countdown(
     timestring,
     message_start,
     message_end,
+    message_completed,
     mention,
     times,
     repeat_length,
@@ -414,7 +431,7 @@ async def countdown(
 ):
     """The countdown command. The main use of this bot. Creates a new countdown."""
 
-    if await do_all_checks(ctx, mention, image_link, times):
+    if await do_all_checks(ctx, mention, image_link, times, message_completed):
 
         wholedate = dateparser.parse("in " + timestring)
         try:  # If wholedate cant be floored, it is not a valid date.
@@ -443,6 +460,7 @@ async def countdown(
                     length,
                     message_start,
                     message_end,
+                    message_completed,
                     image_link,
                     otherchannel,
                     exact,
@@ -466,6 +484,7 @@ async def timer(
     minute,
     message_start,
     message_end,
+    message_completed,
     mention,
     times,
     image_link,
@@ -476,7 +495,7 @@ async def timer(
 ):
     """For those that dont want to use countdown."""
 
-    if await do_all_checks(ctx, mention, image_link, times):
+    if await do_all_checks(ctx, mention, image_link, times, message_completed):
 
         current_time = floor(time.time())
         length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
@@ -492,6 +511,7 @@ async def timer(
             length,
             message_start,
             message_end,
+            message_completed,
             image_link,
             otherchannel,
             exact,
@@ -1001,7 +1021,7 @@ async def make_this_premium(ctx):
     # Find those that are from the user
     # that havent been recently edited.
     cursor = conn_premium_db.execute(
-        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid;",
+        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid AND level = 1;",
         {"allowedtime": allowed_time, "userid": user_id},
     )
 
@@ -1009,11 +1029,11 @@ async def make_this_premium(ctx):
     if len(cursor.fetchall()) != 0:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
-            "UPDATE Premium set guildid = :guildid WHERE userid = :userid;",
+            "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = 1;",
             {"userid": user_id, "guildid": int(guild_id)},
         )
         conn_premium_db.execute(
-            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid;",
+            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = 1;",
             {"userid": user_id, "currenttime": int(current_time)},
         )
         conn_premium_db.commit()
@@ -1037,14 +1057,14 @@ async def premium_info(ctx):
     """Sends some info about premium."""
     embed = interactions.Embed()
     embed.title = "Premium info"
-    embed.description = "To get premium you can head over to [Patreon](https://www.patreon.com/livecountdownbot)"
+    embed.description = "To get premium you can head over to [Patreon](https://www.patreon.com/HourglassTimelord)"
     embed.add_field(
         "Why premium?",
         "Premium gives you access to:\n• More countdowns in a guild\n• Adding images at the end of a countdown\n• Repeating countdowns",
     )
     embed.add_field(
         "How do I activate it?",
-        "Unfortunatly there isnt a good way of doing this yet. For now ping either <@238006908664020993> or <@729791860674920488> after reciving the patreon role in the [Discord Support Guild](https://discord.com/invite/b2fY4z4xBY)",
+        "Unfortunatly there isnt a good way of doing this yet. For now ping either <@238006908664020993> or <@729791860674920488> after reciving the patreon role in the [Discord Support Guild]( https://discord.gg/YTxTms4Sp7)",
     )
     embed.add_field(
         "How do I pick what guild?",
@@ -1083,19 +1103,21 @@ async def log(ctx):
         )
 
 
-async def add_premium(ctx, user_id, guild_id):
+async def add_premium(ctx, user_id, guild_id, level):
     """Add a premium user."""
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute(
-            "SELECT userid FROM Premium WHERE userid = :userid;", {"userid": user_id}
+            "SELECT userid FROM Premium WHERE userid = :userid AND level = 1;",
+            {"userid": user_id},
         )
         # Check that the user isnt alredy there
-        if len(cursor.fetchall()) == 0:
+        if len(cursor.fetchall()) == 0 or level != 1:
             conn_premium_db.execute(
-                "INSERT INTO Premium (userid,guildid,lastedit) VALUES (:userid,:guildid,0);",
+                "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,0,:level);",
                 {
                     "userid": int(user_id),
                     "guildid": int(guild_id),
+                    "level": int(level),
                 },
             )
             conn_premium_db.commit()
@@ -1109,13 +1131,13 @@ async def add_premium(ctx, user_id, guild_id):
         )
 
 
-async def delete_premium(ctx, user_id):
+async def delete_premium(ctx, user_id, level):
     """Delete a premium user."""
     if int(ctx.user.id) in devs:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
-            "DELETE from Premium WHERE userid = :userid;",
-            {"userid": user_id},
+            "DELETE from Premium WHERE userid = :userid AND level <= :level;",
+            {"userid": user_id, "level": level},
         )
         conn_premium_db.commit()
 
@@ -1141,7 +1163,9 @@ async def list_premium(ctx, page):
         cursor = conn_premium_db.execute("SELECT COUNT (*) FROM Premium")
         for row in cursor:
             number_of_countdown = int(row[0])
-        cursor = conn_premium_db.execute("SELECT guildid,userid,lastedit FROM Premium")
+        cursor = conn_premium_db.execute(
+            "SELECT guildid,userid,lastedit,level FROM Premium"
+        )
         lines = 15
         max_page = ceil(number_of_countdown / lines)
         if max_page < page:
@@ -1157,9 +1181,10 @@ async def list_premium(ctx, page):
                 guild_id = int(row[0])
                 user_id = int(row[1])
                 last_edit = int(row[2])
+                level = int(row[3])
                 embed.add_field(
                     "-----",
-                    f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>",
+                    f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>. Level: {level}",
                 )
             # If it is before, go to next one
             elif current_line < goal_line - lines:
@@ -1184,12 +1209,14 @@ async def check_done(bot):
     """Checks if a countdown is done. If it is, send the countdown completed message."""
     current_time = int(floor(time.time()))
     cursor = conn_countdowns_db.execute(
-        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend FROM Countdowns WHERE timestamp < :currenttime;",
+        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number FROM Countdowns WHERE timestamp < :currenttime;",
         {"currenttime": current_time},
     )
     # There will 0 rows in cursor if theres no countdowns that are done.
     # Therefore this wont run multiple times.
     for row in cursor:
+        number = str(row[12])
+        message_completed = str(row[11])
         message_end = str(row[10])
         message_start = str(row[9])
         image_link = str(row[8])
@@ -1232,19 +1259,18 @@ async def check_done(bot):
             )
             if not got_permission:
                 conn_countdowns_db.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msg_id},
+                    "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                    {"msgid": msg_id, "number": number},
                 )
                 conn_countdowns_db.commit()
                 return
         except:
             conn_countdowns_db.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msg_id},
-                )
+                "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                {"msgid": msg_id, "number": number},
+            )
             conn_countdowns_db.commit()
             return
-
 
         # guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild.id))
         language = "en-US"  # guild.preferred_locale
@@ -1256,7 +1282,12 @@ async def check_done(bot):
         if image_link != "":
             embed.set_image(url=image_link)
 
-        embed.add_field("Countdown", f"{message_start} <t:{timestamp}> {message_end}")
+        if message_completed == "":
+            embed.add_field(
+                "Countdown", f"{message_start} <t:{timestamp}> {message_end}"
+            )
+        else:
+            embed.add_field("Message", f"{message_completed}")
         embed.color = int(("#%02x%02x%02x" % (0, 255, 0)).replace("#", "0x"), base=16)
 
         embed.add_field(
@@ -1273,19 +1304,19 @@ async def check_done(bot):
             )
             times = times - 1
             conn_countdowns_db.execute(
-                "UPDATE Countdowns set times = :times where msgid = :msgid;",
-                {"times": times, "msgid": msg_id},
+                "UPDATE Countdowns set times = :times where msgid = :msgid AND number = :number;",
+                {"times": times, "msgid": msg_id, "number": number},
             )
             conn_countdowns_db.execute(
-                "UPDATE Countdowns set timestamp = :timestamp where msgid = :msgid;",
-                {"timestamp": timestamp, "msgid": msg_id},
+                "UPDATE Countdowns set timestamp = :timestamp where msgid = :msgid AND number = :number;",
+                {"timestamp": timestamp, "msgid": msg_id, "number": number},
             )
             conn_countdowns_db.commit()
         # If its not repeating, it should get deleted from the database
         else:
             conn_countdowns_db.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid;",
-                {"msgid": msg_id, "channelid": channel_id},
+                "DELETE from Countdowns WHERE msgid = :msgid AND channelid = :channelid AND number = :number;",
+                {"msgid": msg_id, "channelid": channel_id, "number": number},
             )
             conn_countdowns_db.commit()
 
@@ -1298,8 +1329,8 @@ async def check_done(bot):
                 )
             except:
                 conn_countdowns_db.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid;",
-                    {"msgid": msg_id},
+                    "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                    {"msgid": msg_id, "number": number},
                 )
                 conn_countdowns_db.commit()
                 return
