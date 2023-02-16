@@ -413,6 +413,29 @@ async def help_information(ctx):
     )  # Set the colour to light blue
     await ctx.send(embeds=embed, ephemeral=True)
 
+async def generate_timestamp(ctx,timestring,bot):
+    wholedate = dateparser.parse("in " + timestring)
+    try:  # If wholedate cant be floored, it is not a valid date.
+        timestamp = floor(wholedate.timestamp())
+    except:
+        await ctx.send(
+            "Sorry, I dont understand that date!",
+            ephemeral=True,
+        )
+        return
+    else:
+        embed = interactions.Embed()
+        embed.title = "Timestamps"
+        embed.description = ("Here is a list of all timestamps:")
+        embed.add_field("Time remaining:",f"<t:{timestamp}:R> = `<t:{timestamp}:R>`")
+        embed.add_field("Date with time:",f"<t:{timestamp}> = `<t:{timestamp}>`")
+        embed.add_field("Date:",f"<t:{timestamp}:d> = `<t:{timestamp}:d>`")
+        embed.add_field("Date with month spelled out:",f"<t:{timestamp}:D> = `<t:{timestamp}:D>`")
+        embed.add_field("Time:",f"<t:{timestamp}:t> = `<t:{timestamp}:t>`")
+        embed.add_field("Time with seconds:",f"<t:{timestamp}:T> = `<t:{timestamp}:T>`")
+        embed.add_field("Date with time and day of week:",f"<t:{timestamp}:F> = `<t:{timestamp}:F>`")
+        await ctx.send(embeds=embed, ephemeral=True)
+
 
 async def countdown(
     ctx,

@@ -70,6 +70,32 @@ async def help(ctx: interactions.CommandContext):
 async def premiuminfo(ctx: interactions.CommandContext):
     await command_builder.premium_info(ctx)
 
+@bot.command(
+    name="generatetimestamp",
+    description="Generates a timestamp based of the time.",
+    options=[
+        interactions.Option(
+            name="timestring",
+            description="What time do you want",
+            type=interactions.OptionType.STRING,
+            max_length=100,
+            required=True,
+        )
+    ],
+)
+
+async def generatetimestamp(
+    ctx: interactions.CommandContext,
+    timestring,
+    bot=bot,
+):
+    await command_builder.generate_timestamp(
+        ctx,
+        timestring,
+        bot,
+    )
+
+
 
 @bot.command(
     name="countdown",
