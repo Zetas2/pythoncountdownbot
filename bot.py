@@ -76,7 +76,7 @@ async def premiuminfo(ctx: interactions.CommandContext):
     options=[
         interactions.Option(
             name="timestring",
-            description="What time do you want",
+            description="What time do you want. Default timezone is ET.",
             type=interactions.OptionType.STRING,
             max_length=100,
             required=True,
@@ -103,7 +103,7 @@ async def generatetimestamp(
     options=[
         interactions.Option(
             name="timestring",
-            description="What time do you want",
+            description="What time do you want. Default timezone is ET.",
             type=interactions.OptionType.STRING,
             max_length=100,
             required=True,

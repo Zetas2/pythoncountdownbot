@@ -6,7 +6,7 @@ translations = {
         "helpLeftTitle": "/Timeleft",
         "helpLeftDesc": "Shows the exact time left for a countdown.",
         "helpCountdownTitle": "/Countdown",
-        "helpCountdownDesc": "Countdown will show the remaining time until the date you entered, or for the duration you specify. Its timezone is UTC. Repeatable with `times` option.",
+        "helpCountdownDesc": "Countdown will show the remaining time until the date you entered, or for the duration you specify. Its default timezone is ET. Repeatable with `times` option.",
         "helpListTitle": "/List",
         "helpListDesc": "It will show you all active countdowns in the channel/guild or from you depending on subcommand.",
         "helpDeleteTitle": "/Delete",
