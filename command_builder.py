@@ -341,14 +341,16 @@ async def do_all_checks(ctx, mention, image_link, times, message_completed):
     return True
 
 
-async def delete_message(ctx, msg_id):
+async def delete_message(bot,ctx, msg_id):
     """Send the message if a message is deleted"""
     user = ctx.user.username
     guild_id = ctx.guild_id
     channel_id = ctx.channel_id
+    await delete_edit(bot,msg_id,channel_id)
     await ctx.send(
         f"Countdown [{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} 'Click here to jump to the message') was deleted by {user}"
     )
+    
 
 
 async def help_information(ctx):
@@ -637,7 +639,7 @@ async def list_countdowns(ctx, sub_command, page):
     await ctx.send(embeds=embed, ephemeral=True)
 
 
-async def delete(
+async def delete(bot, 
     ctx, sub_command, sub_command_group, delete_mine, delete_channel, delete_guild
 ):
     """Deletes a countdown based on subcommand."""
@@ -669,7 +671,7 @@ async def delete(
                 )
             else:
 
-                await delete_message(ctx, msg_id)
+                await delete_message(bot,ctx, msg_id)
         else:
             await ctx.send(
                 "Are you sure you want to delete all your countdowns in this guild?",
@@ -725,7 +727,7 @@ async def delete(
                     ephemeral=True,
                 )
             else:
-                await delete_message(ctx, msg_id)
+                await delete_message(bot,ctx, msg_id)
 
         else:
             if sub_command == "channel":
@@ -748,7 +750,7 @@ async def delete(
         )
 
 
-async def delete_this(ctx):
+async def delete_this(bot,ctx):
     """App command for deleting. Use on a active countdown message and it will be deleted."""
     msg_id = int(ctx.target.id)
     user_id = int(ctx.user.id)
@@ -787,7 +789,17 @@ async def delete_this(ctx):
             ephemeral=True,
         )
 
-    await delete_message(ctx, msg_id)
+    await delete_message(bot,ctx, msg_id)
+
+
+async def delete_edit(bot,msg_id,channel_id):
+    msg = await interactions.get(bot, interactions.Message, object_id=msg_id, channel_id=channel_id)
+    # Bot cant edit its own message if it dont have "Attach files" permission... Therefore the try.
+    try:
+        await msg.edit(f"**DELETED**\n~~{msg.content}~~",suppress_embeds=True,files=[])
+    except:
+        pass
+
 
 
 async def fill_choices(ctx, cursor, value):
@@ -870,13 +882,21 @@ def deleted_channel(channel):
     conn_countdowns_db.commit()
 
 
-async def delete_button(ctx, option):
+async def delete_button(bot,ctx, option):
     """If a button used for deleting is used."""
     user = ctx.user.username
     if option == "guild":
         if ctx.guild_id is None:
             return ctx.send("You cant use this in DMs", ephemeral=True)
         guild_id = int(ctx.guild_id)
+        cursor = conn_countdowns_db.execute(
+            "SELECT channelid,msgid from Countdowns WHERE guildid = :guildid;", {"guildid": guild_id}
+        )
+        for row in cursor:
+            channel_id = str(row[0])
+            msg_id = str(row[1])
+            await delete_edit(bot,msg_id,channel_id)
+
         check = conn_countdowns_db.total_changes
         conn_countdowns_db.execute(
             "DELETE from Countdowns WHERE guildid = :guildid;", {"guildid": guild_id}
@@ -893,6 +913,12 @@ async def delete_button(ctx, option):
             await ctx.send(f"Guilds Countdown(s) Deleted by {user}")
     elif option == "channel":
         channel_id = int(ctx.channel_id)
+        cursor = conn_countdowns_db.execute(
+            "SELECT msgid from Countdowns WHERE channelid = :channelid;", {"channelid": channel_id}
+        )
+        for row in cursor:
+            msg_id = str(row[0])
+            await delete_edit(bot,msg_id,channel_id)
         check = conn_countdowns_db.total_changes
         conn_countdowns_db.execute(
             "DELETE from Countdowns WHERE channelid = :channelid;",
@@ -912,6 +938,14 @@ async def delete_button(ctx, option):
             return ctx.send("You cant use this in DMs", ephemeral=True)
         guild_id = int(ctx.guild_id)
         user_id = int(ctx.user.id)
+        cursor = conn_countdowns_db.execute(
+            "SELECT channelid,msgid from Countdowns WHERE guildid = :guildid AND startedby = :userid;", {"guildid": guild_id, "userid": user_id}
+        )
+        for row in cursor:
+            channel_id = str(row[0])
+            msg_id = str(row[1])
+            await delete_edit(bot,msg_id,channel_id)
+
         check = conn_countdowns_db.total_changes
         conn_countdowns_db.execute(
             "DELETE from Countdowns WHERE guildid = :guildid AND startedby = :userid; ",

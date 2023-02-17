@@ -543,7 +543,7 @@ async def delete(
     deleteguild: str = "",
 ):
     await command_builder.delete(
-        ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
+        bot, ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
     )
 
 
@@ -565,17 +565,17 @@ async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
 # Here are the functions that runs when the verify/cancel buttons are pressed
 @bot.component("deleteguild")
 async def button_response(ctx):
-    await command_builder.delete_button(ctx, "guild")
+    await command_builder.delete_button(bot,ctx, "guild")
 
 
 @bot.component("deletechannel")
 async def button_response(ctx):
-    await command_builder.delete_button(ctx, "channel")
+    await command_builder.delete_button(bot,ctx, "channel")
 
 
 @bot.component("deletemine")
 async def button_response(ctx):
-    await command_builder.delete_button(ctx, "mine")
+    await command_builder.delete_button(bot,ctx, "mine")
 
 
 @bot.component("deletecancel")
@@ -717,7 +717,7 @@ async def listpremium(ctx: interactions.CommandContext, page=1):
     type=interactions.ApplicationCommandType.MESSAGE,
 )
 async def deletethis(ctx: interactions.CommandContext):
-    await command_builder.delete_this(ctx)
+    await command_builder.delete_this(bot,ctx)
 
 
 @bot.command(
