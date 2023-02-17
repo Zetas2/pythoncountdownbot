@@ -874,6 +874,7 @@ async def autocomplete_countdowns(ctx, value, option):
 
 def deleted_channel(channel):
     """Delete countdowns from database if the channel they were in get deleted."""
+    # No need to edit the messages, since the channel is gone.
     channel_id = int(channel.id)
     conn_countdowns_db.execute(
         "DELETE from Countdowns WHERE channelid = :channelid;",
