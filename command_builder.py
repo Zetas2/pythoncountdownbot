@@ -308,9 +308,10 @@ async def check_active_and_mention(ctx, mention):
                         "You dont have permission to ping that role", ephemeral=True
                     )
                     return True
-            else:
-                await ctx.send("You dont have permission to ping", ephemeral=True)
-                return True
+            # $ This else is used if the bot shouldnt allow users to ping individuals
+            #else:
+            #    await ctx.send("You dont have permission to ping", ephemeral=True)
+            #    return True
         # mention is a thingy, I just want the id of it.
         if mention != "0":
             mention = mention.id
