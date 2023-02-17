@@ -187,7 +187,7 @@ async def countdown(
     repeattime=24,
     image="",
     otherchannel=None,
-    exact=True,
+    exact=False,
     alert=True,
     bot=bot,
 ):
@@ -314,7 +314,7 @@ async def timer(
     repeat=0,
     image="",
     otherchannel=None,
-    exact=True,
+    exact=False,
     alert=True,
     bot=bot,
 ):
