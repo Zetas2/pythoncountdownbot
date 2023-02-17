@@ -469,13 +469,14 @@ async def countdown(
         wholedate = dateparser.parse("in " + timestring)
         try:  # If wholedate cant be floored, it is not a valid date.
             timestamp = floor(wholedate.timestamp())
-            valid_date = True
         except:
             await ctx.send(
                 "Sorry, I dont understand that date!",
                 ephemeral=True,
             )
             valid_date = False
+        else:
+            valid_date = True
 
         if valid_date:
             current_time = floor(time.time())
