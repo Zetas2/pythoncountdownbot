@@ -229,7 +229,7 @@ async def send_and_add_to_database(
             return False
         else:
             await ctx.send(
-                "In order to preform this action I need view and send embeds/messages permissions added __directly__ to this channel.",
+                "In order to preform this action I need view and send embeds/messages permissions added __**directly**__ to this channel.",
                 ephemeral=True,
             )
 
