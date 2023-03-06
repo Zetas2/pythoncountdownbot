@@ -406,9 +406,16 @@ async def help_information(ctx):
         (translations[(language)]["helpLinksDesc"]),
     )
 
-    embed.footer = interactions.EmbedFooter(
-        text=(translations[(language)]["helpFooter" + str(random.randint(1, 7))])
-    )
+    random_thanks = random.randint(0, 6)
+
+    if random_thanks != 0:
+        embed.footer = interactions.EmbedFooter(
+            text=(translations[(language)]["helpFooter" + str(random_thanks)])
+        )
+    else:
+        embed.footer = interactions.EmbedFooter(
+            text=(translations[("universal")]["names"][random.randint(1, len(translations[("universal")]["names"]))-1]+translations[(language)]["helpFooter0"])
+        )
 
     embed.color = int(
         ("#%02x%02x%02x" % (90, 232, 240)).replace("#", "0x"), base=16

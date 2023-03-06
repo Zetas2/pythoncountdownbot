@@ -1,4 +1,7 @@
 translations = {
+    "universal":{
+    "names": ["TFalcon","BrownStar"],
+    },
     "en-US": {
         "helpHeader": "Help",
         "helpHover": "To see when the timer runs out, you can hover/click on the timestamp.\nTo view the command used click the blue text `/countdown`\nYou can use app commands by right click/long pressing on a countdown, pick apps, and then the command.\n`MENTION_EVERYONE` permission needed to mention people at end of countdown.",
@@ -19,13 +22,13 @@ translations = {
         "helpLinksDesc": "[Discord Support]( https://discord.gg/YTxTms4Sp7 'Join the support guild!') | [Invite the Bot](https://top.gg/bot/1015703443358363789) | [Patreon](https://patreon.com/HourglassTimelord)",
         "helpTranslateTitle": "/Translate",
         "helpTranslateDesc": "Allows you as an administrator to switch the language of the bot",
+        "helpFooter0": " - thank you for supporting the bot on patreon.",
         "helpFooter1": "Thanks Zetas2 for developing this bot",
         "helpFooter2": "Thanks Biz for being a legend",
         "helpFooter3": "Thanks Pocket for outliving all the mess",
         "helpFooter4": "Thanks Stryker for tasting my spaghetti",
         "helpFooter5": "Thanks Midnightoel for causing me problems to solve",
         "helpFooter6": "Thanks Patreons for supporting the bot",
-        "helpFooter7": "Thanks TFalcon for being the first super patreon.",
         "done": "A countdown is done!",
         "created": "It was started by",
     },
