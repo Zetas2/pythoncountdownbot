@@ -87,12 +87,10 @@ async def premiuminfo(ctx: interactions.CommandContext):
 async def generatetimestamp(
     ctx: interactions.CommandContext,
     timestring,
-    bot=bot,
 ):
     await command_builder.generate_timestamp(
         ctx,
-        timestring,
-        bot,
+        timestring
     )
 
 
