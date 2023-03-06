@@ -29,6 +29,7 @@ translations = {
         "helpFooter4": "Thanks Stryker for tasting my spaghetti",
         "helpFooter5": "Thanks Midnightoel for causing me problems to solve",
         "helpFooter6": "Thanks Patreons for supporting the bot",
+        "helpFooter7": "Thanks Zetas2 for translating to english", # Edit to your name and language
         "premiumTitle": "Premium info",
         "premiumDesc": "To get premium you can head over to [Patreon](https://www.patreon.com/HourglassTimelord)",
         "premiumMultipleTitle":"Can I have premium in multiple guilds?",

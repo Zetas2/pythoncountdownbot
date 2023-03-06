@@ -372,7 +372,7 @@ async def help_information(ctx):
     This looks different than the rest since it is prepped
     for translation by using the translations file
     """
-    language = translations[("universal")]["language"]
+    language = getLanguage(ctx)
     
     # Create a embed and add in all fields to it.
     embed = interactions.Embed()
@@ -417,7 +417,7 @@ async def help_information(ctx):
         (translations[(language)]["helpLinksDesc"]),
     )
 
-    random_thanks = random.randint(0, 6)
+    random_thanks = random.randint(0, 7)
 
     if random_thanks != 0:
         embed.footer = interactions.EmbedFooter(
