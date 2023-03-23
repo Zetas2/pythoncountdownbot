@@ -360,7 +360,6 @@ async def delete_message(bot, ctx, msg_id,language):
     user = ctx.user.username
     guild_id = ctx.guild_id
     channel_id = ctx.channel_id
-    await delete_edit(bot, msg_id, channel_id,language)
     await ctx.send(
         f"""{translations[(language)]["countdown"]} [{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}') {translations[(language)]["wasDeleted"]} {user}"""
     )
@@ -825,6 +824,7 @@ async def delete_this(bot, ctx):
 
 
 async def delete_edit(bot, msg_id, channel_id,language):
+    """Was planned to be used for editing in DELETED at all countdowns that got deleted. Was too heavely rate limited though"""
     msg = await interactions.get(
         bot, interactions.Message, object_id=msg_id, channel_id=channel_id
     )
@@ -933,7 +933,6 @@ async def delete_button(bot, ctx, option):
         for row in cursor:
             channel_id = str(row[0])
             msg_id = str(row[1])
-            await delete_edit(bot, msg_id, channel_id,language)
 
         check = conn_countdowns_db.total_changes
         conn_countdowns_db.execute(
@@ -957,7 +956,6 @@ async def delete_button(bot, ctx, option):
         )
         for row in cursor:
             msg_id = str(row[0])
-            await delete_edit(bot, msg_id, channel_id,language)
         check = conn_countdowns_db.total_changes
         conn_countdowns_db.execute(
             "DELETE from Countdowns WHERE channelid = :channelid;",
@@ -984,7 +982,6 @@ async def delete_button(bot, ctx, option):
         for row in cursor:
             channel_id = str(row[0])
             msg_id = str(row[1])
-            await delete_edit(bot, msg_id, channel_id,language)
 
         check = conn_countdowns_db.total_changes
         conn_countdowns_db.execute(
@@ -1393,11 +1390,11 @@ async def check_done(bot):
         if image_link != "":
             embed.set_image(url=image_link)
 
-        if message_completed == "":
-            embed.add_field(
-                translations[(language)]["countdown"], f"{message_start} <t:{timestamp}> {message_end}"
-            )
-        else:
+    
+        embed.add_field(
+            translations[(language)]["countdown"], f"{message_start} <t:{timestamp}> {message_end}"
+        )
+        if message_completed != "":
             embed.add_field(translations[(language)]["message"], f"{message_completed}")
 
         embed.color = int(("#%02x%02x%02x" % (0, 255, 0)).replace("#", "0x"), base=16)
