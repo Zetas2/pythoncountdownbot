@@ -454,16 +454,23 @@ async def help_information(ctx):
 async def generate_timestamp(ctx, timestring):
     wholedate = dateparser.parse("in " + timestring)
     language = getLanguage(ctx)
-    try:  # If wholedate cant be floored, it is not a valid date.
-        timestamp = floor(wholedate.timestamp())
-    except:
+    if wholedate == None:
+        # If wholedate is None, it is not a valid date. This should be caught in the try... but apparently not
         await ctx.send(
-            translations[(language)]["errDate"],
+            f"""{translations[(language)]["errDate"]}""",
             ephemeral=True,
         )
         return
+    try:  # If wholedate cant be floored, it is not a valid date.
+        timestamp = floor(wholedate.timestamp())
+    except:
+        return await ctx.send(
+            f"""{translations[(language)]["errDate"]}""",
+            ephemeral=True,
+        )
     else:
         embed = interactions.Embed()
+
         embed.title = translations[(language)]["timestamp"]
         embed.description = translations[(language)]["timestampList"]
         embed.add_field(
@@ -520,46 +527,42 @@ async def countdown(
         try:  # If wholedate cant be floored, it is not a valid date.
             timestamp = floor(wholedate.timestamp())
         except:
-            await ctx.send(
+            return await ctx.send(
                 translations[(language)]["errDate"],
                 ephemeral=True,
             )
-            valid_date = False
-        else:
-            valid_date = True
 
-        if valid_date:
-            current_time = floor(time.time())
-            if current_time < timestamp:  # Make sure the time is in the future
-                length = timestamp - current_time
-                if await check_length(ctx, length, language):
-                    return
-                if times != 0:
-                    length = repeat_length * 3600
-                write_error = await send_and_add_to_database(
-                    timestamp,
-                    ctx,
-                    mention,
-                    times,
-                    length,
-                    message_start,
-                    message_end,
-                    message_completed,
-                    countdownname,
-                    image_link,
-                    otherchannel,
-                    exact,
-                    alert,
-                    bot,
-                    language,
-                )
-                if write_error:
-                    await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
-            else:
-                await ctx.send(
-                    translations[(language)]["errPast"],
-                    ephemeral=True,
-                )
+        current_time = floor(time.time())
+        if current_time < timestamp:  # Make sure the time is in the future
+            length = timestamp - current_time
+            if await check_length(ctx, length, language):
+                return
+            if times != 0:
+                length = repeat_length * 3600
+            write_error = await send_and_add_to_database(
+                timestamp,
+                ctx,
+                mention,
+                times,
+                length,
+                message_start,
+                message_end,
+                message_completed,
+                countdownname,
+                image_link,
+                otherchannel,
+                exact,
+                alert,
+                bot,
+                language,
+            )
+            if write_error:
+                await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
+        else:
+            await ctx.send(
+                translations[(language)]["errPast"],
+                ephemeral=True,
+            )
 
 
 async def timer(
@@ -896,12 +899,13 @@ async def fill_choices(ctx, cursor, value):
     countdowns = []
     countdown_id = 0
     for row in cursor:
+        countdownname = str(row[1])
         # Need to be limited due to discord not allowing more than 25 options
         if countdown_id < 24:
-            if row[1] == "":
+            if countdownname == "None":
                 countdowns.append(str(countdown_id) + ": " + str(row[0]))
             else:
-                countdowns.append(str(row[1]) + ": " + str(row[0]))
+                countdowns.append(countdownname + ": " + str(row[0]))
             countdown_id += 1
         else:
             break
