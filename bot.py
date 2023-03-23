@@ -589,6 +589,15 @@ async def botstats(ctx: interactions.CommandContext):
     await command_builder.botstats(ctx, bot)
 
 
+@bot.command(
+    name="fixperms",
+    description="Fixes the permissions for this channel",
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+)
+async def fixperms(ctx: interactions.CommandContext):
+    await command_builder.fixperms(ctx)
+
+
 # This command is not entierly active yet. It is just a prototype for when the bot is availible in multiple languages.
 @bot.command(
     name="translate",

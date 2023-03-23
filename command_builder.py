@@ -1182,6 +1182,16 @@ async def premium_info(ctx):
     embed.color = int(("#%02x%02x%02x" % (255, 20, 147)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed, ephemeral=True)
 
+async def fixperms(ctx):
+    language = getLanguage(ctx)
+    channel=ctx.channel
+    try:
+        await channel.add_permission_overwrite(1015703443358363789,1,allow=interactions.Permissions.EMBED_LINKS | interactions.Permissions.SEND_MESSAGES | interactions.Permissions.VIEW_CHANNEL)
+    except:
+        await ctx.send(translations[(language)]["permsNotFixed"])
+    else:    
+        await ctx.send(translations[(language)]["permsFixed"])
+
 
 # HERE COME DEVS COMMANDS
 devs = (238006908664020993, 729791860674920488)

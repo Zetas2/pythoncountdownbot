@@ -43,6 +43,8 @@ translations = {
         "premiumFooter": "Thanks for considering supporting this bot",
         "botstatTitle": "BOT STATS",
         "botstatDesc": "This is the current status of the bot",
+        "permsFixed": "The permissions are fixed!",
+        "permsNotFixed": "Sorry, I couldnt fix the permissions. (Am I allowed to edit channel?)",
         "CPU": "CPU",
         "RAM": "RAM",
         "storage": "Storage used",
