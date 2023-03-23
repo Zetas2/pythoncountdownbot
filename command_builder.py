@@ -185,7 +185,8 @@ async def send_and_add_to_database(
             # Allow for \n to be used as newline charachter
             message_end = message_end.replace("\\n", "\n")
             # To not break delete
-            countdownname = countdownname.replace(":", ";")
+            if countdownname != None:
+                countdownname = countdownname.replace(":", ";")
             current_time = floor(time.time())
             time_left = int(timestamp) - int(current_time)
             timestring = ""
@@ -688,7 +689,7 @@ async def list_countdowns(ctx, sub_command, page):
             channel_id = int(row[2])
             started_by = int(row[3])
             countdownname = str(row[4])
-            if countdownname == "":
+            if countdownname == "None":
                 embed.add_field(
                     f"{current_line}: <t:{timestamp}:R>",
                     f"""[{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}') {translations[(language)]["created"]} <@!{started_by}>\n""",
@@ -1080,7 +1081,7 @@ async def time_left_message(ctx, msg_id, language, hidden):
 
     current_time = floor(time.time())
     length = timestamp - current_time
-    if countdownname == "":
+    if countdownname == "None":
         timestring = f"""{translations[(language)]["exactLeft"]} [{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}'): """
     else:
         timestring = f"""{translations[(language)]["exactLeft"]} [{countdownname}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}'): """
