@@ -595,7 +595,7 @@ async def botstats(ctx: interactions.CommandContext):
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
 )
 async def fixperms(ctx: interactions.CommandContext):
-    await command_builder.fixperms(ctx)
+    await command_builder.fixperms(ctx,bot)
 
 
 # This command is not entierly active yet. It is just a prototype for when the bot is availible in multiple languages.
