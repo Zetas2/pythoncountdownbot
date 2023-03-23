@@ -44,7 +44,7 @@ conn_countdowns_db = sqlite3.connect("Countdowns.db")
 
 # Make the table if there is noe
 conn_countdowns_db.execute(
-    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255),number int);"""
+    """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255),number int, countdownname varchar(50));"""
 )
 
 # makes connPremium into the connected database for premium.
@@ -131,6 +131,7 @@ async def send_and_add_to_database(
     message_start,
     message_end,
     message_completed,
+    countdownname,
     image_link,
     otherchannel,
     exact,
@@ -181,6 +182,8 @@ async def send_and_add_to_database(
             message_start = message_start.replace("\\n", "\n")
             # Allow for \n to be used as newline charachter
             message_end = message_end.replace("\\n", "\n")
+            # To not break delete
+            countdownname = countdownname.replace(":", ";")
             current_time = floor(time.time())
             time_left = int(timestamp) - int(current_time)
             timestring = ""
@@ -220,7 +223,7 @@ async def send_and_add_to_database(
                 # ¤ Implement number usage
                 # Add it into database
                 conn_countdowns_db.execute(
-                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend,:messagecompleted,:number);",
+                    "INSERT INTO Countdowns (timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number,countdownname) VALUES (:timestamp,:msgid,:channelid,:guildid,:mention,:startedby,:times,:length,:imagelink,:messagestart,:messageend,:messagecompleted,:number,:countdownname);",
                     {
                         "timestamp": int(timestamp),
                         "msgid": int(msg.id),
@@ -235,6 +238,7 @@ async def send_and_add_to_database(
                         "messageend": str(message_end),
                         "messagecompleted": str(message_completed),
                         "number": (int(1)),
+                        "countdownname": str(countdownname),
                     },
                 )
                 conn_countdowns_db.commit()
@@ -471,6 +475,7 @@ async def countdown(
     message_start,
     message_end,
     message_completed,
+    countdownname,
     mention,
     times,
     repeat_length,
@@ -513,6 +518,7 @@ async def countdown(
                     message_start,
                     message_end,
                     message_completed,
+                    countdownname,
                     image_link,
                     otherchannel,
                     exact,
@@ -538,6 +544,7 @@ async def timer(
     message_start,
     message_end,
     message_completed,
+    countdownname,
     mention,
     times,
     image_link,
@@ -565,6 +572,7 @@ async def timer(
             message_start,
             message_end,
             message_completed,
+            countdownname,
             image_link,
             otherchannel,
             exact,
@@ -598,7 +606,7 @@ async def list_countdowns(ctx, sub_command, page):
         for row in cursor:
             number_of_countdowns = int(row[0])
         cursor = conn_countdowns_db.execute(
-            "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
+            "SELECT timestamp,msgid,channelid,startedby,countdownname FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
             {"channelid": channel_id},
         )
 
@@ -611,7 +619,7 @@ async def list_countdowns(ctx, sub_command, page):
         for row in cursor:
             number_of_countdowns = int(row[0])
         cursor = conn_countdowns_db.execute(
-            "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
+            "SELECT timestamp,msgid,channelid,startedby,countdownname FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
             {"guildid": guild_id},
         )
 
@@ -625,7 +633,7 @@ async def list_countdowns(ctx, sub_command, page):
         for row in cursor:
             number_of_countdowns = int(row[0])
         cursor = conn_countdowns_db.execute(
-            "SELECT timestamp,msgid,channelid,startedby FROM Countdowns WHERE guildid = :guildid AND startedby = :userid ORDER BY timestamp ASC;",
+            "SELECT timestamp,msgid,channelid,startedby,countdownname FROM Countdowns WHERE guildid = :guildid AND startedby = :userid ORDER BY timestamp ASC;",
             {"guildid": guild_id, "userid": user_id},
         )
 
@@ -651,10 +659,17 @@ async def list_countdowns(ctx, sub_command, page):
             msg_id = int(row[1])
             channel_id = int(row[2])
             started_by = int(row[3])
-            embed.add_field(
-                f"{current_line}: <t:{timestamp}:R>",
-                f"""[{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}') {translations[(language)]["created"]} <@!{started_by}>\n""",
-            )
+            countdownname = str(row[4])
+            if countdownname == "":
+                embed.add_field(
+                    f"{current_line}: <t:{timestamp}:R>",
+                    f"""[{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}') {translations[(language)]["created"]} <@!{started_by}>\n""",
+                )
+            else:
+                embed.add_field(
+                    f"{countdownname}: <t:{timestamp}:R>",
+                    f"""[{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}') {translations[(language)]["created"]} <@!{started_by}>\n""",
+                )
         elif current_line < goal_line - 5:
             pass
         else:
@@ -848,7 +863,10 @@ async def fill_choices(ctx, cursor, value):
     for row in cursor:
         # Need to be limited due to discord not allowing more than 25 options
         if countdown_id < 24:
-            countdowns.append(str(countdown_id) + ": " + str(row[0]))
+            if row[1] == "":
+                countdowns.append(str(countdown_id) + ": " + str(row[0]))
+            else:
+                countdowns.append(str(row[1]) + ": " + str(row[0]))
             countdown_id += 1
         else:
             break
@@ -868,20 +886,20 @@ def get_possible_countdowns(ctx, option):
         if ctx.guild_id is None:
             channel_id = int(ctx.channel_id)
             cursor = conn_countdowns_db.execute(
-                "SELECT msgid FROM Countdowns WHERE startedby = :userid AND channelid = :channelid ORDER BY timestamp ASC;",
+                "SELECT msgid,countdownname FROM Countdowns WHERE startedby = :userid AND channelid = :channelid ORDER BY timestamp ASC;",
                 {"userid": user_id, "channelid": channel_id},
             )
         else:
             guild_id = int(ctx.guild_id)
             cursor = conn_countdowns_db.execute(
-                "SELECT msgid FROM Countdowns WHERE startedby = :userid AND guildid = :guildid ORDER BY timestamp ASC;",
+                "SELECT msgid,countdownname FROM Countdowns WHERE startedby = :userid AND guildid = :guildid ORDER BY timestamp ASC;",
                 {"userid": user_id, "guildid": guild_id},
             )
 
     elif option == "channel":
         channel_id = int(ctx.channel_id)
         cursor = conn_countdowns_db.execute(
-            "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
+            "SELECT msgid,countdownname FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
             {"channelid": channel_id},
         )
     elif option == "guild":
@@ -889,13 +907,13 @@ def get_possible_countdowns(ctx, option):
         if ctx.guild_id is None:
             channel_id = int(ctx.channel_id)
             cursor = conn_countdowns_db.execute(
-                "SELECT msgid FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
+                "SELECT msgid,countdownname FROM Countdowns WHERE channelid = :channelid ORDER BY timestamp ASC;",
                 {"channelid": channel_id},
             )
         else:
             guild_id = int(ctx.guild_id)
             cursor = conn_countdowns_db.execute(
-                "SELECT msgid FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
+                "SELECT msgid,countdownname FROM Countdowns WHERE guildid = :guildid ORDER BY timestamp ASC;",
                 {"guildid": guild_id},
             )
     return cursor
@@ -1008,21 +1026,24 @@ async def time_left_message(ctx, msg_id,language):
     """Send the message for time left"""
     timestamp = 0
     cursor = conn_countdowns_db.execute(
-        "SELECT timestamp,channelid,guildid from Countdowns WHERE msgid = :msgid;",
+        "SELECT timestamp,channelid,guildid,countdownname from Countdowns WHERE msgid = :msgid;",
         {"msgid": msg_id},
     )
     for row in cursor:
         timestamp = int(row[0])
         channel_id = int(row[1])
         guild_id = int(row[2])
+        countdownname = str(row[3])
 
     if timestamp == 0:
         return await ctx.send(translations[(language)]["errNotFound"], ephemeral=True)
 
     current_time = floor(time.time())
     length = timestamp - current_time
-
-    timestring = f"""{translations[(language)]["exactLeft"]} [{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}'): """
+    if countdownname == "":
+        timestring = f"""{translations[(language)]["exactLeft"]} [{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}'): """
+    else:
+        timestring = f"""{translations[(language)]["exactLeft"]} [{countdownname}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}'): """
     timestring = get_exact_timestring(timestring, length,language)
     await ctx.send(timestring, ephemeral=True)
 
