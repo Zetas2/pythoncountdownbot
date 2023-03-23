@@ -58,7 +58,6 @@ conn_premium_db.execute(
 bot_starttime = floor(time.time())
 
 
-
 def getLanguage(ctx):
     """Check what language the guild is set to. And translates bot to that language if it exsits"""
     language = str(ctx.guild.preferred_locale)
@@ -66,10 +65,9 @@ def getLanguage(ctx):
         return language
     else:
         return "en-US"
-    
 
 
-async def check_no_premium(ctx, feature,language):
+async def check_no_premium(ctx, feature, language):
     """Make sure that a feature can only be used by premium users."""
     if ctx.guild_id is None:
         await ctx.send(translations[(language)]["errPremiumDm"], ephemeral=True)
@@ -91,7 +89,7 @@ async def check_no_premium(ctx, feature,language):
     return True
 
 
-async def check_link(ctx, image_link,language):
+async def check_link(ctx, image_link, language):
     """Checks so that the link is valid."""
     if validurl(image_link):
         return False
@@ -101,7 +99,7 @@ async def check_link(ctx, image_link,language):
     return True
 
 
-def get_exact_timestring(timestring, length,language):
+def get_exact_timestring(timestring, length, language):
     """Creates the Exact time from start message. Fills in the time that is left."""
     meassurement = length
     if meassurement >= 86400:
@@ -115,10 +113,14 @@ def get_exact_timestring(timestring, length,language):
     if meassurement >= 60:
         amount = meassurement // 60
         meassurement = meassurement - amount * 60
-        timestring = f"""{timestring} {amount} {translations[(language)]["timeMinute"]}"""
+        timestring = (
+            f"""{timestring} {amount} {translations[(language)]["timeMinute"]}"""
+        )
     if meassurement > 0:
         amount = meassurement
-        timestring = f"""{timestring} {amount} {translations[(language)]["timeSecond"]}"""
+        timestring = (
+            f"""{timestring} {amount} {translations[(language)]["timeSecond"]}"""
+        )
     return timestring
 
 
@@ -137,7 +139,7 @@ async def send_and_add_to_database(
     exact,
     alert,
     bot,
-    language
+    language,
 ):
     """
     This makes the countdown message.
@@ -192,7 +194,9 @@ async def send_and_add_to_database(
                 # only use exact if time is longer
                 if time_left > 3600:
                     timestring = f"""\n*{translations[(language)]["exact"]} """
-                    timestring = f"{get_exact_timestring(timestring, time_left,language)}*"
+                    timestring = (
+                        f"{get_exact_timestring(timestring, time_left,language)}*"
+                    )
             if otherchannel is None:
                 msg = await ctx.send(
                     f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
@@ -250,19 +254,17 @@ async def send_and_add_to_database(
             )
 
 
-async def check_length(ctx, length,language):
+async def check_length(ctx, length, language):
     """Check so that a countdown is at least one minute long"""
     if length < 60:
         # I am the dev and want to be able to test timers without wating, ok?
         if int(ctx.user.id) != 238006908664020993:
-            await ctx.send(
-                translations[(language)]["errLength"], ephemeral=True
-            )
+            await ctx.send(translations[(language)]["errLength"], ephemeral=True)
             return True
     return False
 
 
-async def check_active_and_mention(ctx, mention,language):
+async def check_active_and_mention(ctx, mention, language):
     """
     Checks so the limit of active countdowns isnt reached
     and that the user have permission to ping
@@ -337,29 +339,35 @@ async def check_active_and_mention(ctx, mention,language):
         return False
 
 
-async def do_all_checks(ctx, mention, image_link, times, message_completed,language):
+async def do_all_checks(ctx, mention, image_link, times, message_completed, language):
     """A single function for all checks required before a dountdown/timer starts"""
-    if await check_active_and_mention(ctx, mention,language):
+    if await check_active_and_mention(ctx, mention, language):
         return False
 
     if image_link != "":
-        if await check_no_premium(ctx, translations[(language)]["errPremiumImage"],language):
+        if await check_no_premium(
+            ctx, translations[(language)]["errPremiumImage"], language
+        ):
             return False
-        if await check_link(ctx, image_link,language):
+        if await check_link(ctx, image_link, language):
             return False
 
     if times != 0:
-        if await check_no_premium(ctx, translations[(language)]["errPremiumRepeat"],language):
+        if await check_no_premium(
+            ctx, translations[(language)]["errPremiumRepeat"], language
+        ):
             return False
 
     if message_completed != "":
-        if await check_no_premium(ctx, translations[(language)]["errPremiumCustomMsg"],language):
+        if await check_no_premium(
+            ctx, translations[(language)]["errPremiumCustomMsg"], language
+        ):
             return False
 
     return True
 
 
-async def delete_message(bot, ctx, msg_id,language):
+async def delete_message(bot, ctx, msg_id, language):
     """Send the message if a message is deleted"""
     user = ctx.user.username
     guild_id = ctx.guild_id
@@ -376,7 +384,7 @@ async def help_information(ctx):
     for translation by using the translations file
     """
     language = getLanguage(ctx)
-    
+
     # Create a embed and add in all fields to it.
     embed = interactions.Embed()
     embed.title = translations[(language)]["helpHeader"]
@@ -428,7 +436,12 @@ async def help_information(ctx):
         )
     else:
         embed.footer = interactions.EmbedFooter(
-            text=(translations[("universal")]["names"][random.randint(1, len(translations[("universal")]["names"]))-1]+translations[(language)]["helpFooter0"])
+            text=(
+                translations[("universal")]["names"][
+                    random.randint(1, len(translations[("universal")]["names"])) - 1
+                ]
+                + translations[(language)]["helpFooter0"]
+            )
         )
 
     embed.color = int(
@@ -452,15 +465,26 @@ async def generate_timestamp(ctx, timestring):
         embed = interactions.Embed()
         embed.title = translations[(language)]["timestamp"]
         embed.description = translations[(language)]["timestampList"]
-        embed.add_field(translations[(language)]["timeRemain"], f"<t:{timestamp}:R> = `<t:{timestamp}:R>`")
-        embed.add_field(translations[(language)]["dateTime"], f"<t:{timestamp}> = `<t:{timestamp}>`")
-        embed.add_field(translations[(language)]["date"], f"<t:{timestamp}:d> = `<t:{timestamp}:d>`")
         embed.add_field(
-            translations[(language)]["dateMonth"], f"<t:{timestamp}:D> = `<t:{timestamp}:D>`"
+            translations[(language)]["timeRemain"],
+            f"<t:{timestamp}:R> = `<t:{timestamp}:R>`",
         )
-        embed.add_field(translations[(language)]["time"], f"<t:{timestamp}:t> = `<t:{timestamp}:t>`")
         embed.add_field(
-            translations[(language)]["timeWithSecond"], f"<t:{timestamp}:T> = `<t:{timestamp}:T>`"
+            translations[(language)]["dateTime"], f"<t:{timestamp}> = `<t:{timestamp}>`"
+        )
+        embed.add_field(
+            translations[(language)]["date"], f"<t:{timestamp}:d> = `<t:{timestamp}:d>`"
+        )
+        embed.add_field(
+            translations[(language)]["dateMonth"],
+            f"<t:{timestamp}:D> = `<t:{timestamp}:D>`",
+        )
+        embed.add_field(
+            translations[(language)]["time"], f"<t:{timestamp}:t> = `<t:{timestamp}:t>`"
+        )
+        embed.add_field(
+            translations[(language)]["timeWithSecond"],
+            f"<t:{timestamp}:T> = `<t:{timestamp}:T>`",
         )
         embed.add_field(
             translations[(language)]["dateTimeWeek"],
@@ -487,7 +511,9 @@ async def countdown(
 ):
     """The countdown command. The main use of this bot. Creates a new countdown."""
     language = getLanguage(ctx)
-    if await do_all_checks(ctx, mention, image_link, times, message_completed,language):
+    if await do_all_checks(
+        ctx, mention, image_link, times, message_completed, language
+    ):
 
         wholedate = dateparser.parse("in " + timestring)
         try:  # If wholedate cant be floored, it is not a valid date.
@@ -505,7 +531,7 @@ async def countdown(
             current_time = floor(time.time())
             if current_time < timestamp:  # Make sure the time is in the future
                 length = timestamp - current_time
-                if await check_length(ctx, length,language):
+                if await check_length(ctx, length, language):
                     return
                 if times != 0:
                     length = repeat_length * 3600
@@ -524,7 +550,7 @@ async def countdown(
                     exact,
                     alert,
                     bot,
-                    language
+                    language,
                 )
                 if write_error:
                     await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
@@ -555,11 +581,13 @@ async def timer(
 ):
     """For those that dont want to use countdown."""
     language = getLanguage(ctx)
-    if await do_all_checks(ctx, mention, image_link, times, message_completed,language):
+    if await do_all_checks(
+        ctx, mention, image_link, times, message_completed, language
+    ):
 
         current_time = floor(time.time())
         length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
-        if await check_length(ctx, length,language):
+        if await check_length(ctx, length, language):
             return
         timestamp = current_time + length
 
@@ -578,7 +606,7 @@ async def timer(
             exact,
             alert,
             bot,
-            language
+            language,
         )
         if write_error:
             await ctx.send(translations[(language)]["error"], ephemeral=True)
@@ -695,14 +723,18 @@ async def delete(
             try:
                 msg_id = delete_mine.split(": ")[1]
             except:
-                return await ctx.send(translations[(language)]["errOption"], ephemeral=True)
+                return await ctx.send(
+                    translations[(language)]["errOption"], ephemeral=True
+                )
             allowed_delete = False
             for row in cursor:
                 if int(row[0]) == int(msg_id):
                     allowed_delete = True
                     pass
             if not allowed_delete:
-                return await ctx.send(translations[(language)]["errOption"], ephemeral=True)
+                return await ctx.send(
+                    translations[(language)]["errOption"], ephemeral=True
+                )
 
             check = conn_countdowns_db.total_changes
             conn_countdowns_db.execute(
@@ -716,7 +748,7 @@ async def delete(
                 )
             else:
 
-                await delete_message(bot, ctx, msg_id,language)
+                await delete_message(bot, ctx, msg_id, language)
         else:
             await ctx.send(
                 translations[(language)]["deleteConfirmGuild"],
@@ -772,7 +804,7 @@ async def delete(
                     ephemeral=True,
                 )
             else:
-                await delete_message(bot, ctx, msg_id,language)
+                await delete_message(bot, ctx, msg_id, language)
 
         else:
             if sub_command == "channel":
@@ -835,10 +867,10 @@ async def delete_this(bot, ctx):
             ephemeral=True,
         )
 
-    await delete_message(bot, ctx, msg_id,language)
+    await delete_message(bot, ctx, msg_id, language)
 
 
-async def delete_edit(bot, msg_id, channel_id,language):
+async def delete_edit(bot, msg_id, channel_id, language):
     """Was planned to be used for editing in DELETED at all countdowns that got deleted. Was too heavely rate limited though"""
     msg = await interactions.get(
         bot, interactions.Message, object_id=msg_id, channel_id=channel_id
@@ -846,7 +878,9 @@ async def delete_edit(bot, msg_id, channel_id,language):
     # Bot cant edit its own message if it dont have "Attach files" permission... Therefore the try.
     try:
         await msg.edit(
-            f"""**{translations[(language)]["deleted"]}**\n~~{msg.content}~~""", suppress_embeds=True, files=[]
+            f"""**{translations[(language)]["deleted"]}**\n~~{msg.content}~~""",
+            suppress_embeds=True,
+            files=[],
         )
     except:
         pass
@@ -965,7 +999,9 @@ async def delete_button(bot, ctx, option):
             )
         else:
             await ctx.edit(components=[])
-            await ctx.send(f"""{translations[(language)]["guild"]} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["wasDeleted"]} {user}""")
+            await ctx.send(
+                f"""{translations[(language)]["guild"]} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["wasDeleted"]} {user}"""
+            )
     elif option == "channel":
         channel_id = int(ctx.channel_id)
         cursor = conn_countdowns_db.execute(
@@ -987,7 +1023,9 @@ async def delete_button(bot, ctx, option):
             )
         else:
             await ctx.edit(components=[])
-            await ctx.send(f"""{translations[(language)]["channel"]} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["wasDeleted"]} {user}""")
+            await ctx.send(
+                f"""{translations[(language)]["channel"]} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["wasDeleted"]} {user}"""
+            )
     elif option == "mine":
         if ctx.guild_id is None:
             return ctx.send(translations[(language)]["errDm"], ephemeral=True)
@@ -1016,13 +1054,15 @@ async def delete_button(bot, ctx, option):
             # Remove the buttons from the ephemeral message
             # and send a message announcing.
             await ctx.edit(components=[])
-            await ctx.send(f"""{user} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["deleted"]}""")
+            await ctx.send(
+                f"""{user} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["deleted"]}"""
+            )
     elif option == "cancel":
         # Just edit away the buttons and say that contdowns are kept
         await ctx.edit(translations[(language)]["kept"], components=[])
 
 
-async def time_left_message(ctx, msg_id,language):
+async def time_left_message(ctx, msg_id, language, hidden):
     """Send the message for time left"""
     timestamp = 0
     cursor = conn_countdowns_db.execute(
@@ -1044,11 +1084,11 @@ async def time_left_message(ctx, msg_id,language):
         timestring = f"""{translations[(language)]["exactLeft"]} [{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}'): """
     else:
         timestring = f"""{translations[(language)]["exactLeft"]} [{countdownname}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}'): """
-    timestring = get_exact_timestring(timestring, length,language)
-    await ctx.send(timestring, ephemeral=True)
+    timestring = get_exact_timestring(timestring, length, language)
+    await ctx.send(timestring, ephemeral=hidden)
 
 
-async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
+async def time_left(ctx, sub_command, show_mine, show_channel, show_guild, hidden):
     """Show how long time it is left for a countdown"""
     language = getLanguage(ctx)
     # show_mine, show_channel and show_guild contains the ID
@@ -1065,14 +1105,14 @@ async def time_left(ctx, sub_command, show_mine, show_channel, show_guild):
     except:
         return await ctx.send(translations[(language)]["errOption"], ephemeral=True)
 
-    await time_left_message(ctx, msg_id,language)
+    await time_left_message(ctx, msg_id, language, hidden)
 
 
 async def timeleft_this(ctx):
     """App command for timeleft."""
     language = getLanguage(ctx)
     msg_id = int(ctx.target.id)
-    await time_left_message(ctx, msg_id,language)
+    await time_left_message(ctx, msg_id, language, True)
 
 
 async def botstats(ctx, bot):
@@ -1105,9 +1145,17 @@ async def botstats(ctx, bot):
     embed.add_field(f"""{translations[(language)]["storage"]} :minidisc:""", f"{disk}%")
     embed.add_field(f"""{translations[(language)]["active"]} :clock1:""", f"{number}")
     embed.add_field(f"""{translations[(language)]["guild"]} :timer:""", f"{guilds}")
-    embed.add_field(f"""{translations[(language)]["uptime"]} :up:""", f"<t:{bot_starttime}:R>")
-    embed.add_field(f"""{translations[(language)]["ping"]} :satellite:""", f"""{ping} {translations[(language)]["ms"]}""")
-    embed.add_field(f"""{translations[(language)]["log"]} :scroll:""", f"""{logsize} {translations[(language)]["rows"]}""")
+    embed.add_field(
+        f"""{translations[(language)]["uptime"]} :up:""", f"<t:{bot_starttime}:R>"
+    )
+    embed.add_field(
+        f"""{translations[(language)]["ping"]} :satellite:""",
+        f"""{ping} {translations[(language)]["ms"]}""",
+    )
+    embed.add_field(
+        f"""{translations[(language)]["log"]} :scroll:""",
+        f"""{logsize} {translations[(language)]["rows"]}""",
+    )
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed)
 
@@ -1124,11 +1172,11 @@ async def translate(ctx, new_language):
                 ephemeral=True,
             )
         else:
-            await ctx.send(f"""{ctx.user.username} {translations[(new_language)]["translated"]} {new_language}""")
+            await ctx.send(
+                f"""{ctx.user.username} {translations[(new_language)]["translated"]} {new_language}"""
+            )
     else:
-        await ctx.send(
-            translations[(language)]["errNoAdmin"], ephemeral=True
-        )
+        await ctx.send(translations[(language)]["errNoAdmin"], ephemeral=True)
 
 
 async def make_this_premium(ctx):
@@ -1165,7 +1213,10 @@ async def make_this_premium(ctx):
                 ephemeral=True,
             )
         else:
-            await ctx.send(f"""{translations[(language)]["guild"]} {translations[(language)]["updated"]} {guild_id}""", ephemeral=True)
+            await ctx.send(
+                f"""{translations[(language)]["guild"]} {translations[(language)]["updated"]} {guild_id}""",
+                ephemeral=True,
+            )
 
     else:
         await ctx.send(
@@ -1203,16 +1254,23 @@ async def premium_info(ctx):
     embed.color = int(("#%02x%02x%02x" % (255, 20, 147)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed, ephemeral=True)
 
-async def fixperms(ctx,bot):
+
+async def fixperms(ctx, bot):
     """Adds the permissions of the bot to the channel"""
-    
+
     language = getLanguage(ctx)
-    channel=ctx.channel
+    channel = ctx.channel
     try:
-        await channel.add_permission_overwrite(bot.me.id,1,allow=interactions.Permissions.EMBED_LINKS | interactions.Permissions.SEND_MESSAGES | interactions.Permissions.VIEW_CHANNEL)
+        await channel.add_permission_overwrite(
+            bot.me.id,
+            1,
+            allow=interactions.Permissions.EMBED_LINKS
+            | interactions.Permissions.SEND_MESSAGES
+            | interactions.Permissions.VIEW_CHANNEL,
+        )
     except:
         await ctx.send(translations[(language)]["permsNotFixed"])
-    else:    
+    else:
         await ctx.send(translations[(language)]["permsFixed"])
 
 
@@ -1233,9 +1291,7 @@ async def log(ctx):
         await ctx.send(f"Logs are:\n```{logs}```", ephemeral=True)
 
     else:
-        await ctx.send(
-            translations[(language)]["errDev"], ephemeral=True
-        )
+        await ctx.send(translations[(language)]["errDev"], ephemeral=True)
 
 
 async def add_premium(ctx, user_id, guild_id, level):
@@ -1262,9 +1318,7 @@ async def add_premium(ctx, user_id, guild_id, level):
             await ctx.send(f"User <@{user_id}> is alredy premium", ephemeral=True)
 
     else:
-        await ctx.send(
-            translations[(language)]["errDev"], ephemeral=True
-        )
+        await ctx.send(translations[(language)]["errDev"], ephemeral=True)
 
 
 async def delete_premium(ctx, user_id, level):
@@ -1289,9 +1343,7 @@ async def delete_premium(ctx, user_id, level):
             )
 
     else:
-        await ctx.send(
-            translations[(language)]["errDev"], ephemeral=True
-        )
+        await ctx.send(translations[(language)]["errDev"], ephemeral=True)
 
 
 async def list_premium(ctx, page):
@@ -1338,9 +1390,7 @@ async def list_premium(ctx, page):
         await ctx.send(embeds=embed, ephemeral=True)
 
     else:
-        await ctx.send(
-            translations[(language)]["errDev"], ephemeral=True
-        )
+        await ctx.send(translations[(language)]["errDev"], ephemeral=True)
 
 
 async def check_done(bot):
@@ -1410,11 +1460,12 @@ async def check_done(bot):
             conn_countdowns_db.commit()
             return
 
-        guild = await interactions.get(bot, interactions.Guild, object_id=int(channel.guild.id))
+        guild = await interactions.get(
+            bot, interactions.Guild, object_id=int(channel.guild.id)
+        )
         language = guild.preferred_locale
         if language not in translations.keys():
             language = "en-US"
-
 
         embed = interactions.Embed()
         embed.title = translations[(language)]["done"]
@@ -1423,9 +1474,9 @@ async def check_done(bot):
         if image_link != "":
             embed.set_image(url=image_link)
 
-    
         embed.add_field(
-            translations[(language)]["countdown"], f"{message_start} <t:{timestamp}> {message_end}"
+            translations[(language)]["countdown"],
+            f"{message_start} <t:{timestamp}> {message_end}",
         )
         if message_completed != "":
             embed.add_field(translations[(language)]["message"], f"{message_completed}")

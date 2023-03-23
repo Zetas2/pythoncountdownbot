@@ -70,6 +70,7 @@ async def help(ctx: interactions.CommandContext):
 async def premiuminfo(ctx: interactions.CommandContext):
     await command_builder.premium_info(ctx)
 
+
 @bot.command(
     name="generatetimestamp",
     description="Generates a timestamp based of the time.",
@@ -83,16 +84,11 @@ async def premiuminfo(ctx: interactions.CommandContext):
         )
     ],
 )
-
 async def generatetimestamp(
     ctx: interactions.CommandContext,
     timestring,
 ):
-    await command_builder.generate_timestamp(
-        ctx,
-        timestring
-    )
-
+    await command_builder.generate_timestamp(ctx, timestring)
 
 
 @bot.command(
@@ -420,7 +416,13 @@ async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
                     description="Which of your countdowns do you want to be shown?",
                     required=True,
                     autocomplete=True,
-                )
+                ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
+                ),
             ],
         ),
         interactions.Option(
@@ -434,7 +436,13 @@ async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
                     description="Which of this channels countdowns do you want to be shown?",
                     required=True,
                     autocomplete=True,
-                )
+                ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
+                ),
             ],
         ),
         interactions.Option(
@@ -448,7 +456,13 @@ async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
                     description="Which of this guilds countdowns do you want to be shown?",
                     required=True,
                     autocomplete=True,
-                )
+                ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
+                ),
             ],
         ),
     ],
@@ -459,9 +473,12 @@ async def timeleft(
     showmine: str = "",
     showchannel: str = "",
     showguild: str = "",
+    hidden=True,
 ):
 
-    await command_builder.time_left(ctx, sub_command, showmine, showchannel, showguild)
+    await command_builder.time_left(
+        ctx, sub_command, showmine, showchannel, showguild, hidden
+    )
 
 
 @bot.autocomplete("timeleft", "showmine")
@@ -581,17 +598,17 @@ async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
 # Here are the functions that runs when the verify/cancel buttons are pressed
 @bot.component("deleteguild")
 async def button_response(ctx):
-    await command_builder.delete_button(bot,ctx, "guild")
+    await command_builder.delete_button(bot, ctx, "guild")
 
 
 @bot.component("deletechannel")
 async def button_response(ctx):
-    await command_builder.delete_button(bot,ctx, "channel")
+    await command_builder.delete_button(bot, ctx, "channel")
 
 
 @bot.component("deletemine")
 async def button_response(ctx):
-    await command_builder.delete_button(bot,ctx, "mine")
+    await command_builder.delete_button(bot, ctx, "mine")
 
 
 @bot.component("deletecancel")
@@ -613,7 +630,7 @@ async def botstats(ctx: interactions.CommandContext):
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
 )
 async def fixperms(ctx: interactions.CommandContext):
-    await command_builder.fixperms(ctx,bot)
+    await command_builder.fixperms(ctx, bot)
 
 
 # This command is not entierly active yet. It is just a prototype for when the bot is availible in multiple languages.
@@ -742,7 +759,7 @@ async def listpremium(ctx: interactions.CommandContext, page=1):
     type=interactions.ApplicationCommandType.MESSAGE,
 )
 async def deletethis(ctx: interactions.CommandContext):
-    await command_builder.delete_this(bot,ctx)
+    await command_builder.delete_this(bot, ctx)
 
 
 @bot.command(
