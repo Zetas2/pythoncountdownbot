@@ -24,6 +24,8 @@ DISCORD_TOKEN=YourLongAndComplicatedToken
 
 Oh, and then you go into bot.py and edit devservers to be the id of your guild.
 
+After that just run bot.py and you are done!
+
 ## History
 
 This bot is a new version of the old Live Countdown made by the legendary _LordBusiness_. Main reason was since the old one didnt have support for slash commands, but discord would go on and require them.
