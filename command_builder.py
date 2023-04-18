@@ -1464,10 +1464,18 @@ async def check_done(bot):
             )
             conn_countdowns_db.commit()
             return
-
-        guild = await interactions.get(
-            bot, interactions.Guild, object_id=int(channel.guild.id)
-        )
+        # At this point... Just dont ask what all these trys does... Im just trying to keep a bot up
+        try:
+            guild = await interactions.get(
+                bot, interactions.Guild, object_id=int(channel.guild.id)
+            )
+        except:
+            conn_countdowns_db.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                {"msgid": msg_id, "number": number},
+            )
+            conn_countdowns_db.commit()
+            return
         language = guild.preferred_locale
         if language not in translations.keys():
             language = "en-US"
