@@ -365,6 +365,12 @@ async def timer(
                     type=interactions.OptionType.INTEGER,
                     required=False,
                 ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
+                ),
             ],
         ),
         interactions.Option(
@@ -378,6 +384,12 @@ async def timer(
                     type=interactions.OptionType.INTEGER,
                     required=False,
                     max_value=50,
+                ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
                 ),
             ],
         ),
@@ -393,12 +405,19 @@ async def timer(
                     required=False,
                     max_value=50,
                 ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
+                ),
             ],
         ),
+        
     ],
 )
-async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
-    await command_builder.list_countdowns(ctx, sub_command, page)
+async def list(ctx: interactions.CommandContext, sub_command: str, page=1, hidden=True):
+    await command_builder.list_countdowns(ctx, sub_command, page, hidden)
 
 
 @bot.command(

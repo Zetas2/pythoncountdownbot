@@ -616,7 +616,7 @@ async def timer(
             await ctx.send(translations[(language)]["error"], ephemeral=True)
 
 
-async def list_countdowns(ctx, sub_command, page):
+async def list_countdowns(ctx, sub_command, page, hidden):
     """List command. List all active countdowns based on sub command."""
     language = getLanguage(ctx)
     if ctx.guild_id is None and sub_command != "channel":
@@ -712,7 +712,10 @@ async def list_countdowns(ctx, sub_command, page):
 
     embed.footer = interactions.EmbedFooter(text=f"Page {page} of {max_page}")
     embed.color = int(("#%02x%02x%02x" % (255, 153, 51)).replace("#", "0x"), base=16)
-    await ctx.send(embeds=embed, ephemeral=True)
+    if hidden:
+        await ctx.send(embeds=embed, ephemeral=True)
+    else:
+        await ctx.send(embeds=embed, ephemeral=False)
 
 
 async def delete(
