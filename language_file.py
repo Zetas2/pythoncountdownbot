@@ -94,7 +94,7 @@ translations = {
         "errPremiumCustomMsg": "custom message after complete",
         "errImage": "You need to send a link to the image",
         "errView": "I am missing the permission to view the channel. Please give me it!",
-        "errPerms": "In order to preform this action I need view and send embeds/messages permissions added __**directly**__ to this channel. That can be done with /fixperms if I got permission to edit channels",
+        "errPerms": "In order to perform this action I need view and send embeds/messages permissions added __**directly**__ to this channel. That can be done with /fixperms if I got permission to edit channels",
         "errLength": "Minimum length of a countdown is one minute",
         "errMention": "You dont have permission to ping that role",
         "errDate": "Sorry, I dont understand that date!",
