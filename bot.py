@@ -747,9 +747,17 @@ async def deletepremium(ctx: interactions.CommandContext, userid, level=1):
     name="makethispremium",
     description="Changes so this guild becomes your premium guild",
     dm_permission=False,
+    options=[
+        interactions.Option(
+                name="index",
+                description="What premium number",
+                type=interactions.OptionType.INTEGER,
+                required=False,
+            ),
+    ]
 )
-async def makethispremium(ctx: interactions.CommandContext):
-    await command_builder.make_this_premium(ctx)
+async def makethispremium(ctx: interactions.CommandContext, index=1):
+    await command_builder.make_this_premium(ctx, index)
 
 
 @bot.command(

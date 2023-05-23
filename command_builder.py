@@ -1187,7 +1187,7 @@ async def translate(ctx, new_language):
         await ctx.send(translations[(language)]["errNoAdmin"], ephemeral=True)
 
 
-async def make_this_premium(ctx):
+async def make_this_premium(ctx, index):
     """Change the premium guild to the one where the command is used. Cooldown of 2 days."""
     language = getLanguage(ctx)
     guild_id = ctx.guild_id
@@ -1198,20 +1198,20 @@ async def make_this_premium(ctx):
     # Find those that are from the user
     # that havent been recently edited.
     cursor = conn_premium_db.execute(
-        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid AND level = 1;",
-        {"allowedtime": allowed_time, "userid": user_id},
+        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid AND level = :index;",
+        {"allowedtime": allowed_time, "userid": user_id, "index": index},
     )
 
     # If there is 0 results there is no to edit.
     if len(cursor.fetchall()) != 0:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
-            "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = 1;",
-            {"userid": user_id, "guildid": int(guild_id)},
+            "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = :index;",
+            {"userid": user_id, "guildid": int(guild_id),"index": index},
         )
         conn_premium_db.execute(
-            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = 1;",
-            {"userid": user_id, "currenttime": int(current_time)},
+            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = :index;",
+            {"userid": user_id, "currenttime": int(current_time),"index": index},
         )
         conn_premium_db.commit()
 
