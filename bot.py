@@ -652,6 +652,39 @@ async def fixperms(ctx: interactions.CommandContext):
     await command_builder.fixperms(ctx, bot)
 
 
+@bot.command(
+    name="editmention",
+    description="Change who to mention at the end of a countdown",
+    options=[
+        interactions.Option(
+            type=interactions.OptionType.STRING,
+            name="countdown",
+            description="Which of your countdowns do you want to be shown?",
+            required=True,
+            autocomplete=True,
+        ),
+        interactions.Option(
+            name="mention",
+            description="Who to mention",
+            type=interactions.OptionType.MENTIONABLE,
+            required=True,
+        ),
+    ],
+)
+
+async def editmention(
+    ctx: interactions.CommandContext,
+    countdown="",
+    mention="0",
+):
+    await command_builder.edit_mention(ctx, countdown, mention)
+
+
+@bot.autocomplete("editmention", "countdown")
+async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
+    await command_builder.autocomplete_countdowns(ctx, value, "mine")
+
+
 # This command is not entierly active yet. It is just a prototype for when the bot is availible in multiple languages.
 @bot.command(
     name="translate",

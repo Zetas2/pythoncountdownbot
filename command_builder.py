@@ -265,7 +265,7 @@ async def check_length(ctx, length, language):
     return False
 
 
-async def check_active_and_mention(ctx, mention, language):
+async def check_active(ctx, language):
     """
     Checks so the limit of active countdowns isnt reached
     and that the user have permission to ping
@@ -316,33 +316,37 @@ async def check_active_and_mention(ctx, mention, language):
                 language,
             ):
                 return True
-        # Here the limit wasnt reached, so therefore continue checking permission
-        # If you try to ping someone check that you got the permission
-        # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
-        if mention != "0" and (
-            (not ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)
-            and (not mention.id == ctx.user.id)
-        ):
-            if hasattr(mention, "mentionable"):
-                if not mention.mentionable:
-                    await ctx.send(
-                        translations[(language)]["errMention"], ephemeral=True
-                    )
-                    return True
-            # $ This else is used if the bot shouldnt allow users to ping individuals
-            # else:
-            #    await ctx.send("You dont have permission to ping", ephemeral=True)
-            #    return True
-        # mention is a thingy, I just want the id of it.
-        if mention != "0":
-            mention = mention.id
-
         return False
+
+async def check_mention(ctx,mention,language):
+    # If you try to ping someone check that you got the permission
+    # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
+    if mention != "0" and (
+        (not ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)
+        and (not mention.id == ctx.user.id)
+    ):
+        if hasattr(mention, "mentionable"):
+            if not mention.mentionable:
+                await ctx.send(
+                    translations[(language)]["errMention"], ephemeral=True
+                )
+                return True
+        # $ This else is used if the bot shouldnt allow users to ping individuals
+        # else:
+        #    await ctx.send("You dont have permission to ping", ephemeral=True)
+        #    return True
+    # mention is a thingy, I just want the id of it.
+    if mention != "0":
+        mention = mention.id
+    return False
 
 
 async def do_all_checks(ctx, mention, image_link, times, message_completed, language):
     """A single function for all checks required before a dountdown/timer starts"""
-    if await check_active_and_mention(ctx, mention, language):
+    if await check_active(ctx, language):
+        return False
+    
+    if await check_mention(ctx,mention,language):
         return False
 
     if image_link != "":
@@ -1166,6 +1170,43 @@ async def botstats(ctx, bot):
     )
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed)
+
+async def edit_mention(ctx,countdownid,mention):
+    """For editing a mention of a running countdown"""
+    language = getLanguage(ctx)
+    if await check_mention(ctx,mention,language):
+        return False
+
+    if mention != "0":
+        role_id = mention.id
+    else:
+        role_id = 0
+
+    cursor = get_possible_countdowns(ctx, "mine")
+    try:
+        msg_id = countdownid.split(": ")[1]
+    except:
+        return await ctx.send(
+            translations[(language)]["errOption"], ephemeral=True
+        )
+    allowed_delete = False
+    for row in cursor:
+        if int(row[0]) == int(msg_id):
+            allowed_delete = True
+            pass
+    if not allowed_delete:
+        return await ctx.send(
+            translations[(language)]["errOption"], ephemeral=True
+        )
+
+
+    conn_countdowns_db.execute(
+        "UPDATE Countdowns set roleid = :roleid where msgid = :msgid;",
+        {"msgid": msg_id, "roleid": int(role_id)},
+    )
+
+    await ctx.send(translations[(language)]["editMention"], ephemeral=True)
+
 
 
 async def translate(ctx, new_language):

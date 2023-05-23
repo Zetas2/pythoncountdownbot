@@ -83,6 +83,7 @@ translations = {
         "time":"Time:",
         "timeWithSecond":"Time with seconds:",
         "dateTimeWeek":"Date with time and day of week:",
+        "editMention":"The mention have been edited",
         "error": "SOMETHING WENT WRONG",
         "errDm": "You cant use this in DMs",
         "errListDm": "Sorry, only /list channel works in DMs",
