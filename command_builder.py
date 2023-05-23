@@ -1335,7 +1335,7 @@ async def delete_premium(ctx, user_id, level):
     if int(ctx.user.id) in devs:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
-            "DELETE from Premium WHERE userid = :userid AND level <= :level;",
+            "DELETE from Premium WHERE userid = :userid AND level >= :level;",
             {"userid": user_id, "level": level},
         )
         conn_premium_db.commit()
