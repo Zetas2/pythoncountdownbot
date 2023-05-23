@@ -318,7 +318,8 @@ async def check_active(ctx, language):
                 return True
         return False
 
-async def check_mention(ctx,mention,language):
+
+async def check_mention(ctx, mention, language):
     # If you try to ping someone check that you got the permission
     # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
     if mention != "0" and (
@@ -327,9 +328,7 @@ async def check_mention(ctx,mention,language):
     ):
         if hasattr(mention, "mentionable"):
             if not mention.mentionable:
-                await ctx.send(
-                    translations[(language)]["errMention"], ephemeral=True
-                )
+                await ctx.send(translations[(language)]["errMention"], ephemeral=True)
                 return True
         # $ This else is used if the bot shouldnt allow users to ping individuals
         # else:
@@ -345,8 +344,8 @@ async def do_all_checks(ctx, mention, image_link, times, message_completed, lang
     """A single function for all checks required before a dountdown/timer starts"""
     if await check_active(ctx, language):
         return False
-    
-    if await check_mention(ctx,mention,language):
+
+    if await check_mention(ctx, mention, language):
         return False
 
     if image_link != "":
@@ -1171,10 +1170,11 @@ async def botstats(ctx, bot):
     embed.color = int(("#%02x%02x%02x" % (255, 132, 140)).replace("#", "0x"), base=16)
     await ctx.send(embeds=embed)
 
-async def edit_mention(ctx,countdownid,mention):
+
+async def edit_mention(ctx, countdownid, mention):
     """For editing a mention of a running countdown"""
     language = getLanguage(ctx)
-    if await check_mention(ctx,mention,language):
+    if await check_mention(ctx, mention, language):
         return False
 
     if mention != "0":
@@ -1186,19 +1186,14 @@ async def edit_mention(ctx,countdownid,mention):
     try:
         msg_id = countdownid.split(": ")[1]
     except:
-        return await ctx.send(
-            translations[(language)]["errOption"], ephemeral=True
-        )
+        return await ctx.send(translations[(language)]["errOption"], ephemeral=True)
     allowed_delete = False
     for row in cursor:
         if int(row[0]) == int(msg_id):
             allowed_delete = True
             pass
     if not allowed_delete:
-        return await ctx.send(
-            translations[(language)]["errOption"], ephemeral=True
-        )
-
+        return await ctx.send(translations[(language)]["errOption"], ephemeral=True)
 
     conn_countdowns_db.execute(
         "UPDATE Countdowns set roleid = :roleid where msgid = :msgid;",
@@ -1206,7 +1201,6 @@ async def edit_mention(ctx,countdownid,mention):
     )
 
     await ctx.send(translations[(language)]["editMention"], ephemeral=True)
-
 
 
 async def translate(ctx, new_language):
@@ -1248,11 +1242,11 @@ async def make_this_premium(ctx, index):
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
             "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = :index;",
-            {"userid": user_id, "guildid": int(guild_id),"index": index},
+            {"userid": user_id, "guildid": int(guild_id), "index": index},
         )
         conn_premium_db.execute(
             "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = :index;",
-            {"userid": user_id, "currenttime": int(current_time),"index": index},
+            {"userid": user_id, "currenttime": int(current_time), "index": index},
         )
         conn_premium_db.commit()
 

@@ -413,7 +413,6 @@ async def timer(
                 ),
             ],
         ),
-        
     ],
 )
 async def list(ctx: interactions.CommandContext, sub_command: str, page=1, hidden=True):
@@ -671,7 +670,6 @@ async def fixperms(ctx: interactions.CommandContext):
         ),
     ],
 )
-
 async def editmention(
     ctx: interactions.CommandContext,
     countdown="",
@@ -782,12 +780,12 @@ async def deletepremium(ctx: interactions.CommandContext, userid, level=1):
     dm_permission=False,
     options=[
         interactions.Option(
-                name="index",
-                description="What premium number",
-                type=interactions.OptionType.INTEGER,
-                required=False,
-            ),
-    ]
+            name="index",
+            description="What premium number",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+    ],
 )
 async def makethispremium(ctx: interactions.CommandContext, index=1):
     await command_builder.make_this_premium(ctx, index)
