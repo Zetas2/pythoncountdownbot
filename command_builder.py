@@ -265,7 +265,7 @@ async def check_length(ctx, length, language):
     return False
 
 
-async def check_active_and_mention(ctx, mention, language):
+async def check_active(ctx, language):
     """
     Checks so the limit of active countdowns isnt reached
     and that the user have permission to ping
@@ -316,33 +316,36 @@ async def check_active_and_mention(ctx, mention, language):
                 language,
             ):
                 return True
-        # Here the limit wasnt reached, so therefore continue checking permission
-        # If you try to ping someone check that you got the permission
-        # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
-        if mention != "0" and (
-            (not ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)
-            and (not mention.id == ctx.user.id)
-        ):
-            if hasattr(mention, "mentionable"):
-                if not mention.mentionable:
-                    await ctx.send(
-                        translations[(language)]["errMention"], ephemeral=True
-                    )
-                    return True
-            # $ This else is used if the bot shouldnt allow users to ping individuals
-            # else:
-            #    await ctx.send("You dont have permission to ping", ephemeral=True)
-            #    return True
-        # mention is a thingy, I just want the id of it.
-        if mention != "0":
-            mention = mention.id
-
         return False
+
+
+async def check_mention(ctx, mention, language):
+    # If you try to ping someone check that you got the permission
+    # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
+    if mention != "0" and (
+        (not ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)
+        and (not mention.id == ctx.user.id)
+    ):
+        if hasattr(mention, "mentionable"):
+            if not mention.mentionable:
+                await ctx.send(translations[(language)]["errMention"], ephemeral=True)
+                return True
+        # $ This else is used if the bot shouldnt allow users to ping individuals
+        # else:
+        #    await ctx.send("You dont have permission to ping", ephemeral=True)
+        #    return True
+    # mention is a thingy, I just want the id of it.
+    if mention != "0":
+        mention = mention.id
+    return False
 
 
 async def do_all_checks(ctx, mention, image_link, times, message_completed, language):
     """A single function for all checks required before a dountdown/timer starts"""
-    if await check_active_and_mention(ctx, mention, language):
+    if await check_active(ctx, language):
+        return False
+
+    if await check_mention(ctx, mention, language):
         return False
 
     if image_link != "":
@@ -616,7 +619,7 @@ async def timer(
             await ctx.send(translations[(language)]["error"], ephemeral=True)
 
 
-async def list_countdowns(ctx, sub_command, page):
+async def list_countdowns(ctx, sub_command, page, hidden):
     """List command. List all active countdowns based on sub command."""
     language = getLanguage(ctx)
     if ctx.guild_id is None and sub_command != "channel":
@@ -712,7 +715,10 @@ async def list_countdowns(ctx, sub_command, page):
 
     embed.footer = interactions.EmbedFooter(text=f"Page {page} of {max_page}")
     embed.color = int(("#%02x%02x%02x" % (255, 153, 51)).replace("#", "0x"), base=16)
-    await ctx.send(embeds=embed, ephemeral=True)
+    if hidden:
+        await ctx.send(embeds=embed, ephemeral=True)
+    else:
+        await ctx.send(embeds=embed, ephemeral=False)
 
 
 async def delete(
@@ -1165,6 +1171,38 @@ async def botstats(ctx, bot):
     await ctx.send(embeds=embed)
 
 
+async def edit_mention(ctx, countdownid, mention):
+    """For editing a mention of a running countdown"""
+    language = getLanguage(ctx)
+    if await check_mention(ctx, mention, language):
+        return False
+
+    if mention != "0":
+        role_id = mention.id
+    else:
+        role_id = 0
+
+    cursor = get_possible_countdowns(ctx, "mine")
+    try:
+        msg_id = countdownid.split(": ")[1]
+    except:
+        return await ctx.send(translations[(language)]["errOption"], ephemeral=True)
+    allowed_delete = False
+    for row in cursor:
+        if int(row[0]) == int(msg_id):
+            allowed_delete = True
+            pass
+    if not allowed_delete:
+        return await ctx.send(translations[(language)]["errOption"], ephemeral=True)
+
+    conn_countdowns_db.execute(
+        "UPDATE Countdowns set roleid = :roleid where msgid = :msgid;",
+        {"msgid": msg_id, "roleid": int(role_id)},
+    )
+
+    await ctx.send(translations[(language)]["editMention"], ephemeral=True)
+
+
 async def translate(ctx, new_language):
     """Allows for tranlsating the bot to another language."""
     language = getLanguage(ctx)
@@ -1184,7 +1222,7 @@ async def translate(ctx, new_language):
         await ctx.send(translations[(language)]["errNoAdmin"], ephemeral=True)
 
 
-async def make_this_premium(ctx):
+async def make_this_premium(ctx, index):
     """Change the premium guild to the one where the command is used. Cooldown of 2 days."""
     language = getLanguage(ctx)
     guild_id = ctx.guild_id
@@ -1195,20 +1233,20 @@ async def make_this_premium(ctx):
     # Find those that are from the user
     # that havent been recently edited.
     cursor = conn_premium_db.execute(
-        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid AND level = 1;",
-        {"allowedtime": allowed_time, "userid": user_id},
+        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid AND level = :index;",
+        {"allowedtime": allowed_time, "userid": user_id, "index": index},
     )
 
     # If there is 0 results there is no to edit.
     if len(cursor.fetchall()) != 0:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
-            "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = 1;",
-            {"userid": user_id, "guildid": int(guild_id)},
+            "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = :index;",
+            {"userid": user_id, "guildid": int(guild_id), "index": index},
         )
         conn_premium_db.execute(
-            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = 1;",
-            {"userid": user_id, "currenttime": int(current_time)},
+            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = :index;",
+            {"userid": user_id, "currenttime": int(current_time), "index": index},
         )
         conn_premium_db.commit()
 
@@ -1332,7 +1370,7 @@ async def delete_premium(ctx, user_id, level):
     if int(ctx.user.id) in devs:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
-            "DELETE from Premium WHERE userid = :userid AND level <= :level;",
+            "DELETE from Premium WHERE userid = :userid AND level >= :level;",
             {"userid": user_id, "level": level},
         )
         conn_premium_db.commit()
@@ -1464,10 +1502,18 @@ async def check_done(bot):
             )
             conn_countdowns_db.commit()
             return
-
-        guild = await interactions.get(
-            bot, interactions.Guild, object_id=int(channel.guild.id)
-        )
+        # At this point... Just dont ask what all these trys does... Im just trying to keep a bot up
+        try:
+            guild = await interactions.get(
+                bot, interactions.Guild, object_id=int(channel.guild.id)
+            )
+        except:
+            conn_countdowns_db.execute(
+                "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                {"msgid": msg_id, "number": number},
+            )
+            conn_countdowns_db.commit()
+            return
         language = guild.preferred_locale
         if language not in translations.keys():
             language = "en-US"

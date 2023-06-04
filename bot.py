@@ -365,6 +365,12 @@ async def timer(
                     type=interactions.OptionType.INTEGER,
                     required=False,
                 ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
+                ),
             ],
         ),
         interactions.Option(
@@ -378,6 +384,12 @@ async def timer(
                     type=interactions.OptionType.INTEGER,
                     required=False,
                     max_value=50,
+                ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
                 ),
             ],
         ),
@@ -393,12 +405,18 @@ async def timer(
                     required=False,
                     max_value=50,
                 ),
+                interactions.Option(
+                    name="hidden",
+                    description="Set to false if you want everyone to see",
+                    type=interactions.OptionType.BOOLEAN,
+                    required=False,
+                ),
             ],
         ),
     ],
 )
-async def list(ctx: interactions.CommandContext, sub_command: str, page=1):
-    await command_builder.list_countdowns(ctx, sub_command, page)
+async def list(ctx: interactions.CommandContext, sub_command: str, page=1, hidden=True):
+    await command_builder.list_countdowns(ctx, sub_command, page, hidden)
 
 
 @bot.command(
@@ -633,6 +651,38 @@ async def fixperms(ctx: interactions.CommandContext):
     await command_builder.fixperms(ctx, bot)
 
 
+@bot.command(
+    name="editmention",
+    description="Change who to mention at the end of a countdown",
+    options=[
+        interactions.Option(
+            type=interactions.OptionType.STRING,
+            name="countdown",
+            description="Which of your countdowns do you want to be shown?",
+            required=True,
+            autocomplete=True,
+        ),
+        interactions.Option(
+            name="mention",
+            description="Who to mention",
+            type=interactions.OptionType.MENTIONABLE,
+            required=True,
+        ),
+    ],
+)
+async def editmention(
+    ctx: interactions.CommandContext,
+    countdown="",
+    mention="0",
+):
+    await command_builder.edit_mention(ctx, countdown, mention)
+
+
+@bot.autocomplete("editmention", "countdown")
+async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
+    await command_builder.autocomplete_countdowns(ctx, value, "mine")
+
+
 # This command is not entierly active yet. It is just a prototype for when the bot is availible in multiple languages.
 @bot.command(
     name="translate",
@@ -728,9 +778,17 @@ async def deletepremium(ctx: interactions.CommandContext, userid, level=1):
     name="makethispremium",
     description="Changes so this guild becomes your premium guild",
     dm_permission=False,
+    options=[
+        interactions.Option(
+            name="index",
+            description="What premium number",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+    ],
 )
-async def makethispremium(ctx: interactions.CommandContext):
-    await command_builder.make_this_premium(ctx)
+async def makethispremium(ctx: interactions.CommandContext, index=1):
+    await command_builder.make_this_premium(ctx, index)
 
 
 @bot.command(
