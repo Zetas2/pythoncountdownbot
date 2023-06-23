@@ -91,6 +91,8 @@ async def check_no_premium(ctx, feature, language):
     await ctx.send(
         f"""{translations[(language)]["errPremium"]} {feature}""", ephemeral=True
     )
+    # ¤ Implement a way so that bot can only be used in premium servers. Easily toggable
+    #await ctx.guild.leave()
     return True
 
 
@@ -1411,7 +1413,6 @@ async def botstats(ctx, bot):
     ram = psutil.virtual_memory()[2]
     disk = psutil.disk_usage("/").percent
     guilds = len(bot.guilds)
-
     # Get the number of active countdowns
     cursor = conn_countdowns_db.execute("SELECT COUNT(*) FROM Countdowns;")
     for row in cursor:
