@@ -93,6 +93,7 @@ translations = {
         "errPremiumImage": "adding image",
         "errPremiumRepeat": "repeating timer",
         "errPremiumCustomMsg": "custom message after complete",
+        "errPremiumPreset": "saving as preset",
         "errImage": "You need to send a link to the image",
         "errView": "I am missing the permission to view the channel. Please give me it!",
         "errPerms": "In order to perform this action I need view and send embeds/messages permissions added __**directly**__ to this channel. That can be done with /fixperms if I got permission to edit channels",

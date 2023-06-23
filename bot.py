@@ -285,6 +285,14 @@ async def countdown(
             max_value=220,
         ),
         interactions.Option(
+            name="preset",
+            description="Save this timer as a preset (PREMIUM FEATURE)",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+            min_value=1,
+            max_value=20,
+        ),
+        interactions.Option(
             name="image",
             description="Link to image to be shown at the end (PREMIUM FEATURE)",
             type=interactions.OptionType.STRING,
@@ -323,6 +331,7 @@ async def timer(
     countdownname=None,
     mention="0",
     repeat=0,
+    preset=0,
     image="",
     otherchannel=None,
     exact=False,
@@ -342,12 +351,48 @@ async def timer(
         countdownname,
         mention,
         repeat,
+        preset,
         image,
         otherchannel,
         exact,
         alert,
         bot,
     )
+
+
+@bot.command(
+    name="preset",
+    description="Use a preset timer",
+    options=[
+        interactions.Option(
+            name="presetid",
+            description="What id of the preset",
+            type=interactions.OptionType.INTEGER,
+            required=True,
+            max_value=20,
+            min_value=1,
+        ),
+    ],
+)
+async def preset(ctx: interactions.CommandContext, presetid=0, bot=bot):
+    await command_builder.preset(ctx, presetid, bot)
+
+
+@bot.command(
+    name="listpreset",
+    description="List all presets",
+    options=[
+        interactions.Option(
+            name="page",
+            description="What page number",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+            max_value=100,
+        ),
+    ],
+)
+async def listpreset(ctx: interactions.CommandContext, page=1):
+    await command_builder.list_preset(ctx, page)
 
 
 @bot.command(
@@ -616,17 +661,17 @@ async def autocompleteMine(ctx: interactions.CommandContext, value: str = ""):
 # Here are the functions that runs when the verify/cancel buttons are pressed
 @bot.component("deleteguild")
 async def button_response(ctx):
-    await command_builder.delete_button(bot, ctx, "guild")
+    await command_builder.delete_button(ctx, "guild")
 
 
 @bot.component("deletechannel")
 async def button_response(ctx):
-    await command_builder.delete_button(bot, ctx, "channel")
+    await command_builder.delete_button(ctx, "channel")
 
 
 @bot.component("deletemine")
 async def button_response(ctx):
-    await command_builder.delete_button(bot, ctx, "mine")
+    await command_builder.delete_button(ctx, "mine")
 
 
 @bot.component("deletecancel")
