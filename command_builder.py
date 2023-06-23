@@ -707,8 +707,9 @@ async def countdown(
     language = get_language(ctx)
     if await premium_bot(ctx,language):
         return
+    preset = 0
     if await do_all_checks(
-        ctx, mention, image_link, times, message_completed, language, 0
+        ctx, mention, image_link, times, message_completed, language, preset
     ):
 
         wholedate = dateparser.parse("in " + timestring)
@@ -745,6 +746,7 @@ async def countdown(
                 alert,
                 bot,
                 language,
+                preset,
             )
             if write_error:
                 await ctx.send(translations[(language)]["error"], ephemeral=True)
