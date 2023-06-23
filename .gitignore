@@ -132,3 +132,6 @@ dmypy.json
 Countdowns.db
 log.txt
 pylint.txt
+
+# A file that converts the databases around
+converter.py

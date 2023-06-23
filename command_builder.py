@@ -4,7 +4,6 @@ All commands are made in here. For translating there is languageFile.
 
 # ¤ are points of optimasation
 # ¤All sql statements can be moved into a seperate file
-# ¤Move responses into langguage_file
 
 # Handeling the database
 import sqlite3
@@ -47,6 +46,13 @@ conn_countdowns_db.execute(
     """CREATE TABLE IF NOT EXISTS Countdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255),number int, countdownname varchar(50));"""
 )
 
+# Make the table for presets if there is none
+conn_preset_db = sqlite3.connect("Presets.db")
+conn_preset_db.execute(
+    """CREATE TABLE IF NOT EXISTS Presets (guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255), countdownname varchar(50),otherchannel int,alert bool,exact bool,presetid int);"""
+)
+
+
 # makes connPremium into the connected database for premium.
 conn_premium_db = sqlite3.connect("premiumGuilds.db")
 # Make the table if there is noe
@@ -58,13 +64,12 @@ conn_premium_db.execute(
 bot_starttime = floor(time.time())
 
 
-def getLanguage(ctx):
+def get_language(ctx):
     """Check what language the guild is set to. And translates bot to that language if it exsits"""
     language = str(ctx.guild.preferred_locale)
     if language in translations.keys():
         return language
-    else:
-        return "en-US"
+    return "en-US"
 
 
 async def check_no_premium(ctx, feature, language):
@@ -140,6 +145,7 @@ async def send_and_add_to_database(
     alert,
     bot,
     language,
+    preset,
 ):
     """
     This makes the countdown message.
@@ -157,7 +163,7 @@ async def send_and_add_to_database(
             else:
                 # channel = otherchannel <- This would have been such a nice solution but nooo... why make it easy???
                 channel = await interactions.get(
-                    bot, interactions.Channel, object_id=otherchannel.id, force="http"
+                    bot, interactions.Channel, object_id=otherchannel, force="http"
                 )
             member = await interactions.get(
                 bot,
@@ -185,7 +191,7 @@ async def send_and_add_to_database(
             # Allow for \n to be used as newline charachter
             message_end = message_end.replace("\\n", "\n")
             # To not break delete
-            if countdownname != None:
+            if countdownname is not None:
                 countdownname = countdownname.replace(":", ";")
             current_time = floor(time.time())
             time_left = int(timestamp) - int(current_time)
@@ -210,21 +216,158 @@ async def send_and_add_to_database(
                     f"""{translations[(language)]["sent"]} https://discord.com/channels/{ctx.guild_id}/{msg.channel_id}/{msg.id}"""
                 )
 
+            guild_id = ctx.guild_id
+            if guild_id is None:  # Will be that in DMs.
+                guild_id = 0
+            started_by = ctx.user.id
+            # Had problems with these numbers being "None" for some unknown reason,
+            # so added a check so they cant come into the database
+            if msg.id is None or msg.channel_id is None:
+                return True
+
+            if mention != "0":
+                role_id = mention.id
+            else:
+                role_id = 0
+
+            if preset != 0:
+                if otherchannel is None:
+                    otherchannelid = 0
+                else:
+                    otherchannelid = msg.channel_id
+
+                cursor = conn_preset_db.execute(
+                    "SELECT presetid FROM Presets WHERE guildid = :guildid AND presetid = :presetid;",
+                    {
+                        "guildid": int(guild_id),
+                        "presetid": int(preset),
+                    },
+                )
+
+                # This checks if cursor got any rows, if it does, then the guild is premium
+                if len(cursor.fetchall()) != 0:
+                    conn_preset_db.execute(
+                        "UPDATE Presets set roleid = :roleid WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "roleid": int(role_id),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set startedby = :startedby WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "startedby": int(started_by),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set times = :times WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "times": int(times),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set length = :length WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "length": int(length),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set imagelink = :imagelink WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "imagelink": str(image_link),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set messagestart = :messagestart WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "messagestart": str(message_start),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set messageend = :messageend WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "messageend": str(message_end),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set messagecompleted = :messagecompleted WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "messagecompleted": str(message_completed),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set countdownname = :countdownname WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "countdownname": str(countdownname),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set otherchannel = :otherchannel WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "otherchannel": int(otherchannelid),
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set alert = :alert WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "alert": alert,
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.execute(
+                        "UPDATE Presets set exact = :exact WHERE guildid = :guildid AND presetid = :presetid;",
+                        {
+                            "exact": exact,
+                            "guildid": int(guild_id),
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.commit()
+                else:
+                    conn_preset_db.execute(
+                        "INSERT INTO Presets (guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,countdownname,otherchannel,alert,exact,presetid) VALUES (:guildid,:roleid,:startedby,:times,:length,:imagelink,:messagestart,:messageend,:messagecompleted,:countdownname,:otherchannel,:alert,:exact,:presetid);",
+                        {
+                            "guildid": int(guild_id),
+                            "roleid": int(role_id),
+                            "startedby": int(started_by),
+                            "times": int(times),
+                            "length": int(length),
+                            "imagelink": str(image_link),
+                            "messagestart": str(message_start),
+                            "messageend": str(message_end),
+                            "messagecompleted": str(message_completed),
+                            "countdownname": str(countdownname),
+                            "otherchannel": int(otherchannelid),
+                            "alert": alert,
+                            "exact": exact,
+                            "presetid": int(preset),
+                        },
+                    )
+                    conn_preset_db.commit()
+
             # If the bot should notify when countdown is done - save it to database:
             if alert:
-                guild_id = ctx.guild_id
-                if guild_id is None:  # Will be that in DMs.
-                    guild_id = 0
-                started_by = ctx.user.id
-                # Had problems with these numbers being "None" for some unknown reason,
-                # so added a check so they cant come into the database
-                if msg.id is None or msg.channel_id is None:
-                    return True
 
-                if mention != "0":
-                    role_id = mention.id
-                else:
-                    role_id = 0
                 # ¤ Implement number usage
                 # Add it into database
                 conn_countdowns_db.execute(
@@ -340,7 +483,9 @@ async def check_mention(ctx, mention, language):
     return False
 
 
-async def do_all_checks(ctx, mention, image_link, times, message_completed, language):
+async def do_all_checks(
+    ctx, mention, image_link, times, message_completed, language, preset
+):
     """A single function for all checks required before a dountdown/timer starts"""
     if await check_active(ctx, language):
         return False
@@ -368,10 +513,16 @@ async def do_all_checks(ctx, mention, image_link, times, message_completed, lang
         ):
             return False
 
+    if preset != 0:
+        if await check_no_premium(
+            ctx, translations[(language)]["errPremiumPreset"], language
+        ):
+            return False
+
     return True
 
 
-async def delete_message(bot, ctx, msg_id, language):
+async def delete_message(ctx, msg_id, language):
     """Send the message if a message is deleted"""
     user = ctx.user.username
     guild_id = ctx.guild_id
@@ -387,7 +538,7 @@ async def help_information(ctx):
     This looks different than the rest since it is prepped
     for translation by using the translations file
     """
-    language = getLanguage(ctx)
+    language = get_language(ctx)
 
     # Create a embed and add in all fields to it.
     embed = interactions.Embed()
@@ -455,9 +606,10 @@ async def help_information(ctx):
 
 
 async def generate_timestamp(ctx, timestring):
+    """Generates timestamps in the different formats given a timestring"""
     wholedate = dateparser.parse("in " + timestring)
-    language = getLanguage(ctx)
-    if wholedate == None:
+    language = get_language(ctx)
+    if wholedate is None:
         # If wholedate is None, it is not a valid date. This should be caught in the try... but apparently not
         await ctx.send(
             f"""{translations[(language)]["errDate"]}""",
@@ -521,7 +673,7 @@ async def countdown(
     bot,
 ):
     """The countdown command. The main use of this bot. Creates a new countdown."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     if await do_all_checks(
         ctx, mention, image_link, times, message_completed, language
     ):
@@ -542,6 +694,8 @@ async def countdown(
                 return
             if times != 0:
                 length = repeat_length * 3600
+            if otherchannel is not None:
+                otherchannel = otherchannel.id
             write_error = await send_and_add_to_database(
                 timestamp,
                 ctx,
@@ -560,7 +714,7 @@ async def countdown(
                 language,
             )
             if write_error:
-                await ctx.send("SOMETHING WENT WRONG", ephemeral=True)
+                await ctx.send(translations[(language)]["error"], ephemeral=True)
         else:
             await ctx.send(
                 translations[(language)]["errPast"],
@@ -568,36 +722,39 @@ async def countdown(
             )
 
 
-async def timer(
-    ctx,
-    day,
-    week,
-    hour,
-    minute,
-    message_start,
-    message_end,
-    message_completed,
-    countdownname,
-    mention,
-    times,
-    image_link,
-    otherchannel,
-    exact,
-    alert,
-    bot,
-):
-    """For those that dont want to use countdown."""
-    language = getLanguage(ctx)
-    if await do_all_checks(
-        ctx, mention, image_link, times, message_completed, language
-    ):
+async def preset(ctx, preset, bot):
+    """Uses one"""
+    language = get_language(ctx)
+
+    cursor = conn_preset_db.execute(
+        "SELECT roleid,times,length,imagelink,messagestart,messageend,messagecompleted,countdownname,otherchannel,alert,exact FROM Presets WHERE presetid = :preset AND guildid = :guildid;",
+        {"guildid": int(ctx.guild_id), "preset": preset},
+    )
+
+    # Well... This class is since send_and_add_to_database needs mention.id
+    class Mention:
+        def __init__(self, id):
+            self.id = id
+
+    for row in cursor:
+        exact = row[10]
+        alert = row[9]
+        otherchannel = int(row[8])
+        countdownname = str(row[7])
+        message_completed = str(row[6])
+        message_end = str(row[5])
+        message_start = str(row[4])
+        image_link = str(row[3])
+        length = int(row[2])
+        times = int(row[1])
+        mention = Mention(int(row[0]))
 
         current_time = floor(time.time())
-        length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
-        if await check_length(ctx, length, language):
-            return
         timestamp = current_time + length
-
+        if otherchannel == 0:
+            otherchannel = None
+        preset = 0
+        # no .id on this otherchannel since its alredy an int
         write_error = await send_and_add_to_database(
             timestamp,
             ctx,
@@ -614,6 +771,143 @@ async def timer(
             alert,
             bot,
             language,
+            preset,
+        )
+        if write_error:
+            await ctx.send(translations[(language)]["error"], ephemeral=True)
+
+
+async def list_preset(ctx, page):
+    """List all presets"""
+    language = get_language(ctx)
+    cursor = conn_preset_db.execute(
+        "SELECT COUNT(*) FROM Presets WHERE guildid= :guildid;",
+        {"guildid": int(ctx.guild_id)},
+    )
+    for row in cursor:
+        number_of_countdown = int(row[0])
+
+    cursor = conn_preset_db.execute(
+        "SELECT roleid,times,length,imagelink,messagestart,messageend,messagecompleted,countdownname,otherchannel,alert,exact,presetid,startedby FROM Presets WHERE guildid = :guildid ORDER BY presetid ASC;",
+        {"guildid": int(ctx.guild_id)},
+    )
+    lines = 5
+    max_page = ceil(number_of_countdown / lines)
+    if max_page < page:
+        page = max_page
+
+    embed = interactions.Embed()
+    embed.title = "Presets"
+    current_line = 0
+    goal_line = page * lines
+    # Loops through all presets to pick out the ones that should be on specified page
+    for row in cursor:
+        if current_line >= goal_line - lines:
+            createdby = str(row[12])
+            presetid = str(row[11])
+            exact = row[10]
+            alert = row[9]
+            otherchannel = str(row[8])
+            countdownname = str(row[7])
+            message_completed = str(row[6])
+            message_end = str(row[5])
+            message_start = str(row[4])
+            image_link = str(row[3])
+            length = str(row[2])
+            times = str(row[1])
+            mention = str(row[0])
+            # To not write out extra stuff theres an if for each
+            # ¤Move to LangFile
+            presetstring = f"Creator: <@{createdby}>, Length: {length}(s) "
+            if exact:
+                presetstring = presetstring + "Exact, "
+            if not alert:
+                presetstring = presetstring + "No Alert, "
+            if times != "0":
+                presetstring = presetstring + f"Repeats {times}, "
+            if mention != "0":
+                presetstring = presetstring + f"Mentions {mention}, "
+            if otherchannel != "0":
+                presetstring = presetstring + f"Sent to <#{otherchannel}>, "
+            if message_start != "Timer will end":
+                presetstring = presetstring + f"Starts with '{message_start}', "
+            if message_end != "!":
+                presetstring = presetstring + f"Ends with '{message_end}', "
+            if message_completed != "":
+                presetstring = (
+                    presetstring + f"Complete message is '{message_completed}', "
+                )
+            if image_link != "":
+                presetstring = presetstring + f"Has image: {image_link}"
+
+            presetstringheader = f"Preset {presetid}"
+            if countdownname != "None":
+                presetstringheader = presetstringheader + f" | {countdownname}"
+            embed.add_field(
+                presetstringheader,
+                presetstring,
+            )
+        # If it is before, go to next one
+        elif current_line < goal_line - lines:
+            pass
+        current_line = current_line + 1
+        if current_line >= goal_line:
+            break
+
+    embed.footer = interactions.EmbedFooter(text=f"Page {page} of {max_page}")
+    embed.color = int(("#%02x%02x%02x" % (255, 153, 51)).replace("#", "0x"), base=16)
+    await ctx.send(embeds=embed, ephemeral=True)
+
+
+async def timer(
+    ctx,
+    day,
+    week,
+    hour,
+    minute,
+    message_start,
+    message_end,
+    message_completed,
+    countdownname,
+    mention,
+    times,
+    preset,
+    image_link,
+    otherchannel,
+    exact,
+    alert,
+    bot,
+):
+    """For those that dont want to use countdown."""
+    language = get_language(ctx)
+    if await do_all_checks(
+        ctx, mention, image_link, times, message_completed, language, preset
+    ):
+
+        current_time = floor(time.time())
+        length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
+        if await check_length(ctx, length, language):
+            return
+        timestamp = current_time + length
+        if otherchannel is not None:
+            otherchannel = otherchannel.id
+        write_error = await send_and_add_to_database(
+            timestamp,
+            ctx,
+            mention,
+            times,
+            length,
+            message_start,
+            message_end,
+            message_completed,
+            countdownname,
+            image_link,
+            otherchannel,
+            exact,
+            alert,
+            bot,
+            language,
+            preset,
         )
         if write_error:
             await ctx.send(translations[(language)]["error"], ephemeral=True)
@@ -621,7 +915,7 @@ async def timer(
 
 async def list_countdowns(ctx, sub_command, page, hidden):
     """List command. List all active countdowns based on sub command."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     if ctx.guild_id is None and sub_command != "channel":
         return await ctx.send(translations[(language)]["errListDm"], ephemeral=True)
     # Links for DMs are @me instead of the guildid
@@ -725,7 +1019,7 @@ async def delete(
     bot, ctx, sub_command, sub_command_group, delete_mine, delete_channel, delete_guild
 ):
     """Deletes a countdown based on subcommand."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     # ¤ Make a function that can fit all of these
     if sub_command == "mine":
         if sub_command_group == "single":
@@ -758,7 +1052,7 @@ async def delete(
                 )
             else:
 
-                await delete_message(bot, ctx, msg_id, language)
+                await delete_message(ctx, msg_id, language)
         else:
             await ctx.send(
                 translations[(language)]["deleteConfirmGuild"],
@@ -814,7 +1108,7 @@ async def delete(
                     ephemeral=True,
                 )
             else:
-                await delete_message(bot, ctx, msg_id, language)
+                await delete_message(ctx, msg_id, language)
 
         else:
             if sub_command == "channel":
@@ -841,7 +1135,7 @@ async def delete_this(bot, ctx):
     """App command for deleting. Use on a active countdown message and it will be deleted."""
     msg_id = int(ctx.target.id)
     user_id = int(ctx.user.id)
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     started_by = 0
     cursor = conn_countdowns_db.execute(
         "SELECT startedby,msgid FROM Countdowns WHERE msgid = :msgid;",
@@ -877,23 +1171,7 @@ async def delete_this(bot, ctx):
             ephemeral=True,
         )
 
-    await delete_message(bot, ctx, msg_id, language)
-
-
-async def delete_edit(bot, msg_id, channel_id, language):
-    """Was planned to be used for editing in DELETED at all countdowns that got deleted. Was too heavely rate limited though"""
-    msg = await interactions.get(
-        bot, interactions.Message, object_id=msg_id, channel_id=channel_id
-    )
-    # Bot cant edit its own message if it dont have "Attach files" permission... Therefore the try.
-    try:
-        await msg.edit(
-            f"""**{translations[(language)]["deleted"]}**\n~~{msg.content}~~""",
-            suppress_embeds=True,
-            files=[],
-        )
-    except:
-        pass
+    await delete_message(ctx, msg_id, language)
 
 
 async def fill_choices(ctx, cursor, value):
@@ -981,9 +1259,9 @@ def deleted_channel(channel):
     conn_countdowns_db.commit()
 
 
-async def delete_button(bot, ctx, option):
+async def delete_button(ctx, option):
     """If a button used for deleting is used."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     user = ctx.user.username
     if option == "guild":
         if ctx.guild_id is None:
@@ -995,7 +1273,6 @@ async def delete_button(bot, ctx, option):
         )
         for row in cursor:
             channel_id = str(row[0])
-            msg_id = str(row[1])
 
         check = conn_countdowns_db.total_changes
         conn_countdowns_db.execute(
@@ -1101,7 +1378,7 @@ async def time_left_message(ctx, msg_id, language, hidden):
 
 async def time_left(ctx, sub_command, show_mine, show_channel, show_guild, hidden):
     """Show how long time it is left for a countdown"""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     # show_mine, show_channel and show_guild contains the ID
     # To process it easier, it is moved into show
     if sub_command == "mine":
@@ -1121,7 +1398,7 @@ async def time_left(ctx, sub_command, show_mine, show_channel, show_guild, hidde
 
 async def timeleft_this(ctx):
     """App command for timeleft."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     msg_id = int(ctx.target.id)
     await time_left_message(ctx, msg_id, language, True)
 
@@ -1129,7 +1406,7 @@ async def timeleft_this(ctx):
 async def botstats(ctx, bot):
     """Botstat command. Gathers a bunch of information about the bot."""
     await ctx.defer(ephemeral=True)
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
     disk = psutil.disk_usage("/").percent
@@ -1173,7 +1450,7 @@ async def botstats(ctx, bot):
 
 async def edit_mention(ctx, countdownid, mention):
     """For editing a mention of a running countdown"""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     if await check_mention(ctx, mention, language):
         return False
 
@@ -1205,7 +1482,7 @@ async def edit_mention(ctx, countdownid, mention):
 
 async def translate(ctx, new_language):
     """Allows for tranlsating the bot to another language."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
             await ctx.guild.set_preferred_locale(new_language)
@@ -1224,7 +1501,7 @@ async def translate(ctx, new_language):
 
 async def make_this_premium(ctx, index):
     """Change the premium guild to the one where the command is used. Cooldown of 2 days."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     guild_id = ctx.guild_id
     current_time = floor(time.time())
     # 172800 seconds is two days.
@@ -1270,7 +1547,7 @@ async def make_this_premium(ctx, index):
 
 async def premium_info(ctx):
     """Sends some info about premium."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     embed = interactions.Embed()
     embed.title = translations[(language)]["premiumTitle"]
     embed.description = translations[(language)]["premiumDesc"]
@@ -1301,7 +1578,7 @@ async def premium_info(ctx):
 async def fixperms(ctx, bot):
     """Adds the permissions of the bot to the channel"""
 
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     channel = ctx.channel
     try:
         await channel.add_permission_overwrite(
@@ -1323,7 +1600,7 @@ devs = (238006908664020993, 729791860674920488)
 
 async def log(ctx):
     """Shows the log"""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     if int(ctx.user.id) in devs:
         logs = ""
         with open("log.txt", "r") as file:
@@ -1339,7 +1616,7 @@ async def log(ctx):
 
 async def add_premium(ctx, user_id, guild_id, level):
     """Add a premium user."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute(
             "SELECT userid FROM Premium WHERE userid = :userid AND level = 1;",
@@ -1366,7 +1643,7 @@ async def add_premium(ctx, user_id, guild_id, level):
 
 async def delete_premium(ctx, user_id, level):
     """Delete a premium user."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     if int(ctx.user.id) in devs:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
@@ -1391,7 +1668,7 @@ async def delete_premium(ctx, user_id, level):
 
 async def list_premium(ctx, page):
     """List all premium users."""
-    language = getLanguage(ctx)
+    language = get_language(ctx)
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute("SELECT COUNT (*) FROM Premium")
         for row in cursor:
