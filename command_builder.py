@@ -64,13 +64,38 @@ conn_premium_db.execute(
 bot_starttime = floor(time.time())
 
 
+
+async def premium_bot(ctx, language):
+    """To keep this bot from being added to a ton of servers this makes sure it can only be used in premium servers."""
+    ispremiumbot = False
+    if ispremiumbot:
+        if ctx.guild_id is None:
+            await ctx.send(translations[(language)]["errPremiumDm"], ephemeral=True)
+            return True
+        guild_id = int(ctx.guild_id)
+
+        cursor = conn_premium_db.execute(
+            "SELECT guildid FROM Premium WHERE guildid = :guildid;",
+            {"guildid": guild_id},
+        )
+
+        # This checks if cursor got any rows, if it does, then the guild is premium
+        if len(cursor.fetchall()) != 0:
+            return False
+        # If the code havent returned yet, its not a premium user
+        await ctx.send(
+            f"""{translations[(language)]["errPremiumBot"]}""", ephemeral=False
+        )
+        await ctx.guild.leave()
+        return True
+        
+
 def get_language(ctx):
     """Check what language the guild is set to. And translates bot to that language if it exsits"""
     language = str(ctx.guild.preferred_locale)
     if language in translations.keys():
         return language
     return "en-US"
-
 
 async def check_no_premium(ctx, feature, language):
     """Make sure that a feature can only be used by premium users."""
@@ -579,6 +604,10 @@ async def help_information(ctx):
         # If they are in DM, dont show it.
         pass
     embed.add_field(
+        (translations[(language)]["helpCommonTimeTile"]),
+        (translations[(language)]["helpCommonTimeDesc"]),
+    )
+    embed.add_field(
         (translations[(language)]["helpLinksTitle"]),
         (translations[(language)]["helpLinksDesc"]),
     )
@@ -607,8 +636,10 @@ async def help_information(ctx):
 
 async def generate_timestamp(ctx, timestring):
     """Generates timestamps in the different formats given a timestring"""
-    wholedate = dateparser.parse("in " + timestring)
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
+    wholedate = dateparser.parse("in " + timestring)
     if wholedate is None:
         # If wholedate is None, it is not a valid date. This should be caught in the try... but apparently not
         await ctx.send(
@@ -674,8 +705,11 @@ async def countdown(
 ):
     """The countdown command. The main use of this bot. Creates a new countdown."""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
+    preset = 0
     if await do_all_checks(
-        ctx, mention, image_link, times, message_completed, language
+        ctx, mention, image_link, times, message_completed, language, preset
     ):
 
         wholedate = dateparser.parse("in " + timestring)
@@ -712,6 +746,7 @@ async def countdown(
                 alert,
                 bot,
                 language,
+                preset,
             )
             if write_error:
                 await ctx.send(translations[(language)]["error"], ephemeral=True)
@@ -723,9 +758,10 @@ async def countdown(
 
 
 async def preset(ctx, preset, bot):
-    """Uses one"""
+    """Uses one of the presets"""
     language = get_language(ctx)
-
+    if await premium_bot(ctx,language):
+        return
     cursor = conn_preset_db.execute(
         "SELECT roleid,times,length,imagelink,messagestart,messageend,messagecompleted,countdownname,otherchannel,alert,exact FROM Presets WHERE presetid = :preset AND guildid = :guildid;",
         {"guildid": int(ctx.guild_id), "preset": preset},
@@ -780,6 +816,8 @@ async def preset(ctx, preset, bot):
 async def list_preset(ctx, page):
     """List all presets"""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     cursor = conn_preset_db.execute(
         "SELECT COUNT(*) FROM Presets WHERE guildid= :guildid;",
         {"guildid": int(ctx.guild_id)},
@@ -880,6 +918,8 @@ async def timer(
 ):
     """For those that dont want to use countdown."""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     if await do_all_checks(
         ctx, mention, image_link, times, message_completed, language, preset
     ):
@@ -916,6 +956,8 @@ async def timer(
 async def list_countdowns(ctx, sub_command, page, hidden):
     """List command. List all active countdowns based on sub command."""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     if ctx.guild_id is None and sub_command != "channel":
         return await ctx.send(translations[(language)]["errListDm"], ephemeral=True)
     # Links for DMs are @me instead of the guildid
@@ -1020,6 +1062,8 @@ async def delete(
 ):
     """Deletes a countdown based on subcommand."""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     # ¤ Make a function that can fit all of these
     if sub_command == "mine":
         if sub_command_group == "single":
@@ -1379,6 +1423,8 @@ async def time_left_message(ctx, msg_id, language, hidden):
 async def time_left(ctx, sub_command, show_mine, show_channel, show_guild, hidden):
     """Show how long time it is left for a countdown"""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     # show_mine, show_channel and show_guild contains the ID
     # To process it easier, it is moved into show
     if sub_command == "mine":
@@ -1405,13 +1451,14 @@ async def timeleft_this(ctx):
 
 async def botstats(ctx, bot):
     """Botstat command. Gathers a bunch of information about the bot."""
-    await ctx.defer(ephemeral=True)
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
+    await ctx.defer(ephemeral=True)
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
     disk = psutil.disk_usage("/").percent
     guilds = len(bot.guilds)
-
     # Get the number of active countdowns
     cursor = conn_countdowns_db.execute("SELECT COUNT(*) FROM Countdowns;")
     for row in cursor:
@@ -1451,6 +1498,8 @@ async def botstats(ctx, bot):
 async def edit_mention(ctx, countdownid, mention):
     """For editing a mention of a running countdown"""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     if await check_mention(ctx, mention, language):
         return False
 
@@ -1483,6 +1532,8 @@ async def edit_mention(ctx, countdownid, mention):
 async def translate(ctx, new_language):
     """Allows for tranlsating the bot to another language."""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
             await ctx.guild.set_preferred_locale(new_language)
@@ -1577,8 +1628,9 @@ async def premium_info(ctx):
 
 async def fixperms(ctx, bot):
     """Adds the permissions of the bot to the channel"""
-
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     channel = ctx.channel
     try:
         await channel.add_permission_overwrite(
@@ -1601,6 +1653,8 @@ devs = (238006908664020993, 729791860674920488)
 async def log(ctx):
     """Shows the log"""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     if int(ctx.user.id) in devs:
         logs = ""
         with open("log.txt", "r") as file:
@@ -1617,6 +1671,8 @@ async def log(ctx):
 async def add_premium(ctx, user_id, guild_id, level):
     """Add a premium user."""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute(
             "SELECT userid FROM Premium WHERE userid = :userid AND level = 1;",
@@ -1644,6 +1700,8 @@ async def add_premium(ctx, user_id, guild_id, level):
 async def delete_premium(ctx, user_id, level):
     """Delete a premium user."""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     if int(ctx.user.id) in devs:
         check = conn_premium_db.total_changes
         conn_premium_db.execute(
@@ -1669,6 +1727,8 @@ async def delete_premium(ctx, user_id, level):
 async def list_premium(ctx, page):
     """List all premium users."""
     language = get_language(ctx)
+    if await premium_bot(ctx,language):
+        return
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute("SELECT COUNT (*) FROM Premium")
         for row in cursor:
