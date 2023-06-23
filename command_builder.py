@@ -708,7 +708,7 @@ async def countdown(
     if await premium_bot(ctx,language):
         return
     if await do_all_checks(
-        ctx, mention, image_link, times, message_completed, language
+        ctx, mention, image_link, times, message_completed, language, 0
     ):
 
         wholedate = dateparser.parse("in " + timestring)
