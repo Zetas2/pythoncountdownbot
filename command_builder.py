@@ -1550,6 +1550,8 @@ async def translate(ctx, new_language):
         await ctx.send(translations[(language)]["errNoAdmin"], ephemeral=True)
 
 
+
+
 async def make_this_premium(ctx, index):
     """Change the premium guild to the one where the command is used. Cooldown of 2 days."""
     language = get_language(ctx)
@@ -1561,39 +1563,82 @@ async def make_this_premium(ctx, index):
     # Find those that are from the user
     # that havent been recently edited.
     cursor = conn_premium_db.execute(
-        "SELECT userid FROM Premium WHERE lastedit < :allowedtime AND userid = :userid AND level = :index;",
-        {"allowedtime": allowed_time, "userid": user_id, "index": index},
+        "SELECT level,lastedit FROM Premium WHERE userid = :userid AND level = :index;",
+        {"userid": user_id, "index": index},
     )
+    maxlevel = 0
+    for row in cursor:
+        lastedit = int(row[1])
+        maxlevel = int(row[0])
+        break
 
     # If there is 0 results there is no to edit.
-    if len(cursor.fetchall()) != 0:
-        check = conn_premium_db.total_changes
-        conn_premium_db.execute(
-            "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = :index;",
-            {"userid": user_id, "guildid": int(guild_id), "index": index},
-        )
-        conn_premium_db.execute(
-            "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = :index;",
-            {"userid": user_id, "currenttime": int(current_time), "index": index},
-        )
-        conn_premium_db.commit()
+    if maxlevel != 0:
+        if lastedit < allowed_time:
+            check = conn_premium_db.total_changes
+            conn_premium_db.execute(
+                "UPDATE Premium set guildid = :guildid WHERE userid = :userid AND level = :index;",
+                {"userid": user_id, "guildid": int(guild_id), "index": index},
+            )
+            conn_premium_db.execute(
+                "UPDATE Premium set lastedit = :currenttime WHERE userid = :userid AND level = :index;",
+                {"userid": user_id, "currenttime": int(current_time), "index": index},
+            )
+            conn_premium_db.commit()
 
-        if check == conn_premium_db.total_changes:
-            await ctx.send(
-                translations[(language)]["error"],
-                ephemeral=True,
-            )
-        else:
-            await ctx.send(
-                f"""{translations[(language)]["guild"]} {translations[(language)]["updated"]} {guild_id}""",
-                ephemeral=True,
-            )
+            if check == conn_premium_db.total_changes:
+                await ctx.send(
+                    translations[(language)]["error"],
+                    ephemeral=True,
+                )
+                return
+            else:
+                await ctx.send(
+                    f"""{translations[(language)]["guild"]} {translations[(language)]["updated"]} {guild_id}""",
+                    ephemeral=True,
+                )
+                return
+        
 
     else:
-        await ctx.send(
-            translations[(language)]["errPremiumReuse"],
-            ephemeral=True,
+        # Check if user got a higher level
+        cursor = conn_premium_db.execute(
+            "SELECT level,lastedit FROM Premium WHERE userid = :userid ORDER BY level DESC;",
+            {"userid": user_id},
         )
+        for row in cursor:
+            lastedit = int(row[1])
+            maxlevel = int(row[0])
+            break
+        if maxlevel > index:
+            if lastedit < allowed_time:
+                check = conn_premium_db.total_changes
+                conn_premium_db.execute(
+                    "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,:lastedit,:level);",
+                    {
+                        "userid": int(user_id),
+                        "guildid": int(guild_id),
+                        "lastedit": int(current_time),
+                        "level": int(index),
+                    },
+                )
+                conn_premium_db.commit()
+
+                if check == conn_premium_db.total_changes:
+                    await ctx.send(
+                        translations[(language)]["error"],
+                        ephemeral=True,
+                    )
+                else:
+                    await ctx.send(
+                        f"""{translations[(language)]["guild"]} {translations[(language)]["updated"]} {guild_id}""",
+                        ephemeral=True,
+                    )
+                return    
+    await ctx.send(
+        translations[(language)]["errPremiumReuse"],
+        ephemeral=True,
+    )
 
 
 async def premium_info(ctx):
@@ -1675,11 +1720,14 @@ async def add_premium(ctx, user_id, guild_id, level):
         return
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute(
-            "SELECT userid FROM Premium WHERE userid = :userid AND level = 1;",
-            {"userid": user_id},
+            "SELECT userid FROM Premium WHERE userid = :userid AND level = :level;",
+            {
+                "userid": int(user_id),
+                "level": int(level),
+            },
         )
         # Check that the user isnt alredy there
-        if len(cursor.fetchall()) == 0 or level != 1:
+        if len(cursor.fetchall()) == 0:
             conn_premium_db.execute(
                 "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,0,:level);",
                 {
@@ -1734,17 +1782,16 @@ async def list_premium(ctx, page):
         for row in cursor:
             number_of_countdown = int(row[0])
         cursor = conn_premium_db.execute(
-            "SELECT guildid,userid,lastedit,level FROM Premium"
+            "SELECT guildid,userid,lastedit,level FROM Premium ORDER BY userid,level"
         )
-        lines = 15
+        lines = 25
         max_page = ceil(number_of_countdown / lines)
         if max_page < page:
             page = max_page
 
-        embed = interactions.Embed()
-        embed.title = "Premium users"
         current_line = 0
         goal_line = page * lines
+        resultstring = ""
         # Loops through all premiums to pick out the ones that should be on specified page
         for row in cursor:
             if current_line >= goal_line - lines:
@@ -1752,10 +1799,7 @@ async def list_premium(ctx, page):
                 user_id = int(row[1])
                 last_edit = int(row[2])
                 level = int(row[3])
-                embed.add_field(
-                    "-----",
-                    f"<@{user_id}> have guild {guild_id}. Edited <t:{last_edit}>. Level: {level}",
-                )
+                resultstring = resultstring + f"<@{user_id}> {level} - {guild_id} <t:{last_edit}>\n"
             # If it is before, go to next one
             elif current_line < goal_line - lines:
                 pass
@@ -1763,11 +1807,8 @@ async def list_premium(ctx, page):
             if current_line >= goal_line:
                 break
 
-        embed.footer = interactions.EmbedFooter(text=f"Page {page} of {max_page}")
-        embed.color = int(
-            ("#%02x%02x%02x" % (255, 153, 51)).replace("#", "0x"), base=16
-        )
-        await ctx.send(embeds=embed, ephemeral=True)
+        resultstring = resultstring + f"\nPage {page} of {max_page}"
+        await ctx.send(resultstring, ephemeral=True)
 
     else:
         await ctx.send(translations[(language)]["errDev"], ephemeral=True)
