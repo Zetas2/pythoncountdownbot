@@ -26,7 +26,7 @@ TOKENSTRING = getenv("DISCORD_TOKEN")
 
 bot = interactions.Client(token=TOKENSTRING, intents=interactions.Intents.GUILDS)
 
-devservers = [1010636307216728094, 719541990580289557]
+devservers = [1010636307216728094]
 
 
 # Check this when activating shards
@@ -808,7 +808,7 @@ async def addpremium(ctx: interactions.CommandContext, userid, guildid=0, level=
         ),
         interactions.Option(
             name="level",
-            description="Up to what level?",
+            description="Down to what level?",
             type=interactions.OptionType.INTEGER,
             required=False,
             max_value=50,
@@ -828,7 +828,8 @@ async def deletepremium(ctx: interactions.CommandContext, userid, level=1):
             name="index",
             description="What premium number",
             type=interactions.OptionType.INTEGER,
-            required=False,
+            min_value = 1,
+            required=True,
         ),
     ],
 )
