@@ -41,7 +41,7 @@ translations = {
         "premiumActivateTitle": "How do I activate it?",
         "premiumActivateDesc": "To activate premium you need to contact <@238006908664020993> or <@729791860674920488> in the [Discord Support Guild](https://discord.gg/YTxTms4Sp7). From here you will be able to invite the premium bot and we can get you all linked up.",
         "premiumWhyTitle": "Why premium?",
-        "premiumWhyDesc": "Premium gives you access to:\n• More countdowns in a guild\n• Adding images at the end of a countdown\n• Repeating countdowns\n• Custom message after countdown\n• Preset commands",
+        "premiumWhyDesc": "Premium gives you access to:\n• More countdowns in a guild\n• Adding images at the end of a countdown\n• Repeating countdowns\n• Custom message after countdown\n• Preset commands\n• Dedicated bot",
         "premiumFooter": "Thanks for considering supporting this bot",
         "botstatTitle": "BOT STATS",
         "botstatDesc": "This is the current status of the bot",
