@@ -135,3 +135,6 @@ pylint.txt
 
 # A file that converts the databases around
 converter.py
+.vscode/settings.json
+Presets.db
+premiumGuilds.db

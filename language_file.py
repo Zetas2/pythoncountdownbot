@@ -53,6 +53,7 @@ translations = {
         "active": "Active countdowns",
         "uptime": "Uptime",
         "ping": "Ping",
+        "shards": "Shards",
         "log": "Log size",
         "ms": "ms",
         "rows": "rows",

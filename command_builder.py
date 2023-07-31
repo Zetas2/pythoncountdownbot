@@ -64,7 +64,6 @@ conn_premium_db.execute(
 bot_starttime = floor(time.time())
 
 
-
 async def premium_bot(ctx, language):
     """To keep this bot from being added to a ton of servers this makes sure it can only be used in premium servers."""
     ispremiumbot = False
@@ -88,7 +87,7 @@ async def premium_bot(ctx, language):
         )
         await ctx.guild.leave()
         return True
-        
+
 
 def get_language(ctx):
     """Check what language the guild is set to. And translates bot to that language if it exsits"""
@@ -96,6 +95,7 @@ def get_language(ctx):
     if language in translations.keys():
         return language
     return "en-US"
+
 
 async def check_no_premium(ctx, feature, language):
     """Make sure that a feature can only be used by premium users."""
@@ -184,29 +184,26 @@ async def send_and_add_to_database(
         await ctx.defer(ephemeral=False)
         if alert:
             if otherchannel is None:
-                channel = await ctx.get_channel()
+                channel = ctx.channel
             else:
-                # channel = otherchannel <- This would have been such a nice solution but nooo... why make it easy???
-                channel = await interactions.get(
-                    bot, interactions.Channel, object_id=otherchannel, force="http"
-                )
-            member = await interactions.get(
-                bot,
-                interactions.Member,
-                object_id=int(bot.me.id),
-                parent_id=ctx.guild_id,
-            )
-            got_permission = await member.has_permissions(
-                interactions.Permissions.EMBED_LINKS
-                | interactions.Permissions.SEND_MESSAGES
-                | interactions.Permissions.VIEW_CHANNEL,
-                channel=channel,
-            )
+                channel = bot.get_channel(otherchannel)
+            if (
+                interactions.Permissions.SEND_MESSAGES
+                in channel.permissions_for(ctx.guild.me)
+                and interactions.Permissions.EMBED_LINKS
+                in channel.permissions_for(ctx.guild.me)
+                and interactions.Permissions.VIEW_CHANNEL
+                in channel.permissions_for(ctx.guild.me)
+            ):
+                got_permission = True
+
+            else:
+                got_permission = False
         else:
             got_permission = True
     except:
         await ctx.send(
-            translations[(language)]["errView"],
+            translations[(language)]["errPerms"],
             ephemeral=True,
         )
     else:
@@ -238,7 +235,7 @@ async def send_and_add_to_database(
                     f"{message_start} <t:{timestamp}:R> {message_end}{timestring}"
                 )
                 await ctx.send(
-                    f"""{translations[(language)]["sent"]} https://discord.com/channels/{ctx.guild_id}/{msg.channel_id}/{msg.id}"""
+                    f"""{translations[(language)]["sent"]} https://discord.com/channels/{ctx.guild_id}/{msg.channel.id}/{msg.id}"""
                 )
 
             guild_id = ctx.guild_id
@@ -247,7 +244,7 @@ async def send_and_add_to_database(
             started_by = ctx.user.id
             # Had problems with these numbers being "None" for some unknown reason,
             # so added a check so they cant come into the database
-            if msg.id is None or msg.channel_id is None:
+            if msg.id is None or msg.channel.id is None:
                 return True
 
             if mention != "0":
@@ -259,7 +256,7 @@ async def send_and_add_to_database(
                 if otherchannel is None:
                     otherchannelid = 0
                 else:
-                    otherchannelid = msg.channel_id
+                    otherchannelid = msg.channel.id
 
                 cursor = conn_preset_db.execute(
                     "SELECT presetid FROM Presets WHERE guildid = :guildid AND presetid = :presetid;",
@@ -392,7 +389,6 @@ async def send_and_add_to_database(
 
             # If the bot should notify when countdown is done - save it to database:
             if alert:
-
                 # ¤ Implement number usage
                 # Add it into database
                 conn_countdowns_db.execute(
@@ -400,7 +396,7 @@ async def send_and_add_to_database(
                     {
                         "timestamp": int(timestamp),
                         "msgid": int(msg.id),
-                        "channelid": int(msg.channel_id),
+                        "channelid": int(msg.channel.id),
                         "guildid": int(guild_id),
                         "mention": int(role_id),
                         "startedby": int(started_by),
@@ -490,8 +486,9 @@ async def check_active(ctx, language):
 async def check_mention(ctx, mention, language):
     # If you try to ping someone check that you got the permission
     # You can ping yourself or if you got MENTION_EVERYONE, or if its a role that is mentionble.
+
     if mention != "0" and (
-        (not ctx.author.permissions & interactions.Permissions.MENTION_EVERYONE)
+        (not interactions.Permissions.MENTION_EVERYONE in ctx.author.guild_permissions)
         and (not mention.id == ctx.user.id)
     ):
         if hasattr(mention, "mentionable"):
@@ -637,7 +634,7 @@ async def help_information(ctx):
 async def generate_timestamp(ctx, timestring):
     """Generates timestamps in the different formats given a timestring"""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     wholedate = dateparser.parse("in " + timestring)
     if wholedate is None:
@@ -705,13 +702,12 @@ async def countdown(
 ):
     """The countdown command. The main use of this bot. Creates a new countdown."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     preset = 0
     if await do_all_checks(
         ctx, mention, image_link, times, message_completed, language, preset
     ):
-
         wholedate = dateparser.parse("in " + timestring)
         try:  # If wholedate cant be floored, it is not a valid date.
             timestamp = floor(wholedate.timestamp())
@@ -760,7 +756,7 @@ async def countdown(
 async def preset(ctx, preset, bot):
     """Uses one of the presets"""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     cursor = conn_preset_db.execute(
         "SELECT roleid,times,length,imagelink,messagestart,messageend,messagecompleted,countdownname,otherchannel,alert,exact FROM Presets WHERE presetid = :preset AND guildid = :guildid;",
@@ -816,7 +812,7 @@ async def preset(ctx, preset, bot):
 async def list_preset(ctx, page):
     """List all presets"""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     cursor = conn_preset_db.execute(
         "SELECT COUNT(*) FROM Presets WHERE guildid= :guildid;",
@@ -918,12 +914,11 @@ async def timer(
 ):
     """For those that dont want to use countdown."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     if await do_all_checks(
         ctx, mention, image_link, times, message_completed, language, preset
     ):
-
         current_time = floor(time.time())
         length = minute * 60 + hour * 3600 + day * 86400 + week * 604800
         if await check_length(ctx, length, language):
@@ -956,7 +951,7 @@ async def timer(
 async def list_countdowns(ctx, sub_command, page, hidden):
     """List command. List all active countdowns based on sub command."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     if ctx.guild_id is None and sub_command != "channel":
         return await ctx.send(translations[(language)]["errListDm"], ephemeral=True)
@@ -1062,7 +1057,7 @@ async def delete(
 ):
     """Deletes a countdown based on subcommand."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     # ¤ Make a function that can fit all of these
     if sub_command == "mine":
@@ -1095,7 +1090,6 @@ async def delete(
                     ephemeral=True,
                 )
             else:
-
                 await delete_message(ctx, msg_id, language)
         else:
             await ctx.send(
@@ -1423,7 +1417,7 @@ async def time_left_message(ctx, msg_id, language, hidden):
 async def time_left(ctx, sub_command, show_mine, show_channel, show_guild, hidden):
     """Show how long time it is left for a countdown"""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     # show_mine, show_channel and show_guild contains the ID
     # To process it easier, it is moved into show
@@ -1452,13 +1446,14 @@ async def timeleft_this(ctx):
 async def botstats(ctx, bot):
     """Botstat command. Gathers a bunch of information about the bot."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     await ctx.defer(ephemeral=True)
     cpu = psutil.cpu_percent(4)
     ram = psutil.virtual_memory()[2]
     disk = psutil.disk_usage("/").percent
     guilds = len(bot.guilds)
+    shards = ctx.client.total_shards
     # Get the number of active countdowns
     cursor = conn_countdowns_db.execute("SELECT COUNT(*) FROM Countdowns;")
     for row in cursor:
@@ -1480,6 +1475,7 @@ async def botstats(ctx, bot):
     embed.add_field(f"""{translations[(language)]["storage"]} :minidisc:""", f"{disk}%")
     embed.add_field(f"""{translations[(language)]["active"]} :clock1:""", f"{number}")
     embed.add_field(f"""{translations[(language)]["guild"]} :timer:""", f"{guilds}")
+    embed.add_field(f"""{translations[(language)]["shards"]} :jigsaw:""", f"{shards}")
     embed.add_field(
         f"""{translations[(language)]["uptime"]} :up:""", f"<t:{bot_starttime}:R>"
     )
@@ -1498,7 +1494,7 @@ async def botstats(ctx, bot):
 async def edit_mention(ctx, countdownid, mention):
     """For editing a mention of a running countdown"""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     if await check_mention(ctx, mention, language):
         return False
@@ -1532,7 +1528,7 @@ async def edit_mention(ctx, countdownid, mention):
 async def translate(ctx, new_language):
     """Allows for tranlsating the bot to another language."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     if ctx.author.permissions & interactions.Permissions.ADMINISTRATOR:
         try:
@@ -1548,8 +1544,6 @@ async def translate(ctx, new_language):
             )
     else:
         await ctx.send(translations[(language)]["errNoAdmin"], ephemeral=True)
-
-
 
 
 async def make_this_premium(ctx, index):
@@ -1598,7 +1592,6 @@ async def make_this_premium(ctx, index):
                     ephemeral=True,
                 )
                 return
-        
 
     else:
         # Check if user got a higher level
@@ -1634,7 +1627,7 @@ async def make_this_premium(ctx, index):
                         f"""{translations[(language)]["guild"]} {translations[(language)]["updated"]} {guild_id}""",
                         ephemeral=True,
                     )
-                return    
+                return
     await ctx.send(
         translations[(language)]["errPremiumReuse"],
         ephemeral=True,
@@ -1674,16 +1667,13 @@ async def premium_info(ctx):
 async def fixperms(ctx, bot):
     """Adds the permissions of the bot to the channel"""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     channel = ctx.channel
+
     try:
-        await channel.add_permission_overwrite(
-            bot.me.id,
-            1,
-            allow=interactions.Permissions.EMBED_LINKS
-            | interactions.Permissions.SEND_MESSAGES
-            | interactions.Permissions.VIEW_CHANNEL,
+        await channel.set_permission(
+            target=bot._user, view_channel=True, embed_links=True, send_messages=True
         )
     except:
         await ctx.send(translations[(language)]["permsNotFixed"])
@@ -1698,7 +1688,7 @@ devs = (238006908664020993, 729791860674920488)
 async def log(ctx):
     """Shows the log"""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     if int(ctx.user.id) in devs:
         logs = ""
@@ -1716,7 +1706,7 @@ async def log(ctx):
 async def add_premium(ctx, user_id, guild_id, level):
     """Add a premium user."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute(
@@ -1748,7 +1738,7 @@ async def add_premium(ctx, user_id, guild_id, level):
 async def delete_premium(ctx, user_id, level):
     """Delete a premium user."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     if int(ctx.user.id) in devs:
         check = conn_premium_db.total_changes
@@ -1775,7 +1765,7 @@ async def delete_premium(ctx, user_id, level):
 async def list_premium(ctx, page):
     """List all premium users."""
     language = get_language(ctx)
-    if await premium_bot(ctx,language):
+    if await premium_bot(ctx, language):
         return
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute("SELECT COUNT (*) FROM Premium")
@@ -1799,7 +1789,10 @@ async def list_premium(ctx, page):
                 user_id = int(row[1])
                 last_edit = int(row[2])
                 level = int(row[3])
-                resultstring = resultstring + f"<@{user_id}> {level} - {guild_id} <t:{last_edit}>\n"
+                resultstring = (
+                    resultstring
+                    + f"<@{user_id}> {level} - {guild_id} <t:{last_edit}>\n"
+                )
             # If it is before, go to next one
             elif current_line < goal_line - lines:
                 pass
@@ -1839,9 +1832,7 @@ async def check_done(bot):
         timestamp = int(row[0])
         # Check that the channel exsist
         try:
-            channel = await interactions.get(
-                bot, interactions.Channel, object_id=channel_id
-            )
+            channel = bot.get_channel(channel_id)
         except:
             conn_countdowns_db.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
@@ -1852,47 +1843,26 @@ async def check_done(bot):
 
         # Check that the bot have permission to
         # send message, embeds and see the channel.
-        member = await interactions.get(
-            bot,
-            interactions.Member,
-            object_id=int(bot.me.id),
-            parent_id=guild_id,
-        )
-        # Something in the has_permission is causing a missing access.. So I just... Dont care about it anymore :)
-        try:
-            got_permission = await member.has_permissions(
-                interactions.Permissions.EMBED_LINKS
-                | interactions.Permissions.SEND_MESSAGES
-                | interactions.Permissions.VIEW_CHANNEL,
-                channel=channel,
-            )
-            if not got_permission:
-                conn_countdowns_db.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
-                    {"msgid": msg_id, "number": number},
-                )
-                conn_countdowns_db.commit()
-                return
-        except:
+        got_permission = False
+        if (
+            interactions.Permissions.SEND_MESSAGES
+            in channel.permissions_for(bot._user.id)
+            and interactions.Permissions.EMBED_LINKS
+            in channel.permissions_for(bot._user.id)
+            and interactions.Permissions.VIEW_CHANNEL
+            in channel.permissions_for(bot._user.id)
+        ):
+            got_permission = True
+
+        if not got_permission:
             conn_countdowns_db.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
                 {"msgid": msg_id, "number": number},
             )
             conn_countdowns_db.commit()
             return
-        # At this point... Just dont ask what all these trys does... Im just trying to keep a bot up
-        try:
-            guild = await interactions.get(
-                bot, interactions.Guild, object_id=int(channel.guild.id)
-            )
-        except:
-            conn_countdowns_db.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
-                {"msgid": msg_id, "number": number},
-            )
-            conn_countdowns_db.commit()
-            return
-        language = guild.preferred_locale
+
+        language = bot.get_guild(guild_id).preferred_locale
         if language not in translations.keys():
             language = "en-US"
 
@@ -1945,32 +1915,19 @@ async def check_done(bot):
         # Mention the role/user
         if role_id != 0:
             not_sent = True
-            try:
-                guild_info = await interactions.get(
-                    bot, interactions.Guild, object_id=guild_id
-                )
-            except:
-                conn_countdowns_db.execute(
-                    "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
-                    {"msgid": msg_id, "number": number},
-                )
-                conn_countdowns_db.commit()
-                return
-            else:
-                list_of_id = guild_info.roles
-                # Go through all roles to see if it is a role to mention
-                for role_ids in list_of_id:
-                    if role_id == int(role_ids.id):
-                        # Formatting of mentioning a role and everyone is different.
-                        await channel.send(
-                            f"{'<@&' + str(role_id) + '>' if role_id != guild_id else '@everyone'}",
-                            embeds=embed,
-                            allowed_mentions={"parse": ["roles", "everyone"]},
-                        )
-                        not_sent = False
-                if not_sent:
-                    # Here its a user that get mentioned.
-                    await channel.send(f"<@{role_id}>", embeds=embed)
+            # Go through all roles to see if it is a role to mention
+            for role_ids in bot.get_guild(guild_id).roles:
+                if role_id == int(role_ids.id):
+                    # Formatting of mentioning a role and everyone is different.
+                    await channel.send(
+                        f"{'<@&' + str(role_id) + '>' if role_id != guild_id else '@everyone'}",
+                        embeds=embed,
+                        allowed_mentions={"parse": ["roles", "everyone"]},
+                    )
+                    not_sent = False
+            if not_sent:
+                # Here its a user that get mentioned.
+                await channel.send(f"<@{role_id}>", embeds=embed)
         else:
             # no mention.
             await channel.send(embeds=embed)
