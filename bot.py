@@ -34,7 +34,9 @@ load_dotenv()
 TOKENSTRING = getenv("DISCORD_TOKEN")
 
 
-bot = interactions.Client(token=TOKENSTRING, intents=interactions.Intents.GUILDS)
+bot = interactions.AutoShardedClient(
+    token=TOKENSTRING, intents=interactions.Intents.GUILDS
+)
 
 devservers = [1010636307216728094]
 
