@@ -1831,8 +1831,21 @@ async def check_done(bot):
         msg_id = int(row[1])
         timestamp = int(row[0])
         # Check that the channel exsist
+        channel = bot.get_channel(channel_id)
+
+        # Check that the bot have permission to
+        # send message, embeds and see the channel.
+        got_permission = False
         try:
-            channel = bot.get_channel(channel_id)
+            if (
+                interactions.Permissions.SEND_MESSAGES
+                in channel.permissions_for(bot._user.id)
+                and interactions.Permissions.EMBED_LINKS
+                in channel.permissions_for(bot._user.id)
+                and interactions.Permissions.VIEW_CHANNEL
+                in channel.permissions_for(bot._user.id)
+            ):
+                got_permission = True
         except:
             conn_countdowns_db.execute(
                 "DELETE from Countdowns WHERE msgid = :msgid;",
@@ -1840,27 +1853,14 @@ async def check_done(bot):
             )
             conn_countdowns_db.commit()
             return
-
-        # Check that the bot have permission to
-        # send message, embeds and see the channel.
-        got_permission = False
-        if (
-            interactions.Permissions.SEND_MESSAGES
-            in channel.permissions_for(bot._user.id)
-            and interactions.Permissions.EMBED_LINKS
-            in channel.permissions_for(bot._user.id)
-            and interactions.Permissions.VIEW_CHANNEL
-            in channel.permissions_for(bot._user.id)
-        ):
-            got_permission = True
-
-        if not got_permission:
-            conn_countdowns_db.execute(
-                "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
-                {"msgid": msg_id, "number": number},
-            )
-            conn_countdowns_db.commit()
-            return
+        else:
+            if not got_permission:
+                conn_countdowns_db.execute(
+                    "DELETE from Countdowns WHERE msgid = :msgid AND number = :number;",
+                    {"msgid": msg_id, "number": number},
+                )
+                conn_countdowns_db.commit()
+                return
 
         language = bot.get_guild(guild_id).preferred_locale
         if language not in translations.keys():
