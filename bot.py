@@ -876,7 +876,7 @@ async def timeleftthis(ctx: interactions.ContextMenuContext):
     name="whoisthegreatest",
     description="If you are curious about who the greatest is",
 )
-async def timeleftthis(ctx: interactions.SlashContext):
+async def whoisthegreatest(ctx: interactions.SlashContext):
     await ctx.send("<@729791860674920488>")
 
 
@@ -884,7 +884,7 @@ async def timeleftthis(ctx: interactions.SlashContext):
     name="whoistheboss",
     description="If you are curious about who the boss is",
 )
-async def timeleftthis(ctx: interactions.SlashContext):
+async def whoistheboss(ctx: interactions.SlashContext):
     await ctx.send(
         "<@360084558265450496>",
         ephemeral=True,
