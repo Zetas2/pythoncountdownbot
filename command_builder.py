@@ -1830,13 +1830,12 @@ async def check_done(bot):
         channel_id = int(row[2])
         msg_id = int(row[1])
         timestamp = int(row[0])
-        # Check that the channel exsist
-        channel = bot.get_channel(channel_id)
-
-        # Check that the bot have permission to
-        # send message, embeds and see the channel.
-        got_permission = False
         try:
+            # Check that the channel exsist
+            channel = await bot.fetch_channel(channel_id)
+            # Check that the bot have permission to
+            # send message, embeds and see the channel.
+            got_permission = False
             if (
                 interactions.Permissions.SEND_MESSAGES
                 in channel.permissions_for(bot._user.id)
