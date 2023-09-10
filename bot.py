@@ -878,7 +878,10 @@ async def latencies(ctx: interactions.SlashContext):
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
 )
 async def killitwithfire(ctx: interactions.SlashContext):
-    await bot.stop()
+    await ctx.send(
+        "restarting"
+    )
+    bot.stop()
 
 
 # Here are message commands - commands that are activated by a message
