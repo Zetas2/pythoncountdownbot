@@ -867,8 +867,7 @@ async def listpremium(ctx: interactions.SlashContext, page=1):
 async def latencies(ctx: interactions.SlashContext):
     result = bot.latencies
     await ctx.send(
-        f"{result}",
-        ephemeral=True,
+        f"{result}"
     )
     
 @interactions.slash_command(
