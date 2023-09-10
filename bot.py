@@ -857,6 +857,29 @@ async def makethispremium(ctx: interactions.SlashContext, index=1):
 async def listpremium(ctx: interactions.SlashContext, page=1):
     await command_builder.list_premium(ctx, page)
 
+    
+@interactions.slash_command(
+    name="latencies",
+    description="List all latencies",
+    scopes=devservers,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+)
+async def latencies(ctx: interactions.SlashContext):
+    result = bot.latencies
+    await ctx.send(
+        f"{result}",
+        ephemeral=True,
+    )
+    
+@interactions.slash_command(
+    name="killitwithfire",
+    description="Restarts the bot hopefully",
+    scopes=devservers,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+)
+async def killitwithfire(ctx: interactions.SlashContext):
+    await bot.stop()
+
 
 # Here are message commands - commands that are activated by a message
 
