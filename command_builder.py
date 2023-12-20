@@ -1414,19 +1414,11 @@ async def time_left_message(ctx, msg_id, language, hidden):
     await ctx.send(timestring, ephemeral=hidden)
 
 
-async def time_left(ctx, sub_command, show_mine, show_channel, show_guild, hidden):
+async def time_left(ctx, show, hidden):
     """Show how long time it is left for a countdown"""
     language = get_language(ctx)
     if await premium_bot(ctx, language):
         return
-    # show_mine, show_channel and show_guild contains the ID
-    # To process it easier, it is moved into show
-    if sub_command == "mine":
-        show = show_mine
-    elif sub_command == "channel":
-        show = show_channel
-    elif sub_command == "guild":
-        show = show_guild
 
     try:
         msg_id = show.split(": ")[1]
