@@ -2,6 +2,7 @@
 import interactions
 
 # Importing from interactions for v5 conversion
+
 from interactions import SlashCommandOption
 
 # This is where the commands are made
@@ -383,7 +384,6 @@ async def preset(ctx: interactions.SlashContext, presetid=0, bot=bot):
 )
 async def listpreset(ctx: interactions.SlashContext, page=1):
     await command_builder.list_preset(ctx, page)
-
 
 @interactions.slash_command(
     name="listchannel",
@@ -872,6 +872,31 @@ async def makethispremium(ctx: interactions.SlashContext, index=1):
 async def listpremium(ctx: interactions.SlashContext, page=1):
     await command_builder.list_premium(ctx, page)
 
+    
+@interactions.slash_command(
+    name="latencies",
+    description="List all latencies",
+    scopes=devservers,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+)
+async def latencies(ctx: interactions.SlashContext):
+    result = bot.latencies
+    await ctx.send(
+        f"{result}"
+    )
+    
+@interactions.slash_command(
+    name="killitwithfire",
+    description="Restarts the bot hopefully",
+    scopes=devservers,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+)
+async def killitwithfire(ctx: interactions.SlashContext):
+    await ctx.send(
+        "restarting"
+    )
+    bot.stop()
+
 
 # Here are message commands - commands that are activated by a message
 @interactions.message_context_menu(
@@ -894,7 +919,7 @@ async def timeleftthis(ctx: interactions.SlashContext):
     description="If you are curious about who the greatest is",
 )
 async def whoisthegreatest(ctx: interactions.SlashContext):
-    await ctx.send("<@729791860674920488>")
+
 
 
 @interactions.slash_command(
@@ -902,6 +927,7 @@ async def whoisthegreatest(ctx: interactions.SlashContext):
     description="If you are curious about who the boss is",
 )
 async def whoistheboss(ctx: interactions.SlashContext):
+
     await ctx.send(
         "<@360084558265450496>",
         ephemeral=True,
