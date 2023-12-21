@@ -1414,19 +1414,11 @@ async def time_left_message(ctx, msg_id, language, hidden):
     await ctx.send(timestring, ephemeral=hidden)
 
 
-async def time_left(ctx, sub_command, show_mine, show_channel, show_guild, hidden):
+async def time_left(ctx, show, hidden):
     """Show how long time it is left for a countdown"""
     language = get_language(ctx)
     if await premium_bot(ctx, language):
         return
-    # show_mine, show_channel and show_guild contains the ID
-    # To process it easier, it is moved into show
-    if sub_command == "mine":
-        show = show_mine
-    elif sub_command == "channel":
-        show = show_channel
-    elif sub_command == "guild":
-        show = show_guild
 
     try:
         msg_id = show.split(": ")[1]
@@ -1830,13 +1822,12 @@ async def check_done(bot):
         channel_id = int(row[2])
         msg_id = int(row[1])
         timestamp = int(row[0])
-        # Check that the channel exsist
-        channel = bot.get_channel(channel_id)
-
-        # Check that the bot have permission to
-        # send message, embeds and see the channel.
-        got_permission = False
         try:
+            # Check that the channel exsist
+            channel = await bot.fetch_channel(channel_id)
+            # Check that the bot have permission to
+            # send message, embeds and see the channel.
+            got_permission = False
             if (
                 interactions.Permissions.SEND_MESSAGES
                 in channel.permissions_for(bot._user.id)

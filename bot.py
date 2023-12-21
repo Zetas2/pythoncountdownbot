@@ -2,20 +2,8 @@
 import interactions
 
 # Importing from interactions for v5 conversion
-from interactions import (
-    slash_command,
-    SlashContext,
-    OptionType,
-    SlashCommandChoice,
-    AutocompleteContext,
-    slash_default_member_permission,
-    slash_option,
-    SlashCommandOption,
-    slash_int_option,
-)
 
-# handles shards Not active due to not needing shards.. yet
-# from interactions.ext.autosharder import shard
+from interactions import SlashCommandOption
 
 # This is where the commands are made
 import command_builder
@@ -397,154 +385,179 @@ async def preset(ctx: interactions.SlashContext, presetid=0, bot=bot):
 async def listpreset(ctx: interactions.SlashContext, page=1):
     await command_builder.list_preset(ctx, page)
 
-
-# @interactions.slash_command(
-#    name="list",
-#    description="List all countdowns",
-#    options=[
-#        SlashCommandOption(
-#            name="channel",
-#            description="List all countdowns in channel",
-#            type=interactions.OptionType.SUB_COMMAND,
-#            options=[
-#                SlashCommandOption(
-#                    name="page",
-#                    description="What page number",
-#                    type=interactions.OptionType.INTEGER,
-#                    required=False,
-#               ),
-#                SlashCommandOption(
-#                    name="hidden",
-#                    description="Set to false if you want everyone to see",
-#                    type=interactions.OptionType.BOOLEAN,
-#                    required=False,
-#                )
-#            ]
-#        ),
-#        SlashCommandOption(
-#            name="guild",
-#            description="List all countdowns in guild",
-#            type=interactions.OptionType.SUB_COMMAND,
-#            options=[
-#                SlashCommandOption(
-#                    name="page",
-#                    description="What page number",
-#                    type=interactions.OptionType.INTEGER,
-#                    required=False,
-#                    max_value=50,
-#                ),
-#                SlashCommandOption(
-#                    name="hidden",
-#                    description="Set to false if you want everyone to see",
-#                    type=interactions.OptionType.BOOLEAN,
-#                    required=False,
-#                )
-#            ]
-#        ),
-#        SlashCommandOption(
-#            name="mine",
-#            description="List all countdowns activated by you",
-#            type=interactions.OptionType.SUB_COMMAND,
-#            options=[
-#                SlashCommandChoice(
-#                    name="page",
-#                    description="What page number",
-#                    type=interactions.OptionType.INTEGER,
-#                    required=False,
-#                    max_value=50,
-#                ),
-#                SlashCommandChoice(
-#                    name="hidden",
-#                    description="Set to false if you want everyone to see",
-#                    type=interactions.OptionType.BOOLEAN,
-#                    required=False,
-#                )
-#            ]
-#        )
-#    ]
-# )
-# async def list(ctx: interactions.SlashContext, sub_command: str, page=1, hidden=True):
-#    await command_builder.list_countdowns(ctx, sub_command, page, hidden)
+@interactions.slash_command(
+    name="listchannel",
+    description="List all countdowns in a channel",
+    options=[
+        SlashCommandOption(
+            name="page",
+            description="What page number",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        SlashCommandOption(
+            name="hidden",
+            description="Set to false if you want everyone to see",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
+    ],
+)
+async def listchannel(ctx: interactions.SlashContext, page=1, hidden=True):
+    await command_builder.list_countdowns(ctx, "channel", page, hidden)
 
 
-# @interactions.slash_command(
-#    name="timeleft",
-#    description="Shows the exact time left of a countdown",
-#    options=[
-#        SlashCommandOption(
-#            name="mine",
-#            description="Shows one of your countdowns",
-#            type=interactions.OptionType.SUB_COMMAND,
-#            options=[
-#                SlashCommandOption(
-#                    type=interactions.OptionType.STRING,
-#                    name="showmine",
-#                    description="Which of your countdowns do you want to be shown?",
-#                    required=True,
-#                    autocomplete=True,
-#                ),
-#                SlashCommandOption(
-#                    name="hidden",
-#                    description="Set to false if you want everyone to see",
-#                    type=interactions.OptionType.BOOLEAN,
-#                    required=False,
-#                )
-#            ]
-#        ),
-#        SlashCommandOption(
-#            name="channel",
-#            description="Show one of this channels countdowns",
-#            type=interactions.OptionType.SUB_COMMAND,
-#            options=[
-#                SlashCommandOption(
-#                    type=interactions.OptionType.STRING,
-#                    name="showchannel",
-#                    description="Which of this channels countdowns do you want to be shown?",
-#                    required=True,
-#                    autocomplete=True,
-#                ),
-#                SlashCommandChoice(
-#                    name="hidden",
-#                    description="Set to false if you want everyone to see",
-#                    type=interactions.OptionType.BOOLEAN,
-#                    required=False,
-#                )
-#            ]
-#        ),
-#        SlashCommandOption(
-#            name="guild",
-#            description="Show one of this guilds countdowns",
-#            type=interactions.OptionType.SUB_COMMAND,
-#            options=[
-#                SlashCommandOption(
-#                    type=interactions.OptionType.STRING,
-#                    name="showguild",
-#                    description="Which of this guilds countdowns do you want to be shown?",
-#                    required=True,
-#                    autocomplete=True,
-#                ),
-#                SlashCommandOption(
-#                    name="hidden",
-#                    description="Set to false if you want everyone to see",
-#                    type=interactions.OptionType.BOOLEAN,
-#                    required=False,
-#                )
-#            ]
-#        )
-#    ]
-# )
-# async def timeleft(
-#    ctx: interactions.SlashContext,
-#    sub_command: str,
-#    showmine: str = "",
-#    showchannel: str = "",
-#    showguild: str = "",
-#    hidden=True,
-# ):
-#    await command_builder.time_left(
-#        ctx, sub_command, showmine, showchannel, showguild, hidden
-#    )
+@interactions.slash_command(
+    name="listguild",
+    description="List all countdowns in a guild",
+    options=[
+        SlashCommandOption(
+            name="page",
+            description="What page number",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        SlashCommandOption(
+            name="hidden",
+            description="Set to false if you want everyone to see",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
+    ],
+)
+async def listguild(ctx: interactions.SlashContext, page=1, hidden=True):
+    await command_builder.list_countdowns(ctx, "guild", page, hidden)
 
+
+@interactions.slash_command(
+    name="listmine",
+    description="List all your contdowns countdowns",
+    options=[
+        SlashCommandOption(
+            name="page",
+            description="What page number",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+        SlashCommandOption(
+            name="hidden",
+            description="Set to false if you want everyone to see",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
+    ],
+)
+async def listmine(ctx: interactions.SlashContext, page=1, hidden=True):
+    await command_builder.list_countdowns(ctx, "mine", page, hidden)
+
+
+"""
+@interactions.slash_command(
+    name="timeleftmine",
+    description="Shows the exact time left of a countdown you created",
+    options=[
+        SlashCommandOption(
+            type=interactions.OptionType.STRING,
+            name="showmine",
+            description="Which of your countdowns do you want to be shown?",
+            required=True,
+            autocomplete=True,
+        ),
+        SlashCommandOption(
+            name="hidden",
+            description="Set to false if you want everyone to see",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
+    ],
+)
+async def timeleft(
+    ctx: interactions.SlashContext,
+    showmine: str = "",
+    hidden=True,
+):
+    await command_builder.time_left(ctx, showmine, hidden)
+
+
+
+@interactions.slash_command(
+    name="timeleft",
+    description="Shows the exact time left of a countdown",
+    #    options=[
+    #        SlashCommandOption(
+    #            name="mine",
+    #            description="Shows one of your countdowns",
+    #            type=interactions.OptionType.SUB_COMMAND,
+    #            options=[
+    #                SlashCommandOption(
+    #                    type=interactions.OptionType.STRING,
+    #                    name="showmine",
+    #                    description="Which of your countdowns do you want to be shown?",
+    #                    required=True,
+    #                    autocomplete=True,
+    #                ),
+    #                SlashCommandOption(
+    #                    name="hidden",
+    #                    description="Set to false if you want everyone to see",
+    #                    type=interactions.OptionType.BOOLEAN,
+    #                    required=False,
+    #                )
+    #            ]
+    #        ),
+    #        SlashCommandOption(
+    #            name="channel",
+    #            description="Show one of this channels countdowns",
+    #            type=interactions.OptionType.SUB_COMMAND,
+    #            options=[
+    #                SlashCommandOption(
+    #                    type=interactions.OptionType.STRING,
+    #                    name="showchannel",
+    #                    description="Which of this channels countdowns do you want to be shown?",
+    #                    required=True,
+    #                    autocomplete=True,
+    #                ),
+    #                SlashCommandChoice(
+    #                    name="hidden",
+    #                    description="Set to false if you want everyone to see",
+    #                    type=interactions.OptionType.BOOLEAN,
+    #                    required=False,
+    #                )
+    #            ]
+    #        ),
+    #        SlashCommandOption(
+    #            name="guild",
+    #            description="Show one of this guilds countdowns",
+    #            type=interactions.OptionType.SUB_COMMAND,
+    #            options=[
+    #                SlashCommandOption(
+    #                    type=interactions.OptionType.STRING,
+    #                    name="showguild",
+    #                    description="Which of this guilds countdowns do you want to be shown?",
+    #                    required=True,
+    #                    autocomplete=True,
+    #                ),
+    #                SlashCommandOption(
+    #                    name="hidden",
+    #                    description="Set to false if you want everyone to see",
+    #                    type=interactions.OptionType.BOOLEAN,
+    #                    required=False,
+    #                )
+    #            ]
+    #        )
+    #    ]
+)
+async def timeleft(
+    ctx: interactions.SlashContext,
+    sub_command: str,
+    showmine: str = "",
+    showchannel: str = "",
+    showguild: str = "",
+    hidden=True,
+):
+    await command_builder.time_left(
+        ctx, sub_command, showmine, showchannel, showguild, hidden
+    )
+"""
 
 # @bot.autocomplete("timeleft", "showmine")
 # async def autocomplete(self, ctx: interactions.AutocompleteContext, value: str = ""):
@@ -698,6 +711,7 @@ async def fixperms(ctx: interactions.SlashContext):
     await command_builder.fixperms(ctx, bot)
 
 
+"""
 @interactions.slash_command(
     name="editmention",
     description="Change who to mention at the end of a countdown",
@@ -723,6 +737,7 @@ async def editmention(
     mention="0",
 ):
     await command_builder.edit_mention(ctx, countdown, mention)
+"""
 
 
 # @bot.autocomplete("editmention", "countdown")
@@ -884,15 +899,17 @@ async def killitwithfire(ctx: interactions.SlashContext):
 
 
 # Here are message commands - commands that are activated by a message
-
-
-@interactions.message_context_menu(name="deletethis")
-async def deletethis(ctx: interactions.ContextMenuContext):
+@interactions.message_context_menu(
+    name="deletethis",
+)
+async def deletethis(ctx: interactions.SlashContext):
     await command_builder.delete_this(bot, ctx)
 
 
-@interactions.message_context_menu(name="timeleftthis")
-async def timeleftthis(ctx: interactions.ContextMenuContext):
+@interactions.message_context_menu(
+    name="timeleftthis",
+)
+async def timeleftthis(ctx: interactions.SlashContext):
     await command_builder.timeleft_this(ctx)
 
 
@@ -901,15 +918,16 @@ async def timeleftthis(ctx: interactions.ContextMenuContext):
     name="whoisthegreatest",
     description="If you are curious about who the greatest is",
 )
-async def timeleftthis(ctx: interactions.SlashContext):
-    await ctx.send("<@729791860674920488>")
+async def whoisthegreatest(ctx: interactions.SlashContext):
+
 
 
 @interactions.slash_command(
     name="whoistheboss",
     description="If you are curious about who the boss is",
 )
-async def timeleftthis(ctx: interactions.SlashContext):
+async def whoistheboss(ctx: interactions.SlashContext):
+
     await ctx.send(
         "<@360084558265450496>",
         ephemeral=True,
@@ -923,8 +941,6 @@ async def timeleftthis(ctx: interactions.SlashContext):
 async def timer_check():
     await command_builder.check_done(bot)
 
-
-# shard(bot)
 
 # Start the bot!
 bot.start()
