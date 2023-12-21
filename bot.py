@@ -919,7 +919,7 @@ async def timeleftthis(ctx: interactions.SlashContext):
     description="If you are curious about who the greatest is",
 )
 async def whoisthegreatest(ctx: interactions.SlashContext):
-
+    await ctx.send("<@729791860674920488>")
 
 
 @interactions.slash_command(
