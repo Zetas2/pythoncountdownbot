@@ -452,7 +452,6 @@ async def listmine(ctx: interactions.SlashContext, page=1, hidden=True):
     await command_builder.list_countdowns(ctx, "mine", page, hidden)
 
 
-"""
 @interactions.slash_command(
     name="timeleftmine",
     description="Shows the exact time left of a countdown you created",
@@ -472,7 +471,7 @@ async def listmine(ctx: interactions.SlashContext, page=1, hidden=True):
         ),
     ],
 )
-async def timeleft(
+async def timeleftmine(
     ctx: interactions.SlashContext,
     showmine: str = "",
     hidden=True,
@@ -480,99 +479,73 @@ async def timeleft(
     await command_builder.time_left(ctx, showmine, hidden)
 
 
+@timeleftmine.autocomplete("showmine")
+async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
+    await command_builder.autocomplete_countdowns(ctx, value, "mine")
+
 
 @interactions.slash_command(
-    name="timeleft",
-    description="Shows the exact time left of a countdown",
-    #    options=[
-    #        SlashCommandOption(
-    #            name="mine",
-    #            description="Shows one of your countdowns",
-    #            type=interactions.OptionType.SUB_COMMAND,
-    #            options=[
-    #                SlashCommandOption(
-    #                    type=interactions.OptionType.STRING,
-    #                    name="showmine",
-    #                    description="Which of your countdowns do you want to be shown?",
-    #                    required=True,
-    #                    autocomplete=True,
-    #                ),
-    #                SlashCommandOption(
-    #                    name="hidden",
-    #                    description="Set to false if you want everyone to see",
-    #                    type=interactions.OptionType.BOOLEAN,
-    #                    required=False,
-    #                )
-    #            ]
-    #        ),
-    #        SlashCommandOption(
-    #            name="channel",
-    #            description="Show one of this channels countdowns",
-    #            type=interactions.OptionType.SUB_COMMAND,
-    #            options=[
-    #                SlashCommandOption(
-    #                    type=interactions.OptionType.STRING,
-    #                    name="showchannel",
-    #                    description="Which of this channels countdowns do you want to be shown?",
-    #                    required=True,
-    #                    autocomplete=True,
-    #                ),
-    #                SlashCommandChoice(
-    #                    name="hidden",
-    #                    description="Set to false if you want everyone to see",
-    #                    type=interactions.OptionType.BOOLEAN,
-    #                    required=False,
-    #                )
-    #            ]
-    #        ),
-    #        SlashCommandOption(
-    #            name="guild",
-    #            description="Show one of this guilds countdowns",
-    #            type=interactions.OptionType.SUB_COMMAND,
-    #            options=[
-    #                SlashCommandOption(
-    #                    type=interactions.OptionType.STRING,
-    #                    name="showguild",
-    #                    description="Which of this guilds countdowns do you want to be shown?",
-    #                    required=True,
-    #                    autocomplete=True,
-    #                ),
-    #                SlashCommandOption(
-    #                    name="hidden",
-    #                    description="Set to false if you want everyone to see",
-    #                    type=interactions.OptionType.BOOLEAN,
-    #                    required=False,
-    #                )
-    #            ]
-    #        )
-    #    ]
+    name="timeleftchannel",
+    description="Shows the exact time left of a countdown in the channel",
+    options=[
+        SlashCommandOption(
+            type=interactions.OptionType.STRING,
+            name="showchannel",
+            description="Which of the channels countdowns do you want to be shown?",
+            required=True,
+            autocomplete=True,
+        ),
+        SlashCommandOption(
+            name="hidden",
+            description="Set to false if you want everyone to see",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
+    ],
 )
-async def timeleft(
+async def timeleftchannel(
     ctx: interactions.SlashContext,
-    sub_command: str,
-    showmine: str = "",
     showchannel: str = "",
+    hidden=True,
+):
+    await command_builder.time_left(ctx, showchannel, hidden)
+
+
+@timeleftchannel.autocomplete("showchannel")
+async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
+    await command_builder.autocomplete_countdowns(ctx, value, "channel")
+
+
+@interactions.slash_command(
+    name="timeleftguild",
+    description="Shows the exact time left of a countdown in the guild",
+    options=[
+        SlashCommandOption(
+            type=interactions.OptionType.STRING,
+            name="showguild",
+            description="Which of the guilds countdowns do you want to be shown?",
+            required=True,
+            autocomplete=True,
+        ),
+        SlashCommandOption(
+            name="hidden",
+            description="Set to false if you want everyone to see",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
+    ],
+)
+async def timeleftguild(
+    ctx: interactions.SlashContext,
     showguild: str = "",
     hidden=True,
 ):
-    await command_builder.time_left(
-        ctx, sub_command, showmine, showchannel, showguild, hidden
-    )
-"""
-
-# @bot.autocomplete("timeleft", "showmine")
-# async def autocomplete(self, ctx: interactions.AutocompleteContext, value: str = ""):
-#    await command_builder.autocomplete_countdowns(ctx, value, "mine")
+    await command_builder.time_left(ctx, showguild, hidden)
 
 
-# @bot.autocomplete("timeleft", "showchannel")
-# async def autocomplete(self, ctx: interactions.AutocompleteContext, value: str = ""):
-#    await command_builder.autocomplete_countdowns(ctx, value, "channel")
-
-
-# @bot.autocomplete("timeleft", "showguild")
-# async def autocomplete(self, ctx: interactions.AutocompleteContext, value: str = ""):
-#    await command_builder.autocomplete_countdowns(ctx, value, "guild")
+@timeleftguild.autocomplete("showguild")
+async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
+    await command_builder.autocomplete_countdowns(ctx, value, "guild")
 
 
 # @interactions.slash_command(

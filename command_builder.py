@@ -1232,12 +1232,8 @@ async def fill_choices(ctx, cursor, value):
         else:
             break
 
-    choices = [
-        interactions.Choice(name=item, value=item)
-        for item in countdowns
-        if value in item
-    ]
-    await ctx.populate(choices)
+    choices = [dict(name=item, value=item) for item in countdowns if value in item]
+    await ctx.send(choices)
 
 
 def get_possible_countdowns(ctx, option):
