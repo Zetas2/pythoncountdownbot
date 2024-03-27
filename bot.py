@@ -685,7 +685,6 @@ async def fixperms(ctx: interactions.SlashContext):
     await command_builder.fixperms(ctx, bot)
 
 
-"""
 @interactions.slash_command(
     name="editmention",
     description="Change who to mention at the end of a countdown",
@@ -711,12 +710,11 @@ async def editmention(
     mention="0",
 ):
     await command_builder.edit_mention(ctx, countdown, mention)
-"""
 
 
-# @bot.autocomplete("editmention", "countdown")
-# async def autocomplete(self, ctx: interactions.AutocompleteContext, value: str = ""):
-#    await command_builder.autocomplete_countdowns(ctx, value, "mine")
+@editmention.autocomplete("countdown")
+async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
+    await command_builder.autocomplete_countdowns(ctx, value, "mine")
 
 
 # This command is not entierly active yet. It is just a prototype for when the bot is availible in multiple languages.
