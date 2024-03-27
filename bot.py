@@ -679,7 +679,7 @@ async def botstats(ctx: interactions.SlashContext):
 @interactions.slash_command(
     name="fixperms",
     description="Fixes the permissions for this channel",
-    #    default_member_permission=interactions.Permissions.ADMINISTRATOR,
+    default_member_permission=interactions.Permissions.ADMINISTRATOR,
 )
 async def fixperms(ctx: interactions.SlashContext):
     await command_builder.fixperms(ctx, bot)
