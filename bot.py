@@ -548,88 +548,88 @@ async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
     await command_builder.autocomplete_countdowns(ctx, value, "guild")
 
 
-# @interactions.slash_command(
-#    name="delete",
-#    description="Deletes countdowns",
-#    dm_permission=False,
-#    options=[
-#        SlashCommandOption(
-#            name="single",
-#            description="delete a single countdown",
-#            type=interactions.OptionType.SUB_COMMAND_GROUP,
-#            options=[
-#                SlashCommandOption(
-#                    name="mine",
-#                    description="delete one of your countdowns",
-#                    type=interactions.OptionType.SUB_COMMAND,
-#                    options=[
-#                        SlashCommandOption(
-#                            type=interactions.OptionType.STRING,
-#                            name="deletemine",
-#                            description="Which of your countdowns do you want to be deleted?",
-#                            required=True,
-#                            autocomplete=True,
-#                        )
-#                    ]
-#                ),
-#                SlashCommandOption(
-#                    name="channel",
-#                    description="delete one of this channels countdowns",
-#                    type=interactions.OptionType.SUB_COMMAND,
-#                    options=[
-#                        SlashCommandOption(
-#                            type=interactions.OptionType.STRING,
-#                            name="deletechannel",
-#                            description="Which of this channels countdowns do you want to be deleted?",
-#                            required=True,
-#                            autocomplete=True,
-#                        )
-#                    ]
-#                ),
-#                SlashCommandOption(
-#                    name="guild",
-#                    description="delete one of this guilds countdowns",
-#                    type=interactions.OptionType.SUB_COMMAND,
-#                    options=[
-#                        SlashCommandOption(
-#                            type=interactions.OptionType.STRING,
-#                            name="deleteguild",
-#                            description="Which of this guilds countdowns do you want to be deleted?",
-#                            required=True,
-#                            autocomplete=True,
-#                        )
-#                    ]
-#                )
-#            ]
-#        ),
-#        SlashCommandOption(
-#            name="mine",
-#            description="Delete all your countdowns in this guild",
-#            type=interactions.OptionType.SUB_COMMAND,
-#        ),
-#        SlashCommandOption(
-#            name="channel",
-#            description="Delete all countdowns in this channel",
-#            type=interactions.OptionType.SUB_COMMAND,
-#        ),
-#        SlashCommandOption(
-#            name="guild",
-#            description="Delete all countdowns in this guild",
-#            type=interactions.OptionType.SUB_COMMAND,
-#        )
-#    ]
-# )
-# async def delete(
-#    ctx: interactions.SlashContext,
-#    sub_command: str,
-#    sub_command_group: str = "",
-#    deletemine: str = "",
-#    deletechannel: str = "",
-#    deleteguild: str = "",
-# ):
-#    await command_builder.delete(
-#        bot, ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
-#    )
+@interactions.slash_command(
+    name="delete",
+    description="Deletes countdowns",
+    dm_permission=False,
+    options=[
+        SlashCommandOption(
+            name="single",
+            description="delete a single countdown",
+            type=interactions.OptionType.SUB_COMMAND_GROUP,
+            options=[
+                SlashCommandOption(
+                    name="mine",
+                    description="delete one of your countdowns",
+                    type=interactions.OptionType.SUB_COMMAND,
+                    options=[
+                        SlashCommandOption(
+                            type=interactions.OptionType.STRING,
+                            name="deletemine",
+                            description="Which of your countdowns do you want to be deleted?",
+                            required=True,
+                            autocomplete=True,
+                        )
+                    ],
+                ),
+                SlashCommandOption(
+                    name="channel",
+                    description="delete one of this channels countdowns",
+                    type=interactions.OptionType.SUB_COMMAND,
+                    options=[
+                        SlashCommandOption(
+                            type=interactions.OptionType.STRING,
+                            name="deletechannel",
+                            description="Which of this channels countdowns do you want to be deleted?",
+                            required=True,
+                            autocomplete=True,
+                        )
+                    ],
+                ),
+                SlashCommandOption(
+                    name="guild",
+                    description="delete one of this guilds countdowns",
+                    type=interactions.OptionType.SUB_COMMAND,
+                    options=[
+                        SlashCommandOption(
+                            type=interactions.OptionType.STRING,
+                            name="deleteguild",
+                            description="Which of this guilds countdowns do you want to be deleted?",
+                            required=True,
+                            autocomplete=True,
+                        )
+                    ],
+                ),
+            ],
+        ),
+        SlashCommandOption(
+            name="mine",
+            description="Delete all your countdowns in this guild",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+        SlashCommandOption(
+            name="channel",
+            description="Delete all countdowns in this channel",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+        SlashCommandOption(
+            name="guild",
+            description="Delete all countdowns in this guild",
+            type=interactions.OptionType.SUB_COMMAND,
+        ),
+    ],
+)
+async def delete(
+    ctx: interactions.SlashContext,
+    sub_command: str,
+    sub_command_group: str = "",
+    deletemine: str = "",
+    deletechannel: str = "",
+    deleteguild: str = "",
+):
+    await command_builder.delete(
+        bot, ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
+    )
 
 
 # @bot.autocomplete("delete", "deletemine")
