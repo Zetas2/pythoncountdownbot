@@ -548,124 +548,132 @@ async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
     await command_builder.autocomplete_countdowns(ctx, value, "guild")
 
 
-@interactions.slash_command(
-    name="delete",
-    description="Deletes countdowns",
+delete_mine_command = interactions.SlashCommand(
+    name="deletemine",
+    description="Delete one or all of your countdowns",
     dm_permission=False,
+)
+
+
+@delete_mine_command.subcommand(
+    sub_cmd_name="single",
+    sub_cmd_description="Deletes a single of your countdowns",
     options=[
         SlashCommandOption(
-            name="single",
-            description="delete a single countdown",
-            type=interactions.OptionType.SUB_COMMAND_GROUP,
-            options=[
-                SlashCommandOption(
-                    name="mine",
-                    description="delete one of your countdowns",
-                    type=interactions.OptionType.SUB_COMMAND,
-                    options=[
-                        SlashCommandOption(
-                            type=interactions.OptionType.STRING,
-                            name="deletemine",
-                            description="Which of your countdowns do you want to be deleted?",
-                            required=True,
-                            autocomplete=True,
-                        )
-                    ],
-                ),
-                SlashCommandOption(
-                    name="channel",
-                    description="delete one of this channels countdowns",
-                    type=interactions.OptionType.SUB_COMMAND,
-                    options=[
-                        SlashCommandOption(
-                            type=interactions.OptionType.STRING,
-                            name="deletechannel",
-                            description="Which of this channels countdowns do you want to be deleted?",
-                            required=True,
-                            autocomplete=True,
-                        )
-                    ],
-                ),
-                SlashCommandOption(
-                    name="guild",
-                    description="delete one of this guilds countdowns",
-                    type=interactions.OptionType.SUB_COMMAND,
-                    options=[
-                        SlashCommandOption(
-                            type=interactions.OptionType.STRING,
-                            name="deleteguild",
-                            description="Which of this guilds countdowns do you want to be deleted?",
-                            required=True,
-                            autocomplete=True,
-                        )
-                    ],
-                ),
-            ],
-        ),
-        SlashCommandOption(
-            name="mine",
-            description="Delete all your countdowns in this guild",
-            type=interactions.OptionType.SUB_COMMAND,
-        ),
-        SlashCommandOption(
-            name="channel",
-            description="Delete all countdowns in this channel",
-            type=interactions.OptionType.SUB_COMMAND,
-        ),
-        SlashCommandOption(
-            name="guild",
-            description="Delete all countdowns in this guild",
-            type=interactions.OptionType.SUB_COMMAND,
-        ),
+            type=interactions.OptionType.STRING,
+            name="deleteid",
+            description="Which of your countdowns do you want to be deleted?",
+            required=True,
+            autocomplete=True,
+        )
     ],
 )
-async def delete(
-    ctx: interactions.SlashContext,
-    sub_command: str,
-    sub_command_group: str = "",
-    deletemine: str = "",
-    deletechannel: str = "",
-    deleteguild: str = "",
-):
-    await command_builder.delete(
-        bot, ctx, sub_command, sub_command_group, deletemine, deletechannel, deleteguild
-    )
+async def delete_single_mine(ctx: interactions.SlashContext, deleteid: str = ""):
+    await command_builder.delete(bot, ctx, "mine", "single", deleteid)
 
 
-# @bot.autocomplete("delete", "deletemine")
-# async def autocomplete(self, ctx: interactions.AutocompleteContext, value: str = ""):
-#    await command_builder.autocomplete_countdowns(ctx, value, "mine")
+@delete_single_mine.autocomplete("deleteid")
+async def autocomplete_mine(ctx: interactions.AutocompleteContext):
+    await command_builder.autocomplete_countdowns(ctx, ctx.input_text, "mine")
 
 
-# @bot.autocomplete("delete", "deletechannel")
-# async def autocomplete(self, ctx: interactions.AutocompleteContext, value: str = ""):
-#    await command_builder.autocomplete_countdowns(ctx, value, "channel")
+@delete_mine_command.subcommand(
+    sub_cmd_name="all",
+    sub_cmd_description="Deletes all of your countdowns",
+)
+async def delete_mine(ctx: interactions.SlashContext):
+    await command_builder.delete(bot, ctx, "mine", "all", "NA")
 
 
-# @bot.autocomplete("delete", "deleteguild")
-# async def autocomplete(self, ctx: interactions.AutocompleteContext, value: str = ""):
-#    await command_builder.autocomplete_countdowns(ctx, value, "guild")
+delete = interactions.SlashCommand(
+    name="delete",
+    description="Delete one or all of the countdowns in this channel/guild",
+    dm_permission=False,
+    default_member_permissions=interactions.Permissions.MANAGE_MESSAGES,
+)
+
+delete_channel_command = delete.group(
+    name="channel", description="Delete one or all of the countdowns in this channel"
+)
 
 
-# Here are the functions that runs when the verify/cancel buttons are pressed
-# @bot.component("deleteguild")
-# async def button_response(ctx):
-#    await command_builder.delete_button(ctx, "guild")
+@delete_channel_command.subcommand(
+    sub_cmd_name="single",
+    sub_cmd_description="Deletes a single of the channels countdowns",
+    options=[
+        SlashCommandOption(
+            type=interactions.OptionType.STRING,
+            name="deleteid",
+            description="Which of the channels countdowns do you want to be deleted?",
+            required=True,
+            autocomplete=True,
+        )
+    ],
+)
+async def delete_single_channel(ctx: interactions.SlashContext, deleteid: str = ""):
+    await command_builder.delete(bot, ctx, "mine", "channel", deleteid)
 
 
-# @bot.component("deletechannel")
-# async def button_response(ctx):
-#    await command_builder.delete_button(ctx, "channel")
+@delete_single_channel.autocomplete("deleteid")
+async def autocomplete_channel(ctx: interactions.AutocompleteContext):
+    await command_builder.autocomplete_countdowns(ctx, ctx.input_text, "channel")
 
 
-# @bot.component("deletemine")
-# async def button_response(ctx):
-#    await command_builder.delete_button(ctx, "mine")
+@delete_channel_command.subcommand(
+    sub_cmd_name="all",
+    sub_cmd_description="Deletes all of the channels countdowns",
+)
+async def delete_channel_command(ctx: interactions.SlashContext):
+    await command_builder.delete(bot, ctx, "channel", "all", "NA")
 
 
-# @bot.component("deletecancel")
-# async def button_response(ctx):
-#    await command_builder.delete_button(ctx, "cancel")
+delete_guild_command = delete.group(
+    name="guild", description="Delete one or all of the countdowns in this guild"
+)
+
+
+@delete_guild_command.subcommand(
+    sub_cmd_name="single",
+    sub_cmd_description="Deletes a single of the guilds countdowns",
+    options=[
+        SlashCommandOption(
+            type=interactions.OptionType.STRING,
+            name="deleteid",
+            description="Which of the guilds countdowns do you want to be deleted?",
+            required=True,
+            autocomplete=True,
+        )
+    ],
+)
+async def delete_single_guild(ctx: interactions.SlashContext, deleteid: str = ""):
+    await command_builder.delete(bot, ctx, "mine", "guild", deleteid)
+
+
+@delete_single_guild.autocomplete("deleteid")
+async def autocomplete_guild(ctx: interactions.AutocompleteContext):
+    await command_builder.autocomplete_countdowns(ctx, ctx.input_text, "guild")
+
+
+@delete_guild_command.subcommand(
+    sub_cmd_name="all",
+    sub_cmd_description="Deletes all of the guilds countdowns",
+)
+async def delete_guild_command(ctx: interactions.SlashContext):
+    await command_builder.delete(bot, ctx, "guild", "all", "NA")
+
+
+@interactions.listen(interactions.api.events.Component)
+async def on_component(event: interactions.api.events.Component):
+    ctx = event.ctx
+    match ctx.custom_id:
+        case "deletemine":
+            await command_builder.delete_button(ctx, "mine")
+        case "deletechannel":
+            await command_builder.delete_button(ctx, "channel")
+        case "deleteguild":
+            await command_builder.delete_button(ctx, "guild")
+        case "deletecancel":
+            await command_builder.delete_button(ctx, "cancel")
 
 
 @interactions.slash_command(
@@ -679,7 +687,7 @@ async def botstats(ctx: interactions.SlashContext):
 @interactions.slash_command(
     name="fixperms",
     description="Fixes the permissions for this channel",
-    default_member_permission=interactions.Permissions.ADMINISTRATOR,
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
 )
 async def fixperms(ctx: interactions.SlashContext):
     await command_builder.fixperms(ctx, bot)
