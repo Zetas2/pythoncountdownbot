@@ -624,7 +624,7 @@ delete_channel_command = delete.group(
     ],
 )
 async def delete_single_channel(ctx: interactions.SlashContext, deleteid: str = ""):
-    await command_builder.delete(bot, ctx, "mine", "channel", deleteid)
+    await command_builder.delete(bot, ctx, "channel", "single", deleteid)
 
 
 @delete_single_channel.autocomplete("deleteid")
@@ -636,7 +636,7 @@ async def autocomplete_channel(ctx: interactions.AutocompleteContext):
     sub_cmd_name="all",
     sub_cmd_description="Deletes all of the channels countdowns",
 )
-async def delete_channel_command(ctx: interactions.SlashContext):
+async def delete_channel(ctx: interactions.SlashContext):
     await command_builder.delete(bot, ctx, "channel", "all", "NA")
 
 
@@ -659,7 +659,7 @@ delete_guild_command = delete.group(
     ],
 )
 async def delete_single_guild(ctx: interactions.SlashContext, deleteid: str = ""):
-    await command_builder.delete(bot, ctx, "mine", "guild", deleteid)
+    await command_builder.delete(bot, ctx, "guild", "single", deleteid)
 
 
 @delete_single_guild.autocomplete("deleteid")
@@ -671,7 +671,7 @@ async def autocomplete_guild(ctx: interactions.AutocompleteContext):
     sub_cmd_name="all",
     sub_cmd_description="Deletes all of the guilds countdowns",
 )
-async def delete_guild_command(ctx: interactions.SlashContext):
+async def delete_guild(ctx: interactions.SlashContext):
     await command_builder.delete(bot, ctx, "guild", "all", "NA")
 
 
