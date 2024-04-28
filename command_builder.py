@@ -609,7 +609,7 @@ async def help_information(ctx):
         (translations[(language)]["helpLinksDesc"]),
     )
 
-    random_thanks = random.randint(0, 7)
+    random_thanks = random.randint(0, 8)
 
     if random_thanks != 0:
         embed.footer = interactions.EmbedFooter(
