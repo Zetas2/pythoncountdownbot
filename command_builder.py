@@ -1690,33 +1690,36 @@ async def add_premium(ctx, user_id, guild_id, level):
         return
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute(
-            "SELECT userid FROM Premium WHERE userid = :userid AND level = :level;",
+            "SELECT userid FROM Premium WHERE userid = :userid AND level <= :level;",
             {
                 "userid": int(user_id),
                 "level": int(level),
             },
         )
+        currlevel = len(cursor.fetchall())
+        print(currlevel)
+        print(int(level))
         # Check that the user isnt alredy there
-        if len(cursor.fetchall()) == 0:
-            conn_premium_db.execute(
-                "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,0,:level);",
-                {
-                    "userid": int(user_id),
-                    "guildid": int(guild_id),
-                    "level": int(level),
-                },
-            )
+        if currlevel < int(level):
+            for i in range(currlevel + 1, int(level) + 1):
+                conn_premium_db.execute(
+                    "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,0,:level);",
+                    {
+                        "userid": int(user_id),
+                        "guildid": int(guild_id),
+                        "level": (i),
+                    },
+                )
             conn_premium_db.commit()
             await ctx.send(f"User <@{user_id}> was added", ephemeral=True)
         else:
             await ctx.send(f"User <@{user_id}> is alredy premium", ephemeral=True)
-
     else:
         await ctx.send(translations[(language)]["errDev"], ephemeral=True)
 
 
-async def delete_premium(ctx, user_id, level):
-    """Delete a premium user."""
+async def remove_premium(ctx, user_id, level):
+    """Removes a premium user."""
     language = get_language(ctx)
     if await premium_bot(ctx, language):
         return

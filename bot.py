@@ -807,8 +807,8 @@ async def addpremium(ctx: interactions.SlashContext, userid, guildid=0, level=1)
 
 
 @interactions.slash_command(
-    name="deletepremium",
-    description="Delete a premium user",
+    name="removepremium",
+    description="Removes a premium user",
     scopes=devservers,
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     options=[
@@ -828,8 +828,8 @@ async def addpremium(ctx: interactions.SlashContext, userid, guildid=0, level=1)
         ),
     ],
 )
-async def deletepremium(ctx: interactions.SlashContext, userid, level=1):
-    await command_builder.delete_premium(ctx, userid, level)
+async def removepremium(ctx: interactions.SlashContext, userid, level=0):
+    await command_builder.remove_premium(ctx, userid, level)
 
 
 @interactions.slash_command(
