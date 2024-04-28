@@ -134,7 +134,7 @@ async def generatetimestamp(
             description="Number of times to repeat (PREMIUM FEATURE)",
             type=interactions.OptionType.INTEGER,
             required=False,
-            max_value=220,
+            max_value=1000,
         ),
         SlashCommandOption(
             name="repeattime",
@@ -275,7 +275,7 @@ async def countdown(
             description="Number of times to repeat (PREMIUM FEATURE)",
             type=interactions.OptionType.INTEGER,
             required=False,
-            max_value=220,
+            max_value=1000,
         ),
         SlashCommandOption(
             name="preset",
