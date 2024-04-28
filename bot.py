@@ -83,6 +83,7 @@ async def generatetimestamp(
     await command_builder.generate_timestamp(ctx, timestring)
 
 
+# ------------------------------------------------ TIMERS ----------------------------------------------------------
 @interactions.slash_command(
     name="countdown",
     description="Countdown to what you tells it to.",
@@ -351,6 +352,9 @@ async def timer(
     )
 
 
+# ------------------------------------------------ PRESETS ----------------------------------------------------------
+
+
 @interactions.slash_command(
     name="preset",
     description="Use a preset timer",
@@ -386,6 +390,7 @@ async def listpreset(ctx: interactions.SlashContext, page=1):
     await command_builder.list_preset(ctx, page)
 
 
+# ------------------------------------------------ LISTS ----------------------------------------------------------
 @interactions.slash_command(
     name="listchannel",
     description="List all countdowns in a channel",
@@ -452,6 +457,7 @@ async def listmine(ctx: interactions.SlashContext, page=1, hidden=True):
     await command_builder.list_countdowns(ctx, "mine", page, hidden)
 
 
+# ------------------------------------------------ TIMELEFT ----------------------------------------------------------
 @interactions.slash_command(
     name="timeleftmine",
     description="Shows the exact time left of a countdown you created",
@@ -480,7 +486,9 @@ async def timeleftmine(
 
 
 @timeleftmine.autocomplete("showmine")
-async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
+async def autocomplete_timeleftmine(
+    ctx: interactions.AutocompleteContext, value: str = ""
+):
     await command_builder.autocomplete_countdowns(ctx, value, "mine")
 
 
@@ -512,7 +520,9 @@ async def timeleftchannel(
 
 
 @timeleftchannel.autocomplete("showchannel")
-async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
+async def autocomplete_timeleftchannel(
+    ctx: interactions.AutocompleteContext, value: str = ""
+):
     await command_builder.autocomplete_countdowns(ctx, value, "channel")
 
 
@@ -544,10 +554,13 @@ async def timeleftguild(
 
 
 @timeleftguild.autocomplete("showguild")
-async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
+async def autocomplete_timeleftguild(
+    ctx: interactions.AutocompleteContext, value: str = ""
+):
     await command_builder.autocomplete_countdowns(ctx, value, "guild")
 
 
+# ------------------------------------------------ DELETE ----------------------------------------------------------
 delete_mine_command = interactions.SlashCommand(
     name="deletemine",
     description="Delete one or all of your countdowns",
@@ -676,6 +689,7 @@ async def on_component(event: interactions.api.events.Component):
             await command_builder.delete_button(ctx, "cancel")
 
 
+# ------------------------------------------------ OTHER ----------------------------------------------------------
 @interactions.slash_command(
     name="botstats",
     description="Shows stats of bot",
@@ -721,7 +735,9 @@ async def editmention(
 
 
 @editmention.autocomplete("countdown")
-async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
+async def autocomplete_editmention(
+    ctx: interactions.AutocompleteContext, value: str = ""
+):
     await command_builder.autocomplete_countdowns(ctx, value, "mine")
 
 
@@ -746,7 +762,7 @@ async def autocomplete(ctx: interactions.AutocompleteContext, value: str = ""):
 #    await command_builder.translate(ctx, language)
 
 
-# a dev program
+# ------------------------------------------------ DEV ----------------------------------------------------------
 @interactions.slash_command(
     name="log",
     description="Show the log",
