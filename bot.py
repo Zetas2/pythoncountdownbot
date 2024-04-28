@@ -891,7 +891,7 @@ async def killitwithfire(ctx: interactions.SlashContext):
     await bot.stop()
 
 
-# Here are message commands - commands that are activated by a message
+# ------------------------------------------------ Here are message commands - commands that are activated by a message------------------------------------------------
 @interactions.message_context_menu(
     name="deletethis",
 )
@@ -906,7 +906,7 @@ async def timeleftthis(ctx: interactions.SlashContext):
     await command_builder.timeleft_this(ctx)
 
 
-# Jokes
+# ------------------------------------------------ Jokes ------------------------------------------------
 @interactions.slash_command(
     name="whoisthegreatest",
     description="If you are curious about who the greatest is",
