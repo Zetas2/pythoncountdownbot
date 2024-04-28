@@ -1697,8 +1697,6 @@ async def add_premium(ctx, user_id, guild_id, level):
             },
         )
         currlevel = len(cursor.fetchall())
-        print(currlevel)
-        print(int(level))
         # Check that the user isnt alredy there
         if currlevel < int(level):
             for i in range(currlevel + 1, int(level) + 1):
