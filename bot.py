@@ -714,7 +714,7 @@ async def fixperms(ctx: interactions.SlashContext):
         SlashCommandOption(
             type=interactions.OptionType.STRING,
             name="countdown",
-            description="Which of your countdowns do you want to be shown?",
+            description="Which of your countdowns do you want to edit the mention of?",
             required=True,
             autocomplete=True,
         ),
