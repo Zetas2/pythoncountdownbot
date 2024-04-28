@@ -1674,8 +1674,11 @@ async def log(ctx):
         logs = ""
         with open("log.txt", "r") as file:
             # Read the last lines in the log file
-            for line in file.readlines()[-19:]:
-                logs = logs + line
+            for line in file.readlines()[::-1]:
+                if len(line + logs) > 1900:
+                    break
+                else:
+                    logs = line + logs
 
         await ctx.send(f"Logs are:\n```{logs}```", ephemeral=True)
 
