@@ -1180,15 +1180,6 @@ async def delete_this(bot, ctx):
             translations[(language)]["errNoActive"],
             ephemeral=True,
         )
-    # Make sure user have permission to delete.
-    if (
-        started_by != user_id
-        and not ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES
-    ):
-        return await ctx.send(
-            translations[(language)]["errNoPerm"],
-            ephemeral=True,
-        )
 
     check = conn_countdowns_db.total_changes
     conn_countdowns_db.execute(
