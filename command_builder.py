@@ -1180,15 +1180,6 @@ async def delete_this(bot, ctx):
             translations[(language)]["errNoActive"],
             ephemeral=True,
         )
-    # Make sure user have permission to delete.
-    if (
-        started_by != user_id
-        and not ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES
-    ):
-        return await ctx.send(
-            translations[(language)]["errNoPerm"],
-            ephemeral=True,
-        )
 
     check = conn_countdowns_db.total_changes
     conn_countdowns_db.execute(
@@ -1795,12 +1786,13 @@ async def check_done(bot):
     """Checks if a countdown is done. If it is, send the countdown completed message."""
     current_time = int(floor(time.time()))
     cursor = conn_countdowns_db.execute(
-        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number FROM Countdowns WHERE timestamp < :currenttime;",
+        "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number,countdownname FROM Countdowns WHERE timestamp < :currenttime;",
         {"currenttime": current_time},
     )
     # There will 0 rows in cursor if theres no countdowns that are done.
     # Therefore this wont run multiple times.
     for row in cursor:
+        countdown_name = str(row[13])
         number = str(row[12])
         message_completed = str(row[11])
         message_end = str(row[10])
@@ -1850,7 +1842,11 @@ async def check_done(bot):
             language = "en-US"
 
         embed = interactions.Embed()
-        embed.title = translations[(language)]["done"]
+        embedtitle = translations[(language)]["done"]
+        if countdown_name == "None":
+            embed.title = embedtitle
+        else:
+            embed.title = f"{embedtitle} - {countdown_name}"
         embed.description = f"{(translations[(language)]['created'])} <@!{started_by}>"
 
         if image_link != "":

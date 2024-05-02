@@ -894,6 +894,7 @@ async def killitwithfire(ctx: interactions.SlashContext):
 # ------------------------------------------------ Here are message commands - commands that are activated by a message------------------------------------------------
 @interactions.message_context_menu(
     name="deletethis",
+    default_member_permissions=interactions.Permissions.MANAGE_MESSAGES,
 )
 async def deletethis(ctx: interactions.SlashContext):
     await command_builder.delete_this(bot, ctx)
