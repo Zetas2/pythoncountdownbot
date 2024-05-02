@@ -609,7 +609,7 @@ async def help_information(ctx):
         (translations[(language)]["helpLinksDesc"]),
     )
 
-    random_thanks = random.randint(0, 7)
+    random_thanks = random.randint(0, 8)
 
     if random_thanks != 0:
         embed.footer = interactions.EmbedFooter(
@@ -1052,9 +1052,7 @@ async def list_countdowns(ctx, sub_command, page, hidden):
         await ctx.send(embeds=embed, ephemeral=False)
 
 
-async def delete(
-    bot, ctx, sub_command, sub_command_group, delete_mine, delete_channel, delete_guild
-):
+async def delete(bot, ctx, sub_command, sub_command_group, delete_id):
     """Deletes a countdown based on subcommand."""
     language = get_language(ctx)
     if await premium_bot(ctx, language):
@@ -1064,7 +1062,7 @@ async def delete(
         if sub_command_group == "single":
             cursor = get_possible_countdowns(ctx, "mine")
             try:
-                msg_id = delete_mine.split(": ")[1]
+                msg_id = delete_id.split(": ")[1]
             except:
                 return await ctx.send(
                     translations[(language)]["errOption"], ephemeral=True
@@ -1093,17 +1091,17 @@ async def delete(
                 await delete_message(ctx, msg_id, language)
         else:
             await ctx.send(
-                translations[(language)]["deleteConfirmGuild"],
+                translations[(language)]["deleteConfirmMine"],
                 components=[components.delete_mine, components.delete_cancel],
                 ephemeral=True,
             )
 
-    elif ctx.author.permissions & interactions.Permissions.MANAGE_MESSAGES:
+    else:
         if sub_command_group == "single":
             if sub_command == "channel":
                 cursor = get_possible_countdowns(ctx, "channel")
                 try:
-                    msg_id = delete_channel.split(": ")[1]
+                    msg_id = delete_id.split(": ")[1]
                 except:
                     return await ctx.send(
                         translations[(language)]["errOption"], ephemeral=True
@@ -1120,7 +1118,7 @@ async def delete(
             if sub_command == "guild":
                 cursor = get_possible_countdowns(ctx, "guild")
                 try:
-                    msg_id = delete_guild.split(": ")[1]
+                    msg_id = delete_id.split(": ")[1]
                 except:
                     return await ctx.send(
                         translations[(language)]["errOption"], ephemeral=True
@@ -1161,12 +1159,6 @@ async def delete(
                     components=[components.delete_guild, components.delete_cancel],
                     ephemeral=True,
                 )
-
-    else:
-        await ctx.send(
-            translations[(language)]["errNoPerm"],
-            ephemeral=True,
-        )
 
 
 async def delete_this(bot, ctx):
@@ -1232,12 +1224,8 @@ async def fill_choices(ctx, cursor, value):
         else:
             break
 
-    choices = [
-        interactions.Choice(name=item, value=item)
-        for item in countdowns
-        if value in item
-    ]
-    await ctx.populate(choices)
+    choices = [dict(name=item, value=item) for item in countdowns if value in item]
+    await ctx.send(choices)
 
 
 def get_possible_countdowns(ctx, option):
@@ -1301,91 +1289,91 @@ async def delete_button(ctx, option):
     """If a button used for deleting is used."""
     language = get_language(ctx)
     user = ctx.user.username
-    if option == "guild":
-        if ctx.guild_id is None:
-            return ctx.send(translations[(language)]["errDm"], ephemeral=True)
-        guild_id = int(ctx.guild_id)
-        cursor = conn_countdowns_db.execute(
-            "SELECT channelid,msgid from Countdowns WHERE guildid = :guildid;",
-            {"guildid": guild_id},
-        )
-        for row in cursor:
-            channel_id = str(row[0])
+    match option:
+        case "guild":
+            if ctx.guild_id is None:
+                return ctx.send(translations[(language)]["errDm"], ephemeral=True)
+            guild_id = int(ctx.guild_id)
+            cursor = conn_countdowns_db.execute(
+                "SELECT channelid,msgid from Countdowns WHERE guildid = :guildid;",
+                {"guildid": guild_id},
+            )
+            for row in cursor:
+                channel_id = str(row[0])
 
-        check = conn_countdowns_db.total_changes
-        conn_countdowns_db.execute(
-            "DELETE from Countdowns WHERE guildid = :guildid;", {"guildid": guild_id}
-        )
-        conn_countdowns_db.commit()
+            check = conn_countdowns_db.total_changes
+            conn_countdowns_db.execute(
+                "DELETE from Countdowns WHERE guildid = :guildid;",
+                {"guildid": guild_id},
+            )
+            conn_countdowns_db.commit()
 
-        if check == conn_countdowns_db.total_changes:
-            await ctx.send(
-                translations[(language)]["errDelete"],
-                ephemeral=True,
+            if check == conn_countdowns_db.total_changes:
+                await ctx.send(
+                    translations[(language)]["errDelete"],
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send(
+                    f"""{translations[(language)]["guild"]} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["wasDeleted"]} {user}"""
+                )
+        case "channel":
+            channel_id = int(ctx.channel_id)
+            cursor = conn_countdowns_db.execute(
+                "SELECT msgid from Countdowns WHERE channelid = :channelid;",
+                {"channelid": channel_id},
             )
-        else:
-            await ctx.edit(components=[])
-            await ctx.send(
-                f"""{translations[(language)]["guild"]} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["wasDeleted"]} {user}"""
+            for row in cursor:
+                msg_id = str(row[0])
+            check = conn_countdowns_db.total_changes
+            conn_countdowns_db.execute(
+                "DELETE from Countdowns WHERE channelid = :channelid;",
+                {"channelid": channel_id},
             )
-    elif option == "channel":
-        channel_id = int(ctx.channel_id)
-        cursor = conn_countdowns_db.execute(
-            "SELECT msgid from Countdowns WHERE channelid = :channelid;",
-            {"channelid": channel_id},
-        )
-        for row in cursor:
-            msg_id = str(row[0])
-        check = conn_countdowns_db.total_changes
-        conn_countdowns_db.execute(
-            "DELETE from Countdowns WHERE channelid = :channelid;",
-            {"channelid": channel_id},
-        )
-        conn_countdowns_db.commit()
-        if check == conn_countdowns_db.total_changes:
-            await ctx.send(
-                translations[(language)]["errDelete"],
-                ephemeral=True,
+            conn_countdowns_db.commit()
+            if check == conn_countdowns_db.total_changes:
+                await ctx.send(
+                    translations[(language)]["errDelete"],
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send(
+                    f"""{translations[(language)]["channel"]} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["wasDeleted"]} {user}"""
+                )
+        case "mine":
+            if ctx.guild_id is None:
+                return ctx.send(translations[(language)]["errDm"], ephemeral=True)
+            guild_id = int(ctx.guild_id)
+            user_id = int(ctx.user.id)
+            cursor = conn_countdowns_db.execute(
+                "SELECT channelid,msgid from Countdowns WHERE guildid = :guildid AND startedby = :userid;",
+                {"guildid": guild_id, "userid": user_id},
             )
-        else:
-            await ctx.edit(components=[])
-            await ctx.send(
-                f"""{translations[(language)]["channel"]} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["wasDeleted"]} {user}"""
-            )
-    elif option == "mine":
-        if ctx.guild_id is None:
-            return ctx.send(translations[(language)]["errDm"], ephemeral=True)
-        guild_id = int(ctx.guild_id)
-        user_id = int(ctx.user.id)
-        cursor = conn_countdowns_db.execute(
-            "SELECT channelid,msgid from Countdowns WHERE guildid = :guildid AND startedby = :userid;",
-            {"guildid": guild_id, "userid": user_id},
-        )
-        for row in cursor:
-            channel_id = str(row[0])
-            msg_id = str(row[1])
+            for row in cursor:
+                channel_id = str(row[0])
+                msg_id = str(row[1])
 
-        check = conn_countdowns_db.total_changes
-        conn_countdowns_db.execute(
-            "DELETE from Countdowns WHERE guildid = :guildid AND startedby = :userid; ",
-            {"guildid": guild_id, "userid": user_id},
-        )
-        conn_countdowns_db.commit()
-        if check == conn_countdowns_db.total_changes:
-            await ctx.send(
-                translations[(language)]["errDelete"],
-                ephemeral=True,
+            check = conn_countdowns_db.total_changes
+            conn_countdowns_db.execute(
+                "DELETE from Countdowns WHERE guildid = :guildid AND startedby = :userid; ",
+                {"guildid": guild_id, "userid": user_id},
             )
-        else:
-            # Remove the buttons from the ephemeral message
-            # and send a message announcing.
-            await ctx.edit(components=[])
-            await ctx.send(
-                f"""{user} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["deleted"]}"""
+            conn_countdowns_db.commit()
+            if check == conn_countdowns_db.total_changes:
+                await ctx.send(
+                    translations[(language)]["errDelete"],
+                    ephemeral=True,
+                )
+            else:
+                # Send a message announcing.
+                await ctx.send(
+                    f"""{user} {translations[(language)]["countdown"]}{translations[(language)]["multiple"]} {translations[(language)]["deleted"]}"""
+                )
+        case "cancel":
+            # Just edit away the buttons and say that contdowns are kept
+            await ctx.edit_origin(
+                content=translations[(language)]["kept"], components=[]
             )
-    elif option == "cancel":
-        # Just edit away the buttons and say that contdowns are kept
-        await ctx.edit(translations[(language)]["kept"], components=[])
 
 
 async def time_left_message(ctx, msg_id, language, hidden):
@@ -1686,8 +1674,11 @@ async def log(ctx):
         logs = ""
         with open("log.txt", "r") as file:
             # Read the last lines in the log file
-            for line in file.readlines()[-19:]:
-                logs = logs + line
+            for line in file.readlines()[::-1]:
+                if len(line + logs) > 1900:
+                    break
+                else:
+                    logs = line + logs
 
         await ctx.send(f"Logs are:\n```{logs}```", ephemeral=True)
 
@@ -1702,33 +1693,34 @@ async def add_premium(ctx, user_id, guild_id, level):
         return
     if int(ctx.user.id) in devs:
         cursor = conn_premium_db.execute(
-            "SELECT userid FROM Premium WHERE userid = :userid AND level = :level;",
+            "SELECT userid FROM Premium WHERE userid = :userid AND level <= :level;",
             {
                 "userid": int(user_id),
                 "level": int(level),
             },
         )
+        currlevel = len(cursor.fetchall())
         # Check that the user isnt alredy there
-        if len(cursor.fetchall()) == 0:
-            conn_premium_db.execute(
-                "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,0,:level);",
-                {
-                    "userid": int(user_id),
-                    "guildid": int(guild_id),
-                    "level": int(level),
-                },
-            )
+        if currlevel < int(level):
+            for i in range(currlevel + 1, int(level) + 1):
+                conn_premium_db.execute(
+                    "INSERT INTO Premium (userid,guildid,lastedit,level) VALUES (:userid,:guildid,0,:level);",
+                    {
+                        "userid": int(user_id),
+                        "guildid": int(guild_id),
+                        "level": (i),
+                    },
+                )
             conn_premium_db.commit()
             await ctx.send(f"User <@{user_id}> was added", ephemeral=True)
         else:
             await ctx.send(f"User <@{user_id}> is alredy premium", ephemeral=True)
-
     else:
         await ctx.send(translations[(language)]["errDev"], ephemeral=True)
 
 
-async def delete_premium(ctx, user_id, level):
-    """Delete a premium user."""
+async def remove_premium(ctx, user_id, level):
+    """Removes a premium user."""
     language = get_language(ctx)
     if await premium_bot(ctx, language):
         return
