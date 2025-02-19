@@ -92,6 +92,7 @@ translations = {
         "errDm": "You cant use this in DMs",
         "errListDm": "Sorry, only /list channel works in DMs",
         "errPremiumDm": "You cant use premium features in DMs",
+        "errNotPremiumBot": "Sorry - I’m not the premium bot",
         "errPremiumBot": "Sorry! This bot can only be used in premium servers.\nTo get premium you can head over to [Patreon](https://www.patreon.com/HourglassTimelord)\nIf you got premium you need to reinvite this bot and make sure `/makethispremium` is your first command used.\nI will now leave this server to save resourses for the premium users.",
         "errPremium": "Sorry, you tried to use a premium only feature:",
         "errPremiumReuse": "Sorry, you need to be a premium user to use this command. Or wait 2 days since you last used it",

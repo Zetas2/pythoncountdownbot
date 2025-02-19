@@ -64,9 +64,12 @@ conn_premium_db.execute(
 bot_starttime = floor(time.time())
 
 
+# Change this if the bot is the premium bot
+ispremiumbot = False
+
+
 async def premium_bot(ctx, language):
     """To keep this bot from being added to a ton of servers this makes sure it can only be used in premium servers."""
-    ispremiumbot = False
     if ispremiumbot:
         if ctx.guild_id is None:
             await ctx.send(translations[(language)]["errPremiumDm"], ephemeral=True)
@@ -1520,6 +1523,11 @@ async def translate(ctx, new_language):
 async def make_this_premium(ctx, index):
     """Change the premium guild to the one where the command is used. Cooldown of 2 days."""
     language = get_language(ctx)
+    if not ispremiumbot:
+        await ctx.send(
+            f"""{translations[(language)]["errNotPremiumBot"]}""", ephemeral=True
+        )
+        return
     guild_id = ctx.guild_id
     current_time = floor(time.time())
     # 172800 seconds is two days.
