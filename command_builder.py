@@ -149,11 +149,6 @@ def get_exact_timestring(timestring, length, language):
         timestring = (
             f"""{timestring} {amount} {translations[(language)]["timeMinute"]}"""
         )
-    if meassurement > 0:
-        amount = meassurement
-        timestring = (
-            f"""{timestring} {amount} {translations[(language)]["timeSecond"]}"""
-        )
     return timestring
 
 
