@@ -711,7 +711,10 @@ async def countdown(
     if await do_all_checks(
         ctx, mention, image_link, times, message_completed, language, preset
     ):
-        wholedate = dateparser.parse("in " + timestring)
+        wholedate = dateparser.parse(
+            "in " + timestring.replace("next", ""),
+            settings={"PREFER_DATES_FROM": "future"},
+        )
         try:  # If wholedate cant be floored, it is not a valid date.
             timestamp = floor(wholedate.timestamp())
         except:
