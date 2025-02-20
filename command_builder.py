@@ -954,7 +954,7 @@ async def timer(
             await ctx.send(translations[(language)]["error"], ephemeral=True)
 
 
-async def list_countdowns(ctx, sub_command, page, hidden):
+async def list_countdowns(ctx, sub_command, page, hidden, exact):
     """List command. List all active countdowns based on sub command."""
     language = get_language(ctx)
     if await premium_bot(ctx, language):
@@ -1025,6 +1025,7 @@ async def list_countdowns(ctx, sub_command, page, hidden):
 
     # Loops through all active countowns in the correct place
     # to pick out the ones that should be on specified page
+    current_time = floor(time.time())
     for row in cursor:
         if current_line >= goal_line - 5:
             timestamp = int(row[0])
@@ -1032,14 +1033,20 @@ async def list_countdowns(ctx, sub_command, page, hidden):
             channel_id = int(row[2])
             started_by = int(row[3])
             countdownname = str(row[4])
+            if exact:
+                timestring = get_exact_timestring(
+                    "", int(timestamp) - int(current_time), language
+                )
+            else:
+                timestring = f"<t:{timestamp}:R>"
             if countdownname == "None":
                 embed.add_field(
-                    f"{current_line}: <t:{timestamp}:R>",
+                    f"{current_line}: {timestring}",
                     f"""[{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}') {translations[(language)]["created"]} <@!{started_by}>\n""",
                 )
             else:
                 embed.add_field(
-                    f"{countdownname}: <t:{timestamp}:R>",
+                    f"{countdownname}: {timestring}",
                     f"""[{msg_id}](https://discord.com/channels/{guild_id}/{channel_id}/{msg_id} '{translations[(language)]["jump"]}') {translations[(language)]["created"]} <@!{started_by}>\n""",
                 )
         elif current_line < goal_line - 5:

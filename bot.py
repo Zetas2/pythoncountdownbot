@@ -407,10 +407,16 @@ async def listpreset(ctx: interactions.SlashContext, page=1):
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        SlashCommandOption(
+            name="exact",
+            description="Set to false if you dont want exact date",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
-async def listchannel(ctx: interactions.SlashContext, page=1, hidden=True):
-    await command_builder.list_countdowns(ctx, "channel", page, hidden)
+async def listchannel(ctx: interactions.SlashContext, page=1, hidden=True, exact=True):
+    await command_builder.list_countdowns(ctx, "channel", page, hidden, exact)
 
 
 @interactions.slash_command(
@@ -429,10 +435,16 @@ async def listchannel(ctx: interactions.SlashContext, page=1, hidden=True):
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        SlashCommandOption(
+            name="exact",
+            description="Set to false if you dont want exact date",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
-async def listguild(ctx: interactions.SlashContext, page=1, hidden=True):
-    await command_builder.list_countdowns(ctx, "guild", page, hidden)
+async def listguild(ctx: interactions.SlashContext, page=1, hidden=True, exact=True):
+    await command_builder.list_countdowns(ctx, "guild", page, hidden, exact)
 
 
 @interactions.slash_command(
@@ -451,10 +463,16 @@ async def listguild(ctx: interactions.SlashContext, page=1, hidden=True):
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        SlashCommandOption(
+            name="exact",
+            description="Set to false if you dont want exact date",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
-async def listmine(ctx: interactions.SlashContext, page=1, hidden=True):
-    await command_builder.list_countdowns(ctx, "mine", page, hidden)
+async def listmine(ctx: interactions.SlashContext, page=1, hidden=True, exact=True):
+    await command_builder.list_countdowns(ctx, "mine", page, hidden, exact)
 
 
 # ------------------------------------------------ TIMELEFT ----------------------------------------------------------
