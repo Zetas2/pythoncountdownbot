@@ -30,7 +30,7 @@ conn_premium_countdowns_db = sqlite3.connect("PremiumCountdowns.db")
 #    """CREATE TABLE IF NOT EXISTS PremiumCountdowns (timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255),number int, countdownname varchar(50));"""
 # )
 cursor = conn_premium_countdowns_db.execute(
-    "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number,countdownname FROM PremiumCountdowns WHERE guildid in ('1026639365503459329', '1040842883885965423', '1078358047082156122', '1106937341152591902', '1119672797430558751', '719541990580289557', '832785220184571934', '837389954631204935', '849629393600381008', '893576552904806431', '898302095558598696', '936584263086772254', '946567581060464710', '988768713891250198');",
+    "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number,countdownname FROM PremiumCountdowns WHERE guildid in ('1010636307216728094');",
 )
 
 for row in cursor:
@@ -38,7 +38,7 @@ for row in cursor:
 
 conn_countdowns_db = sqlite3.connect("Countdowns.db")
 cursor = conn_countdowns_db.execute(
-    "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number,countdownname FROM Countdowns WHERE guildid in ('1026639365503459329', '1040842883885965423', '1078358047082156122', '1106937341152591902', '1119672797430558751', '719541990580289557', '832785220184571934', '837389954631204935', '849629393600381008', '893576552904806431', '898302095558598696', '936584263086772254', '946567581060464710', '988768713891250198');",
+    "SELECT timestamp,msgid,channelid,guildid,roleid,startedby,times,length,imagelink,messagestart,messageend,messagecompleted,number,countdownname FROM Countdowns WHERE guildid in ('1010636307216728094');",
 )
 print(
     "--------------------------------------------------------------------------------------------------------------"
