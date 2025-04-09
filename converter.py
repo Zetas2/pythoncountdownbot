@@ -9,6 +9,23 @@ old databases to new ones with more features"""
 # conn_info_db.execute("""ALTER TABLE Countdowns ADD COLUMN countdownname varchar(50);""")
 
 
+# timestamp int,msgid int,channelid int,guildid int,roleid int,startedby int,times int,length int,imagelink varchar(255),messagestart varchar(255),messageend varchar(255),messagecompleted varchar(255),number int, countdownname varchar(50)
+
+# TODO 
+# messagestart & messageend & imagelink upped to 500
+# add a deletetimer (timestamp)
+# add a delay (timestamp)
+# add a paused (timestamp)
+# add a format Binary for following switches
+    # Exact
+    # Only timestamps
+    # Show end date
+    # Use only countdown name
+    # Hide who started
+    # Hide {message_start} <t:{timestamp}> {message_end}
+    # Hide link to original message
+
+
 """
 All this below was to move the countdowns for premium users from one database to another
 """
